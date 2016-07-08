@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <script src="dcrmeg_jquery2" type="text/javascript"></script>
+    <script src="dcrmeg_xrmservicetoolkit"></script>
+    <script src="../../ClientGlobalContext.js.aspx" type="text/javascript" ></script>
+
+<style>
+
+body {
+    padding: 0;
+    margin: 0;
+    font-family: Segoe UI,Tahoma,Arial;
+    font-size: 11px;
+}
+
+td {
+    text-align: left;
+}
+
+.sectiondivider {
+    font-size: 16px;
+    font-weight: bold;
+    text-transform:uppercase;
+    padding: 10px 0px 5px 0px;
+    border-bottom: solid 1px lightgrey;
+}
+
+.Width35 {
+    width: 35%;
+}
+
+.mainContainer {
+	padding:0;
+	margin: auto;
+	width: 650px;
+}
+
+.maintoolbarContainer {
+	background-color: #838383;
+	margin-bottom: 20px;
+}
+
+.selectlanguage {
+	margin-bottom: 20px;
+}
+
+.maintoolbar {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.maintoolbar li {
+    float: left;
+    padding: 0px;
+}
+
+.maintoolbar a {
+    padding-top: 4px;
+	padding-bottom: 5px;
+	font-size: 14px;
+	font-weight: bold;
+	text-align: center;
+}
+
+.maintoolbar a:link, a:visited {
+    display: block;
+    width: 100px;
+    color: #FFFFFF;
+    padding: 4px;
+    text-decoration: none;
+	text-transform: uppercase;
+    text-align: center;
+}
+
+.maintoolbar a:hover, a:active {
+    background-color: #000000;
+        -moz-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        -webkit-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+}
+
+.maintoolbar .disabled {
+	color: darkgrey!important;
+}
+
+.translationsContainer {
+    margin: 0px 0px 10px 0px;
+    border: 1px solid lightgrey;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    background: #fdfcfa;
+}
+
+.translationsContainerCTitle {
+    margin:5px 0px 5px 5px;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.translations {
+    margin: 0;
+    padding: 5px;
+    list-style-type: none;
+    height: 100px; /*19em;*/
+    overflow: auto;
+}
+
+    .translations_option {
+        font-size: 14px;
+        list-style: none;
+        padding: 0 1em 0 1em;
+        margin: 0;
+        line-height: 1.9;
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        cursor: pointer!important;
+    }
+
+.translations_option.j-focused {
+    position: relative
+}
+
+.translations_option.j-focused:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 2;
+    border: 1px solid #AED5A8;
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+}
+
+.translations_option.j-selected {
+    background-color: #E5F7E5;
+    position: relative
+}
+
+.translations_option.j-selected+.translations_option.j-selected:before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -3px;
+    z-index: 1;
+    background-color: #E5F7E5;
+    height: 6px
+}
+
+.selectRegionalFormat {
+	width: 100%;
+}
+
+input, select {
+	padding: 2px;
+}
+
+table {
+	width: 100%;
+}
+
+td input {
+	width: 98%;
+}
+
+/* TABS */
+
+.tabs {
+  float: none;
+  list-style: none;
+  position: relative;
+  margin: 10px 0px 0px 0px;
+  text-align: left;
+  padding-left:0px!important;
+}
+.tabs li {
+  float: left;
+  display: block;
+}
+.tabs input[type="radio"] {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
+    .tabs label {
+        font-size: 14px;
+        font-weight: bold;
+        display: block;
+        padding: 7px 12px 7px 12px;
+        -moz-border-radius: 2px 2px 0 0;
+        -webkit-border-radius: 2px 2px 0 0;
+        border-radius: 2px 2px 0 0;
+        text-transform: uppercase;
+        background-color: lightgrey;
+        color: #FFFFFF;
+        cursor: pointer;
+        position: relative;
+        top: 4px;
+        -moz-transition: all 0.2s ease-in-out;
+        -o-transition: all 0.2s ease-in-out;
+        -webkit-transition: all 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
+    }
+.tabs label:hover {
+  background-color: #000000;
+}
+.tabs .tab-content {
+  z-index: 2;
+  width: 100%;
+  display: none;
+  overflow: hidden;
+  padding: 5px;
+  position: absolute;
+  /*top: 53px;*/
+  left: 0;
+}
+.tabs [id^="tab"]:checked + label {
+  /*
+  top: 0;
+  padding-top: 9px;
+  */
+  background-color: #838383;
+}
+.tabs [id^="tab"]:checked ~ [id^="tab-content"] {
+  display: block;
+}
+
+/* TABS */
+
+</style>
+</head>
+<body>
+<div class="mainContainer">
+
+	<div class="translationsContainer">
+		<div class="translationsContainerCTitle">Saved Translations:</div>
+		<ul class="translations">
+		</ul>
+	</div>
+
+	<div class="maintoolbarContainer">
+		<ul class="maintoolbar">
+		  <li><a href="#" id="newtranslation">New</a></li>
+		  <li><a href="#" id="savetranslation" class="disabled">Save</a></li>
+		  <li><a href="#" id="deletetranslation" class="disabled">Delete</a></li>
+		</ul>
+	</div>
+
+	<div class="selectlanguage">
+	<select class="selectRegionalFormat" id="selectRegionalFormatCode" name="selectRegionalFormatCode" ><option value="1078" title="Afrikaans (South Africa)">Afrikaans (South Africa)</option><option value="1052" title="Albanian (Albania)">Albanian (Albania)</option><option value="1156" title="Alsatian (France)">Alsatian (France)</option><option value="1118" title="Amharic (Ethiopia)">Amharic (Ethiopia)</option><option value="5121" title="Arabic (Algeria)">Arabic (Algeria)</option><option value="15361" title="Arabic (Bahrain)">Arabic (Bahrain)</option><option value="3073" title="Arabic (Egypt)">Arabic (Egypt)</option><option value="2049" title="Arabic (Iraq)">Arabic (Iraq)</option><option value="11265" title="Arabic (Jordan)">Arabic (Jordan)</option><option value="13313" title="Arabic (Kuwait)">Arabic (Kuwait)</option><option value="12289" title="Arabic (Lebanon)">Arabic (Lebanon)</option><option value="4097" title="Arabic (Libya)">Arabic (Libya)</option><option value="6145" title="Arabic (Morocco)">Arabic (Morocco)</option><option value="8193" title="Arabic (Oman)">Arabic (Oman)</option><option value="16385" title="Arabic (Qatar)">Arabic (Qatar)</option><option value="1025" title="Arabic (Saudi Arabia)">Arabic (Saudi Arabia)</option><option value="10241" title="Arabic (Syria)">Arabic (Syria)</option><option value="7169" title="Arabic (Tunisia)">Arabic (Tunisia)</option><option value="14337" title="Arabic (U.A.E.)">Arabic (U.A.E.)</option><option value="9217" title="Arabic (Yemen)">Arabic (Yemen)</option><option value="1067" title="Armenian (Armenia)">Armenian (Armenia)</option><option value="1101" title="Assamese (India)">Assamese (India)</option><option value="2092" title="Azerbaijani (Cyrillic, Azerbaijan)">Azerbaijani (Cyrillic, Azerbaijan)</option><option value="1068" title="Azerbaijani (Latin, Azerbaijan)">Azerbaijani (Latin, Azerbaijan)</option><option value="2117" title="Bangla (Bangladesh)">Bangla (Bangladesh)</option><option value="1093" title="Bangla (India)">Bangla (India)</option><option value="1133" title="Bashkir (Russia)">Bashkir (Russia)</option><option value="1069" title="Basque (Basque)">Basque (Basque)</option><option value="1059" title="Belarusian (Belarus)">Belarusian (Belarus)</option><option value="8218" title="Bosnian (Cyrillic, Bosnia and Herzegovina)">Bosnian (Cyrillic, Bosnia and Herzegovina)</option><option value="5146" title="Bosnian (Latin, Bosnia and Herzegovina)">Bosnian (Latin, Bosnia and Herzegovina)</option><option value="1150" title="Breton (France)">Breton (France)</option><option value="1026" title="Bulgarian (Bulgaria)">Bulgarian (Bulgaria)</option><option value="1027" title="Catalan (Catalan)">Catalan (Catalan)</option><option value="3076" title="Chinese (Hong Kong S.A.R.)">Chinese (Hong Kong S.A.R.)</option><option value="5124" title="Chinese (Macao S.A.R.)">Chinese (Macao S.A.R.)</option><option value="2052" title="Chinese (People's Republic of China)">Chinese (People's Republic of China)</option><option value="4100" title="Chinese (Singapore)">Chinese (Singapore)</option><option value="1028" title="Chinese (Taiwan)">Chinese (Taiwan)</option><option value="1155" title="Corsican (France)">Corsican (France)</option><option value="4122" title="Croatian (Bosnia and Herzegovina)">Croatian (Bosnia and Herzegovina)</option><option value="1050" title="Croatian (Croatia)">Croatian (Croatia)</option><option value="1029" title="Czech (Czech Republic)">Czech (Czech Republic)</option><option value="1030" title="Danish (Denmark)">Danish (Denmark)</option><option value="1164" title="Dari (Afghanistan)">Dari (Afghanistan)</option><option value="1125" title="Divehi (Maldives)">Divehi (Maldives)</option><option value="2067" title="Dutch (Belgium)">Dutch (Belgium)</option><option value="1043" title="Dutch (Netherlands)">Dutch (Netherlands)</option><option value="3081" title="English (Australia)">English (Australia)</option><option value="10249" title="English (Belize)">English (Belize)</option><option value="4105" title="English (Canada)">English (Canada)</option><option value="9225" title="English (Caribbean)">English (Caribbean)</option><option value="15369" title="English (Hong Kong)">English (Hong Kong)</option><option value="16393" title="English (India)">English (India)</option><option value="6153" title="English (Ireland)">English (Ireland)</option><option value="8201" title="English (Jamaica)">English (Jamaica)</option><option value="17417" title="English (Malaysia)">English (Malaysia)</option><option value="5129" title="English (New Zealand)">English (New Zealand)</option><option value="13321" title="English (Republic of the Philippines)">English (Republic of the Philippines)</option><option value="18441" title="English (Singapore)">English (Singapore)</option><option value="7177" title="English (South Africa)">English (South Africa)</option><option value="11273" title="English (Trinidad and Tobago)">English (Trinidad and Tobago)</option><option value="2057" title="English (United Kingdom)">English (United Kingdom)</option><option value="1033" selected="selected" title="English (United States)">English (United States)</option><option value="12297" title="English (Zimbabwe)">English (Zimbabwe)</option><option value="1061" title="Estonian (Estonia)">Estonian (Estonia)</option><option value="1080" title="Faroese (Faroe Islands)">Faroese (Faroe Islands)</option><option value="1124" title="Filipino (Philippines)">Filipino (Philippines)</option><option value="1035" title="Finnish (Finland)">Finnish (Finland)</option><option value="2060" title="French (Belgium)">French (Belgium)</option><option value="3084" title="French (Canada)">French (Canada)</option><option value="1036" title="French (France)">French (France)</option><option value="5132" title="French (Luxembourg)">French (Luxembourg)</option><option value="6156" title="French (Principality of Monaco)">French (Principality of Monaco)</option><option value="4108" title="French (Switzerland)">French (Switzerland)</option><option value="1122" title="Frisian (Netherlands)">Frisian (Netherlands)</option><option value="2151" title="Fulah (Sénégal)">Fulah (Sénégal)</option><option value="1110" title="Galician (Galician)">Galician (Galician)</option><option value="1079" title="Georgian (Georgia)">Georgian (Georgia)</option><option value="3079" title="German (Austria)">German (Austria)</option><option value="1031" title="German (Germany)">German (Germany)</option><option value="5127" title="German (Liechtenstein)">German (Liechtenstein)</option><option value="4103" title="German (Luxembourg)">German (Luxembourg)</option><option value="2055" title="German (Switzerland)">German (Switzerland)</option><option value="1032" title="Greek (Greece)">Greek (Greece)</option><option value="1135" title="Greenlandic (Greenland)">Greenlandic (Greenland)</option><option value="1140" title="Guarani (Paraguái)">Guarani (Paraguái)</option><option value="1095" title="Gujarati (India)">Gujarati (India)</option><option value="1128" title="Hausa (Latin) (Nigeria)">Hausa (Latin) (Nigeria)</option><option value="1141" title="Hawaiʻi (ʻAmelika)">Hawaiʻi (ʻAmelika)</option><option value="1037" title="Hebrew (Israel)">Hebrew (Israel)</option><option value="1081" title="Hindi (India)">Hindi (India)</option><option value="1038" title="Hungarian (Hungary)">Hungarian (Hungary)</option><option value="1039" title="Icelandic (Iceland)">Icelandic (Iceland)</option><option value="1136" title="Igbo (Nigeria)">Igbo (Nigeria)</option><option value="1057" title="Indonesian (Indonesia)">Indonesian (Indonesia)</option><option value="1117" title="Inuktitut (Canada)">Inuktitut (Canada)</option><option value="2141" title="Inuktitut (Latin, Canada)">Inuktitut (Latin, Canada)</option><option value="2108" title="Irish (Ireland)">Irish (Ireland)</option><option value="1040" title="Italian (Italy)">Italian (Italy)</option><option value="2064" title="Italian (Switzerland)">Italian (Switzerland)</option><option value="1041" title="Japanese (Japan)">Japanese (Japan)</option><option value="1158" title="K'iche (Guatemala)">K'iche (Guatemala)</option><option value="1099" title="Kannada (India)">Kannada (India)</option><option value="1087" title="Kazakh (Kazakhstan)">Kazakh (Kazakhstan)</option><option value="1107" title="Khmer (Cambodia)">Khmer (Cambodia)</option><option value="1159" title="Kinyarwanda (Rwanda)">Kinyarwanda (Rwanda)</option><option value="1089" title="Kiswahili (Kenya)">Kiswahili (Kenya)</option><option value="1111" title="Konkani (India)">Konkani (India)</option><option value="1042" title="Korean (Korea)">Korean (Korea)</option><option value="1088" title="Kyrgyz (Kyrgyzstan)">Kyrgyz (Kyrgyzstan)</option><option value="1108" title="Lao (Lao P.D.R.)">Lao (Lao P.D.R.)</option><option value="1062" title="Latvian (Latvia)">Latvian (Latvia)</option><option value="1063" title="Lithuanian (Lithuania)">Lithuanian (Lithuania)</option><option value="2094" title="Lower Sorbian (Germany)">Lower Sorbian (Germany)</option><option value="1134" title="Luxembourgish (Luxembourg)">Luxembourgish (Luxembourg)</option><option value="1071" title="Macedonian (Former Yugoslav Republic of Macedonia)">Macedonian (Former Yugoslav Republic of Macedonia)</option><option value="2110" title="Malay (Brunei Darussalam)">Malay (Brunei Darussalam)</option><option value="1086" title="Malay (Malaysia)">Malay (Malaysia)</option><option value="1100" title="Malayalam (India)">Malayalam (India)</option><option value="1082" title="Maltese">Maltese</option><option value="1153" title="Maori">Maori</option><option value="1146" title="Mapudungun (Chile)">Mapudungun (Chile)</option><option value="1102" title="Marathi (India)">Marathi (India)</option><option value="1148" title="Mohawk (Mohawk)">Mohawk (Mohawk)</option><option value="1104" title="Mongolian (Cyrillic, Mongolia)">Mongolian (Cyrillic, Mongolia)</option><option value="2128" title="Mongolian (Traditional Mongolian) (People's Republic of China)">Mongolian (Traditional Mongolian) (People's Republic of China)</option><option value="1121" title="Nepali (Nepal)">Nepali (Nepal)</option><option value="1044" title="Norwegian, Bokmål (Norway)">Norwegian, Bokmål (Norway)</option><option value="2068" title="Norwegian, Nynorsk (Norway)">Norwegian, Nynorsk (Norway)</option><option value="1154" title="Occitan (France)">Occitan (France)</option><option value="1096" title="Odia (India)">Odia (India)</option><option value="1138" title="Oromoo (Itoophiyaa)">Oromoo (Itoophiyaa)</option><option value="1123" title="Pashto (Afghanistan)">Pashto (Afghanistan)</option><option value="1065" title="Persian (Iran)">Persian (Iran)</option><option value="1045" title="Polish (Poland)">Polish (Poland)</option><option value="1046" title="Portuguese (Brazil)">Portuguese (Brazil)</option><option value="2070" title="Portuguese (Portugal)">Portuguese (Portugal)</option><option value="1094" title="Punjabi (India)">Punjabi (India)</option><option value="1131" title="Quechua (Bolivia)">Quechua (Bolivia)</option><option value="2155" title="Quechua (Ecuador)">Quechua (Ecuador)</option><option value="3179" title="Quechua (Peru)">Quechua (Peru)</option><option value="1048" title="Romanian (Romania)">Romanian (Romania)</option><option value="1047" title="Romansh (Switzerland)">Romansh (Switzerland)</option><option value="1049" title="Russian (Russia)">Russian (Russia)</option><option value="9275" title="Sami, Inari (Finland)">Sami, Inari (Finland)</option><option value="4155" title="Sami, Lule (Norway)">Sami, Lule (Norway)</option><option value="5179" title="Sami, Lule (Sweden)">Sami, Lule (Sweden)</option><option value="3131" title="Sami, Northern (Finland)">Sami, Northern (Finland)</option><option value="1083" title="Sami, Northern (Norway)">Sami, Northern (Norway)</option><option value="2107" title="Sami, Northern (Sweden)">Sami, Northern (Sweden)</option><option value="8251" title="Sami, Skolt (Finland)">Sami, Skolt (Finland)</option><option value="6203" title="Sami, Southern (Norway)">Sami, Southern (Norway)</option><option value="7227" title="Sami, Southern (Sweden)">Sami, Southern (Sweden)</option><option value="1103" title="Sanskrit (India)">Sanskrit (India)</option><option value="1169" title="Scottish Gaelic (United Kingdom)">Scottish Gaelic (United Kingdom)</option><option value="7194" title="Serbian (Cyrillic, Bosnia and Herzegovina)">Serbian (Cyrillic, Bosnia and Herzegovina)</option><option value="12314" title="Serbian (Cyrillic, Montenegro)">Serbian (Cyrillic, Montenegro)</option><option value="3098" title="Serbian (Cyrillic, Serbia)">Serbian (Cyrillic, Serbia)</option><option value="10266" title="Serbian (Cyrillic, Serbia) (sr-Cyrl-RS) (10266)">Serbian (Cyrillic, Serbia) (sr-Cyrl-RS) (10266)</option><option value="6170" title="Serbian (Latin, Bosnia and Herzegovina)">Serbian (Latin, Bosnia and Herzegovina)</option><option value="11290" title="Serbian (Latin, Montenegro)">Serbian (Latin, Montenegro)</option><option value="2074" title="Serbian (Latin, Serbia)">Serbian (Latin, Serbia)</option><option value="9242" title="Serbian (Latin, Serbia) (sr-Latn-RS) (9242)">Serbian (Latin, Serbia) (sr-Latn-RS) (9242)</option><option value="1072" title="Sesotho (South Africa)">Sesotho (South Africa)</option><option value="1132" title="Sesotho sa Leboa (South Africa)">Sesotho sa Leboa (South Africa)</option><option value="2098" title="Setswana (Botswana)">Setswana (Botswana)</option><option value="1074" title="Setswana (South Africa)">Setswana (South Africa)</option><option value="1115" title="Sinhala (Sri Lanka)">Sinhala (Sri Lanka)</option><option value="1051" title="Slovak (Slovakia)">Slovak (Slovakia)</option><option value="1060" title="Slovenian (Slovenia)">Slovenian (Slovenia)</option><option value="1143" title="Soomaali (Soomaaliya)">Soomaali (Soomaaliya)</option><option value="11274" title="Spanish (Argentina)">Spanish (Argentina)</option><option value="16394" title="Spanish (Bolivia)">Spanish (Bolivia)</option><option value="13322" title="Spanish (Chile)">Spanish (Chile)</option><option value="9226" title="Spanish (Colombia)">Spanish (Colombia)</option><option value="5130" title="Spanish (Costa Rica)">Spanish (Costa Rica)</option><option value="7178" title="Spanish (Dominican Republic)">Spanish (Dominican Republic)</option><option value="12298" title="Spanish (Ecuador)">Spanish (Ecuador)</option><option value="17418" title="Spanish (El Salvador)">Spanish (El Salvador)</option><option value="4106" title="Spanish (Guatemala)">Spanish (Guatemala)</option><option value="18442" title="Spanish (Honduras)">Spanish (Honduras)</option><option value="2058" title="Spanish (Mexico)">Spanish (Mexico)</option><option value="19466" title="Spanish (Nicaragua)">Spanish (Nicaragua)</option><option value="6154" title="Spanish (Panama)">Spanish (Panama)</option><option value="15370" title="Spanish (Paraguay)">Spanish (Paraguay)</option><option value="10250" title="Spanish (Peru)">Spanish (Peru)</option><option value="20490" title="Spanish (Puerto Rico)">Spanish (Puerto Rico)</option><option value="3082" title="Spanish (Spain)">Spanish (Spain)</option><option value="21514" title="Spanish (United States)">Spanish (United States)</option><option value="14346" title="Spanish (Uruguay)">Spanish (Uruguay)</option><option value="8202" title="Spanish (Venezuela)">Spanish (Venezuela)</option><option value="2077" title="Swedish (Finland)">Swedish (Finland)</option><option value="1053" title="Swedish (Sweden)">Swedish (Sweden)</option><option value="1114" title="Syriac (Syria)">Syriac (Syria)</option><option value="1064" title="Tajik (Cyrillic) (Tajikistan)">Tajik (Cyrillic) (Tajikistan)</option><option value="2143" title="Tamazight (Latin) (Algeria)">Tamazight (Latin) (Algeria)</option><option value="1097" title="Tamil (India)">Tamil (India)</option><option value="1092" title="Tatar (Russia)">Tatar (Russia)</option><option value="1098" title="Telugu (India)">Telugu (India)</option><option value="1054" title="Thai (Thailand)">Thai (Thailand)</option><option value="1105" title="Tibetan (People's Republic of China)">Tibetan (People's Republic of China)</option><option value="1055" title="Turkish (Turkey)">Turkish (Turkey)</option><option value="1090" title="Turkmen (Turkmenistan)">Turkmen (Turkmenistan)</option><option value="1152" title="Uighur (People's Republic of China)">Uighur (People's Republic of China)</option><option value="1058" title="Ukrainian (Ukraine)">Ukrainian (Ukraine)</option><option value="1070" title="Upper Sorbian (Germany)">Upper Sorbian (Germany)</option><option value="1056" title="Urdu (Islamic Republic of Pakistan)">Urdu (Islamic Republic of Pakistan)</option><option value="2115" title="Uzbek (Cyrillic, Uzbekistan)">Uzbek (Cyrillic, Uzbekistan)</option><option value="1091" title="Uzbek (Latin, Uzbekistan)">Uzbek (Latin, Uzbekistan)</option><option value="2051" title="Valencià (Espanya)">Valencià (Espanya)</option><option value="1066" title="Vietnamese (Vietnam)">Vietnamese (Vietnam)</option><option value="1106" title="Welsh">Welsh</option><option value="1160" title="Wolof (Senegal)">Wolof (Senegal)</option><option value="1076" title="Xhosa">Xhosa</option><option value="1073" title="Xitsonga (South Africa)">Xitsonga (South Africa)</option><option value="1157" title="Yakut (Russia)">Yakut (Russia)</option><option value="1144" title="Yi (People's Republic of China)">Yi (People's Republic of China)</option><option value="1130" title="Yoruba (Nigeria)">Yoruba (Nigeria)</option><option value="1077" title="Zulu">Zulu</option><option value="22538" title="español (Latinoamérica)">español (Latinoamérica)</option><option value="11276" title="français (Cameroun)">français (Cameroun)</option><option value="9228" title="français (Congo [RDC])">français (Congo [RDC])</option><option value="12300" title="français (Côte d’Ivoire)">français (Côte d’Ivoire)</option><option value="15372" title="français (Haïti)">français (Haïti)</option><option value="13324" title="français (Mali)">français (Mali)</option><option value="14348" title="français (Maroc)">français (Maroc)</option><option value="8204" title="français (Réunion)">français (Réunion)</option><option value="10252" title="français (Sénégal)">français (Sénégal)</option><option value="2072" title="română (Republica Moldova)">română (Republica Moldova)</option><option value="2080" title="اردو (بھارت)">اردو (بھارت)</option><option value="2137" title="سنڌي (پاکستان)">سنڌي (پاکستان)</option><option value="2118" title="پنجابی (پاکستان)">پنجابی (پاکستان)</option><option value="1170" title="کوردیی ناوەڕاست (کوردستان)">کوردیی ناوەڕاست (کوردستان)</option><option value="2145" title="नेपाली (भारत)">नेपाली (भारत)</option><option value="2121" title="தமிழ் (இலங்கை)">தமிழ் (இலங்கை)</option><option value="1109" title="ဗမာ (မြန်မာ)">ဗမာ (မြန်မာ)</option><option value="1139" title="ትግርኛ (ኢትዮጵያ)">ትግርኛ (ኢትዮጵያ)</option><option value="2163" title="ትግርኛ (ኤርትራ)">ትግርኛ (ኤርትራ)</option><option value="1116" title="ᏣᎳᎩ (ᏣᎳᎩ)">ᏣᎳᎩ (ᏣᎳᎩ)</option><option value="3152" title="ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ (ᠮᠤᠨᠭᠭᠤᠯ ᠣᠯᠣᠰ)">ᠮᠤᠨᠭᠭᠤᠯ ᠬᠡᠯᠡ (ᠮᠤᠨᠭᠭᠤᠯ ᠣᠯᠣᠰ)</option><option value="4191" title="ⵜⴰⵎⴰⵣⵉⵖⵜ (ⵍⵎⵖⵔⵉⴱ)">ⵜⴰⵎⴰⵣⵉⵖⵜ (ⵍⵎⵖⵔⵉⴱ)</option></select>
+	</div>
+
+	<div>
+        <ul class="tabs">
+            <li>
+                <input type="radio" name="tabs" id="tab1" checked />
+                <label for="tab1">Configuration</label>
+                <div id="tab-content1" class="tab-content">
+		        <table class="translationfieldstable">
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Labels (Drop down, ...)</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td class="Width35">Display grid on entity</td>
+				        <td><input type="text" size="100" id="dcrmeg_displaygridonentity" /></td>
+			        </tr>
+			        <tr>
+				        <td>Display data from entity</td>
+				        <td><input type="text" size="100" id="dcrmeg_displaydatafromentity" /></td>
+			        </tr>
+			        <tr>
+				        <td>Display only related records</td>
+				        <td><input type="text" size="100" id="dcrmeg_displayonlyrelatedrecords" /></td>
+			        </tr>
+			        <tr>
+				        <td>Select fields</td>
+				        <td><input type="text" size="100" id="dcrmeg_selectfields" /></td>
+			        </tr>
+			        <tr>
+				        <td>Display SUM for numeric values</td>
+				        <td><input type="text" size="100" id="dcrmeg_displaysumfornumericvalues" /></td>
+			        </tr>
+			        <tr>
+				        <td>Max records per page</td>
+				        <td><input type="text" size="100" id="dcrmeg_maxrecordsperpage" /></td>
+			        </tr>
+			        <tr>
+				        <td>Related entity lookup</td>
+				        <td><input type="text" size="100" id="dcrmeg_relatedentitylookup" /></td>
+			        </tr>
+			        <tr>
+				        <td>Selected grid headers</td>
+				        <td><input type="text" size="100" id="dcrmeg_selectedgridheaders" /></td>
+			        </tr>
+			        <tr>
+				        <td>Read-only</td>
+				        <td><input type="text" size="100" id="dcrmeg_readonly" /></td>
+			        </tr>
+			        <tr>
+				        <td>Width</td>
+				        <td><input type="text" size="100" id="dcrmeg_width" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Select fields drop down</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Fields on the form</td>
+				        <td><input type="text" size="100" id="dcrmeg_fieldsontheform" /></td>
+			        </tr>
+			        <tr>
+				        <td>Custom fields</td>
+				        <td><input type="text" size="100" id="dcrmeg_customfields" /></td>
+			        </tr>
+			        <tr>
+				        <td>System fields</td>
+				        <td><input type="text" size="100" id="dcrmeg_systemfields" /></td>
+			        </tr>
+			        <tr>
+				        <td>All fields</td>
+				        <td><input type="text" size="100" id="dcrmeg_allfields" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Field condition</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Field conditons label</td>
+				        <td><input type="text" size="100" id="dcrmeg_fieldvalue" /></td>
+			        </tr>
+			        <tr>
+				        <td>Field conditon button</td>
+				        <td><input type="text" size="100" id="dcrmeg_fieldcondition" /></td>
+			        </tr>
+			        <tr>
+				        <td>Delete all field conditions button</td>
+				        <td><input type="text" size="100" id="dcrmeg_deleteallfieldconditions" /></td>
+			        </tr>
+			        <tr>
+				        <td>Set condition button</td>
+				        <td><input type="text" size="100" id="dcrmeg_setcondition" /></td>
+			        </tr>
+			        <tr>
+				        <td>Cancel button</td>
+				        <td><input type="text" size="100" id="dcrmeg_configcancel" /></td>
+			        </tr>
+			        <tr>
+				        <td>Remove condition button</td>
+				        <td><input type="text" size="100" id="dcrmeg_removecondition" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Width tooltip</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>0, width is auto calculated</td>
+				        <td><input type="text" size="100" id="dcrmeg_widthisautocalculated" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Error</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Target entity is requiered</td>
+				        <td><input type="text" size="100" id="dcrmeg_targetentityisrequiered" /></td>
+			        </tr>
+			        <tr>
+				        <td>Entity to display the grid on is requiered</td>
+				        <td><input type="text" size="100" id="dcrmeg_entitytodisplaythegridonisrequiered" /></td>
+			        </tr>
+			        <tr>
+				        <td>At leaset one field must be selected</td>
+				        <td><input type="text" size="100" id="dcrmeg_atleasetonefieldmustbeselected" /></td>
+			        </tr>
+			        <tr>
+				        <td>Please enter a value for the condition</td>
+				        <td><input type="text" size="100" id="dcrmeg_pleaseenteravalueforthecondition" /></td>
+			        </tr>
+		        </table>
+                </div>
+            </li>
+
+            <li>
+                <input type="radio" name="tabs" id="tab2" />
+                <label for="tab2">Grid</label>
+                <div id="tab-content2" class="tab-content">
+		        <table class="translationfieldstable">
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Labels (Checkbox, ...)</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td class="Width35">Total records</td>
+				        <td><input type="text" size="100" id="dcrmeg_totalrecords" /></td>
+			        </tr>
+			        <tr>
+				        <td>Activate editor on double click</td>
+				        <td><input type="text" size="100" id="dcrmeg_activateeditorondoubleclick" /></td>
+			        </tr>
+			        <tr>
+				        <td>Enter text to search</td>
+				        <td><input type="text" size="100" id="dcrmeg_entertexttosearch" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Tooltips (buttons, ...)</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>New record</td>
+				        <td><input type="text" size="100" id="dcrmeg_newrecord" /></td>
+			        </tr>
+			        <tr>
+				        <td>Delete selected records</td>
+				        <td><input type="text" size="100" id="dcrmeg_deleteselectedrecords" /></td>
+			        </tr>
+			        <tr>
+				        <td>Save changes</td>
+				        <td><input type="text" size="100" id="dcrmeg_savechanges" /></td>
+			        </tr>
+			        <tr>
+				        <td>Undo changes</td>
+				        <td><input type="text" size="100" id="dcrmeg_undochanges" /></td>
+			        </tr>
+			        <tr>
+				        <td>Undo all changes</td>
+				        <td><input type="text" size="100" id="dcrmeg_undoallchanges" /></td>
+			        </tr>
+			        <tr>
+				        <td>Select record</td>
+				        <td><input type="text" size="100" id="dcrmeg_selectrecord" /></td>
+			        </tr>
+			        <tr>
+				        <td>Select all records</td>
+				        <td><input type="text" size="100" id="dcrmeg_selectallrecords" /></td>
+			        </tr>
+			        <tr>
+				        <td>Open Record</td>
+				        <td><input type="text" size="100" id="dcrmeg_openrecord" /></td>
+			        </tr>
+			        <tr>
+				        <td>Locked field</td>
+				        <td><input type="text" size="100" id="dcrmeg_lockedfield" /></td>
+			        </tr>
+
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Dialog</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Ok</td>
+				        <td><input type="text" size="100" id="dcrmeg_ok" /></td>
+			        </tr>
+			        <tr>
+				        <td>Cancel</td>
+				        <td><input type="text" size="100" id="dcrmeg_cancel" /></td>
+			        </tr>
+
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Pager</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Page size</td>
+				        <td><input type="text" size="100" id="dcrmeg_pagesize" /></td>
+			        </tr>
+			        <tr>
+				        <td>Go to first</td>
+				        <td><input type="text" size="100" id="dcrmeg_gotofirst" /></td>
+			        </tr>
+			        <tr>
+				        <td>Go to next</td>
+				        <td><input type="text" size="100" id="dcrmeg_gotonext" /></td>
+			        </tr>
+			        <tr>
+				        <td>Go to previous</td>
+				        <td><input type="text" size="100" id="dcrmeg_gotoprevious" /></td>
+			        </tr>
+			        <tr>
+				        <td>Go to last</td>
+				        <td><input type="text" size="100" id="dcrmeg_gotolast" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Context Menu</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Copy value to clipboard</td>
+				        <td><input type="text" size="100" id="dcrmeg_copyvaluetoclipboard" /></td>
+			        </tr>
+			        <tr>
+				        <td>Open record in new window</td>
+				        <td><input type="text" size="100" id="dcrmeg_openrecordinnewwindow" /></td>
+			        </tr>
+			        <tr>
+				        <td>Open lookup record in new window</td>
+				        <td><input type="text" size="100" id="dcrmeg_openlookuprecordinnewwindow" /></td>
+			        </tr>
+			        <tr>
+				        <td>Clear vlaue</td>
+				        <td><input type="text" size="100" id="dcrmeg_clearvlaue" /></td>
+			        </tr>
+			        <tr>
+				        <td>Lookup more records</td>
+				        <td><input type="text" size="100" id="dcrmeg_lookupmorerecords" /></td>
+			        </tr>
+			        <tr>
+				        <td>Open URL in new window</td>
+				        <td><input type="text" size="100" id="dcrmeg_openurlinnewwindow" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Numeric summary</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>SUM</td>
+				        <td><input type="text" size="100" id="dcrmeg_sum" /></td>
+			        </tr>
+
+                    <tr>
+                        <td colspan="2" class="sectiondivider">
+                            <span>Error</span>
+                        </td>
+                    </tr>
+			        <tr>
+				        <td>Required field</td>
+				        <td><input type="text" size="100" id="dcrmeg_requiredfield" /></td>
+			        </tr>
+			        <tr>
+				        <td>Incorrect format</td>
+				        <td><input type="text" size="100" id="dcrmeg_incorrectformat" /></td>
+			        </tr>
+			        <tr>
+				        <td>Max value</td>
+				        <td><input type="text" size="100" id="dcrmeg_maxvalue" /></td>
+			        </tr>
+			        <tr>
+				        <td>Min value</td>
+				        <td><input type="text" size="100" id="dcrmeg_minvalue" /></td>
+			        </tr>
+			        <tr>
+				        <td>Not a valid entry</td>
+				        <td><input type="text" size="100" id="dcrmeg_notavalidentry" /></td>
+			        </tr>
+
+		        </table>
+                </div>
+            </li>
+        </ul>
+	</div>
+
+</div>
+
+<script type="text/javascript">
+
+    var $tmpLi = undefined;
+    var $LastSelected = undefined;
+    var workingOnNew = true;
+    var inputValueChanged = false;
+
+    function LogIt(s) {
+        if (typeof console != "undefined" && typeof console.debug != "undefined") {
+            console.log(s);
+        }
+    }
+
+    function LogError(s) {
+        if (typeof console != "undefined" && typeof console.debug != "undefined") {
+            console.error(s);
+        }
+    }
+
+    function ResetLocalDropDown() {
+        // default 1033 US EN
+        $(".selectRegionalFormat").val(1033);
+    }
+
+    function ResetTranslationInputs() {
+        $(".translationfieldstable").find("input").val("");
+    }
+
+    $(function () {
+
+        $(".translations").on("mouseout", function (e) {
+            $(".translations").find("li").removeClass("j-focused");
+        });
+
+        $(".translations").on("click", function (e) {
+            if ((e.target) && (e.target.tagName == "LI")) {
+                // ask if the user wants to continue
+                if ((workingOnNew) && (inputValueChanged)) {
+                    if (confirm('Discard current changes?') == false) {
+                        return;
+                    }
+                }
+
+                workingOnNew = false;
+                if ($LastSelected) {
+                    $LastSelected.removeClass("j-selected");
+                }
+                $LastSelected = $(e.target);
+                $LastSelected.addClass("j-selected");
+                $("#deletetranslation").removeClass("disabled");
+
+                LoadTranslation($LastSelected.attr("id"));
+            }
+        });
+
+        $(".maintoolbar").find("a").on("click", function (e) {
+            var $tbBtn = $(this);
+            if ($tbBtn.hasClass("disabled")) {
+                return false;
+            }
+
+            var id = $tbBtn.attr("id");
+            // New
+            if (id == "newtranslation") {
+                if ((workingOnNew && inputValueChanged) || ($LastSelected && inputValueChanged)) {
+                    if (confirm('Discard current changes?') == false) {
+                        return;
+                    }
+                }
+                // Reset
+                ResetLocalDropDown();
+                ResetTranslationInputs();
+                workingOnNew = true;
+
+                // Save
+            } else if (id == "savetranslation") {
+                var selected = $(".selectRegionalFormat").find(":selected");
+                //LogIt("Text " + selected.text() + " value " + selected.val());
+
+                if (workingOnNew) {
+                    if ($LastSelected) {
+                        $LastSelected.removeClass("j-selected");
+                    }
+                    AddTranslation(selected.text(), selected.val());
+
+                } else {
+                    // update existing
+                    if ($LastSelected) {
+                        var id = $LastSelected.attr("id");
+                        UpdateTranslation(id, selected.text(), selected.val());
+                    }
+                }
+
+                // reset
+                workingOnNew = false;
+                inputValueChanged = false;
+                $tbBtn.addClass('disabled');
+
+            } else if (id == "deletetranslation") {
+
+                if ($LastSelected) {
+                    var id = $LastSelected.attr("id");
+                    //LogIt("Text " + $LastSelected.text() + " id " + id);
+
+                    // Ask user to confirm
+                    if (confirm('Proceed to delete "' + $LastSelected.text() + '" translation record?') == true) {
+                        try {
+                            XrmServiceToolkit.Soap.Delete("dcrmeg_dcrmegtranslation", id);
+                        } catch (e) {
+                            alert("Exception occured during deletion\n" + e.message);
+                            return;
+                        }
+                        setTimeout(function () {
+                            $LastSelected.remove();
+                            $LastSelected = undefined;
+                            ResetLocalDropDown();
+                            ResetTranslationInputs();
+                            $("#deletetranslation").addClass("disabled");
+                        }, 50);
+                    }
+                }
+            }
+            return false;
+        });
+
+        $(".selectRegionalFormat").on("change", function (e) {
+            //var selected = $(this).find(":selected");
+            //if(selected) {
+            //	LogIt("Local Changed Text " + selected.text() + " value " + selected.val());
+            //}
+            inputValueChanged = true;
+            $("#savetranslation").removeClass('disabled');
+        });
+
+        $(".translationfieldstable").find("input").on("change", function (e) {
+            inputValueChanged = true;
+            $("#savetranslation").removeClass('disabled');
+        });
+
+        LoadAllTranslations();
+
+    });
+
+    function LoadAllTranslations() {
+        // Search by LCID "1033"
+        // Get all translations
+        var FetchedTranslations = XrmServiceToolkit.Soap.Fetch(GetTranslationsFor());
+        //LogIt("FetchedTranslations " + FetchedTranslations.length);
+        if (FetchedTranslations.length > 0) {
+            for (var index = 0; index < FetchedTranslations.length; index++) {
+                var title = FetchedTranslations[index].attributes["dcrmeg_name"].value;
+                var lcid = FetchedTranslations[index].attributes["dcrmeg_lcid"].value;
+
+                var ul = $(".translations");
+                $('<li></li>')
+                    .attr('id', FetchedTranslations[index].attributes["dcrmeg_dcrmegtranslationid"].value)
+                    .addClass('translations_option')
+                    .text(title + " (" + lcid + ")")
+                    .appendTo(ul);
+            }
+        }
+
+        $(".translations_option").off("mousemove").on("mousemove", function (e) {
+            if ((e.target) && (e.target.tagName == "LI")) {
+                if ($tmpLi) {
+                    $tmpLi.removeClass("j-focused");
+                }
+                $tmpLi = $(e.target);
+                $tmpLi.addClass("j-focused");
+            }
+        });
+    }
+
+    function UpdateTranslation(guid, label, value) {
+        var translation = new XrmServiceToolkit.Soap.BusinessEntity("dcrmeg_dcrmegtranslation", guid);
+
+        translation.attributes["dcrmeg_name"] = label;
+        translation.attributes["dcrmeg_lcid"] = value;
+
+        var inputs = $(".translationfieldstable").find("input");
+        if ((inputs) && (inputs.length)) {
+            for (var i = 0; i < inputs.length; i++) {
+                var id = $(inputs[i]).attr("id");
+                if (id) {
+                    //LogIt("Update input " + i + " GUID " + id);
+                    translation.attributes[id] = $("#" + id).val();
+                }
+            }
+        }
+
+        $LastSelected.text(label + " (" + value + ")");
+        XrmServiceToolkit.Soap.Update(translation);
+    }
+
+    function AddTranslation(label, value) {
+        var translation = new XrmServiceToolkit.Soap.BusinessEntity("dcrmeg_dcrmegtranslation");
+
+        translation.attributes["dcrmeg_name"] = label;
+        translation.attributes["dcrmeg_lcid"] = value;
+
+        var inputs = $(".translationfieldstable").find("input");
+        if ((inputs) && (inputs.length)) {
+            for (var i = 0; i < inputs.length; i++) {
+                var id = $(inputs[i]).attr("id");
+                if (id) {
+                    //LogIt("Add input " + i + " GUID " + id);
+                    translation.attributes[id] = $("#" + id).val();
+                }
+            }
+        }
+
+        var newRecGuid = XrmServiceToolkit.Soap.Create(translation);
+
+        var ul = $(".translations");
+
+        $LastSelected = $('<li></li>')
+            .attr('id', newRecGuid)
+            .addClass('translations_option j-selected')
+            .text(label + " (" + value + ")")
+            .appendTo(ul);
+
+        $(".translations_option").off("mousemove").on("mousemove", function (e) {
+            if ((e.target) && (e.target.tagName == "LI")) {
+                if ($tmpLi) {
+                    $tmpLi.removeClass("j-focused");
+                }
+                $tmpLi = $(e.target);
+                $tmpLi.addClass("j-focused");
+            }
+        });
+
+        return newRecGuid;
+    }
+
+    function GetTranslationsFor(lcid) {
+        var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
+          '<entity name="dcrmeg_dcrmegtranslation">' +
+            '<attribute name="dcrmeg_dcrmegtranslationid" />' +
+            '<attribute name="dcrmeg_name" />' +
+            '<attribute name="dcrmeg_lcid" />';
+
+        var inputs = $(".translationfieldstable").find("input");
+        if ((inputs) && (inputs.length)) {
+            for (var i = 0; i < inputs.length; i++) {
+                var id = $(inputs[i]).attr("id");
+                if (id) {
+                    fetch += '<attribute name="' + id + '" />';
+                }
+            }
+        } else {
+            LogError("Unable to get a list of INPUTs");
+            return;
+        }
+
+            fetch += '<order attribute="dcrmeg_name" descending="false" />';
+        if (lcid) {
+            fetch += '<filter type="and">' +
+              '<condition attribute="dcrmeg_lcid" operator="eq" value="' + lcid + '" />' +
+            '</filter>';
+        }
+        fetch += '</entity>' +
+      '</fetch>';
+        return fetch;
+    }
+
+    function LoadTranslation(guid) {
+
+        var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
+          '<entity name="dcrmeg_dcrmegtranslation">' +
+            '<attribute name="dcrmeg_dcrmegtranslationid" />' +
+            '<attribute name="dcrmeg_name" />' +
+            '<attribute name="dcrmeg_lcid" />';
+
+        var inputs = $(".translationfieldstable").find("input");
+        if ((inputs) && (inputs.length)) {
+            for (var i = 0; i < inputs.length; i++) {
+                var id = $(inputs[i]).attr("id");
+                if (id) {
+                    fetch += '<attribute name="' + id + '" />';
+                }
+            }
+        } else {
+            LogError("Unable to get a list of INPUTs");
+            return;
+        }
+
+            fetch += '<order attribute="dcrmeg_name" descending="false" />' +
+            '<filter type="and">' +
+              '<condition attribute="dcrmeg_dcrmegtranslationid" operator="eq" value="' + guid + '" />' +
+            '</filter>' +
+
+            '</entity>' +
+        '</fetch>';
+
+        var translation = XrmServiceToolkit.Soap.Fetch(fetch);
+        if (translation.length > 0) {
+            for (var i = 0; i < inputs.length; i++) {
+                var id = $(inputs[i]).attr("id");
+                if (id) {
+                    //LogIt("Load input " + i + " GUID " + id);
+                    $("#" + id).val((translation[0].attributes[id] ? translation[0].attributes[id].value : ''));
+                }
+            }
+            //var title = translation[0].attributes["dcrmeg_name"].value + " (" + translation[0].attributes["dcrmeg_lcid"].value + ")";
+            $(".selectRegionalFormat").val(translation[0].attributes["dcrmeg_lcid"].value);
+
+        }
+    }
+
+</script>
+
+</body>
+</html>

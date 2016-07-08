@@ -1,0 +1,413 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <script src="dcrmeg_jquery2"></script>
+    <script src="dcrmeg_webapisdk"></script>
+    <title></title>
+    <style>
+        div {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div style="width:90%;height:98%;">
+        <div><button id="btngo">Execute</button></div>
+        <div><select style="width:300px;" id="entitylist"></select>&nbsp;&nbsp;&nbsp;&nbsp;<button id="cleardisplay">Clear</button></div>
+        <div><textarea id="displayresult" rows="20" style="width:100%;border:1px solid lightgray;overflow:auto;"></textarea></div>
+    </div>
+    <script type="text/javascript">
+
+        $(function () {
+            // http://localhost/DemoApi
+            
+            var _UserId = null;
+
+            String.prototype.capitalizeFirstLetter = function () {
+                return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
+            };
+
+            function SetDisplay(txt) {
+                var display = $('#displayresult');
+
+                var cur = display.val();
+
+                if (cur.length > 0) {
+                    cur += '\r\n\r\n';
+                }
+
+                display.val(cur + txt);
+            }
+
+            function VSuccessCallback(result) {
+                SetDisplay("Version number[" + result.Version + "]");
+            }
+
+            function FailCallback(error) {
+                SetDisplay("WebApi call failed\r\n" + error.message);
+            }
+
+            function WSuccessCallback(result) {
+                _UserId = result.UserId;
+
+                SetDisplay("User ID[" + result.UserId +
+                    "]\r\nBusinessUnitId[" + result.BusinessUnitId +
+                    "]\r\nOrganizationId[" + result.OrganizationId + "]");
+            }
+
+            function EntityListCallback(result) {
+                $('#entitylist').empty();
+
+                result.sort(function (a, b) {
+                    if (a.name < b.name)
+                        return -1
+                    if (a.name > b.name)
+                        return 1
+                    return 0
+                });
+
+                var select = $('#entitylist');
+
+                result.forEach(function (entity) {
+                    //console.log("Entity name[" + entity.name + "] Url [" + entity.url + "]");
+                    var struc = {
+                        value: entity.url,
+                        text: entity.name.capitalizeFirstLetter()
+                    };
+
+                    select.append($('<option>', struc));
+                });
+
+                SetDisplay("Retreived list of entities");
+            }
+
+            function UserSettingsCallback(settigs) {
+
+                if (settigs == undefined)
+                    return;
+
+                if ((settigs.length) && (settigs.length == 0))
+                    return;
+
+                var result = settigs[0];
+
+                SetDisplay("dateformatstring[" + result.dateformatstring + "]\r\ndateseparator[" +
+                result.dateseparator + "]\r\ntimeformatstring[" +
+                result.timeformatstring + "]\r\ntimeseparator[" +
+                result.timeseparator + "]\r\nuilanguageid[" +
+                result.uilanguageid + "]\r\ndefaultcountrycode[" +
+                result.defaultcountrycode + "]\r\ncurrencysymbol[" +
+                result.currencysymbol + "]\r\nnumberseparator[" +
+                result.numberseparator + "]\r\ndecimalsymbol[" +
+                result.decimalsymbol + "]\r\ncurrencydecimalprecision[" +
+                result.currencydecimalprecision + "]\r\nnumbergroupformat[" +
+                result.numbergroupformat + "]\r\ncurrencyformatcode[" +
+                result.currencyformatcode + "]\r\nnegativeformatcode[" +
+                result.negativeformatcode + "]\r\nnegativecurrencyformatcode[" +
+                result.negativecurrencyformatcode + "]");
+            }
+
+            $('#cleardisplay').on('click', function (e) {
+                $('#displayresult').val();
+                return false;
+            });
+
+            $('#btngo').on('click', function (e) {
+                GetAllUserSettings();
+                return false;
+            });
+
+            function GetAllUserSettings() {
+                Sdk.WebAPI.getUserSetttings(_UserId, UserSettingsCallback, FailCallback);
+
+                /*
+dateformatstring[M/d/yyyy]
+dateseparator[/]
+timeformatstring[h:mm tt]
+timeseparator[:]
+uilanguageid[1033]
+defaultcountrycode[null]
+currencysymbol[$]
+numberseparator[,]
+decimalsymbol[.]
+currencydecimalprecision[2]
+numbergroupformat[3]
+currencyformatcode[0]
+negativeformatcode[1]
+negativecurrencyformatcode[0]
+                */
+
+                // account -> accounts
+                // new_wolf -> new_wolfs
+
+                // if the noun ends with s the plural is added es
+                // EXCEPTION:
+                // usersettingscollection
+                // usersettings -> usersettingses
+
+                // if the noun ends with y the plural replaces y with ies
+                // transactioncurrency -> transactioncurrencies
+                // new_city -> new_cities
+
+                /*
+Change the name of an entity set
+By default, the entity set name matches the EntityMetadata EntityType LogicalCollectionName (EntityMetadataLogicalCollectionName) property value. If you have a custom entity that you want to address using a different entity set name, you can update the EntityMetadata EntityType EntitySetName (EntityMetadata.EntitySetName) property value to use a different name.
+Source: https://msdn.microsoft.com/de-de/library/mt607990.aspx#bkmk_entityTypes
+                */
+            }
+
+            //Sdk.WebAPI.versionNumber(VSuccessCallback, FailCallback);
+            Sdk.WebAPI.whoAmIFunction(WSuccessCallback, FailCallback);
+            Sdk.WebAPI.getEntityList(EntityListCallback, FailCallback);
+        });
+
+        /*
+        // Result of calling getEntityList
+        // except for a few, all names conform to expectations.
+Entity name[EntityDefinitions] Url [EntityDefinitions]
+Entity name[GlobalOptionSetDefinitions] Url [GlobalOptionSetDefinitions]
+Entity name[ManagedPropertyDefinitions] Url [ManagedPropertyDefinitions]
+Entity name[RelationshipDefinitions] Url [RelationshipDefinitions]
+Entity name[accountleadscollection] Url [accountleadscollection]
+Entity name[accounts] Url [accounts]
+Entity name[activitymimeattachments] Url [activitymimeattachments]
+Entity name[activityparties] Url [activityparties]
+Entity name[activitypointers] Url [activitypointers]
+Entity name[annotations] Url [annotations]
+Entity name[annualfiscalcalendars] Url [annualfiscalcalendars]
+Entity name[appointments] Url [appointments]
+Entity name[asyncoperations] Url [asyncoperations]
+Entity name[attachments] Url [attachments]
+Entity name[bookableresourcebookingheaders] Url [bookableresourcebookingheaders]
+Entity name[bookableresourcebookings] Url [bookableresourcebookings]
+Entity name[bookableresourcecategories] Url [bookableresourcecategories]
+Entity name[bookableresourcecategoryassns] Url [bookableresourcecategoryassns]
+Entity name[bookableresourcecharacteristics] Url [bookableresourcecharacteristics]
+Entity name[bookableresourcegroups] Url [bookableresourcegroups]
+Entity name[bookableresources] Url [bookableresources]
+Entity name[bookingstatuses] Url [bookingstatuses]
+Entity name[bulkdeletefailures] Url [bulkdeletefailures]
+Entity name[bulkdeleteoperations] Url [bulkdeleteoperations]
+Entity name[bulkoperationlogs] Url [bulkoperationlogs]
+Entity name[bulkoperations] Url [bulkoperations]
+Entity name[businessunitnewsarticles] Url [businessunitnewsarticles]
+Entity name[businessunits] Url [businessunits]
+Entity name[calendarrules] Url [calendarrules]
+Entity name[calendars] Url [calendars]
+Entity name[campaignactivities] Url [campaignactivities]
+Entity name[campaignactivityitems] Url [campaignactivityitems]
+Entity name[campaignitems] Url [campaignitems]
+Entity name[campaignresponses] Url [campaignresponses]
+Entity name[campaigns] Url [campaigns]
+Entity name[categories] Url [categories]
+Entity name[channelaccessprofileentityaccesslevels] Url [channelaccessprofileentityaccesslevels]
+Entity name[characteristics] Url [characteristics]
+Entity name[competitoraddresses] Url [competitoraddresses]
+Entity name[competitorproducts] Url [competitorproducts]
+Entity name[competitors] Url [competitors]
+Entity name[competitorsalesliteratures] Url [competitorsalesliteratures]
+Entity name[complexcontrols] Url [complexcontrols]
+Entity name[connectionroleassociations] Url [connectionroleassociations]
+Entity name[connectionroles] Url [connectionroles]
+Entity name[connections] Url [connections]
+Entity name[constraintbasedgroups] Url [constraintbasedgroups]
+Entity name[contactinvoicescollection] Url [contactinvoicescollection]
+Entity name[contactleadscollection] Url [contactleadscollection]
+Entity name[contactorderscollection] Url [contactorderscollection]
+Entity name[contactquotescollection] Url [contactquotescollection]
+Entity name[contacts] Url [contacts]
+Entity name[contractdetails] Url [contractdetails]
+Entity name[contracts] Url [contracts]
+Entity name[contracttemplates] Url [contracttemplates]
+Entity name[customcontroldefaultconfigs] Url [customcontroldefaultconfigs]
+Entity name[customcontrolresources] Url [customcontrolresources]
+Entity name[customcontrols] Url [customcontrols]
+Entity name[customeraddresses] Url [customeraddresses]
+Entity name[dataperformances] Url [dataperformances]
+Entity name[dcrmeg_dcrmegconfigurations] Url [dcrmeg_dcrmegconfigurations]
+Entity name[dcrmeg_dcrmegtranslations] Url [dcrmeg_dcrmegtranslations]
+Entity name[dependencies] Url [dependencies]
+Entity name[discounts] Url [discounts]
+Entity name[discounttypes] Url [discounttypes]
+Entity name[documenttemplates] Url [documenttemplates]
+Entity name[duplicaterecords] Url [duplicaterecords]
+Entity name[duplicateruleconditions] Url [duplicateruleconditions]
+Entity name[duplicaterules] Url [duplicaterules]
+Entity name[emails] Url [emails]
+Entity name[emailserverprofiles] Url [emailserverprofiles]
+Entity name[entitlementchannels] Url [entitlementchannels]
+Entity name[entitlementcontactscollection] Url [entitlementcontactscollection]
+Entity name[entitlementproductscollection] Url [entitlementproductscollection]
+Entity name[entitlements] Url [entitlements]
+Entity name[entitlementtemplatechannels] Url [entitlementtemplatechannels]
+Entity name[entitlementtemplateproductscollection] Url [entitlementtemplateproductscollection]
+Entity name[entitlementtemplates] Url [entitlementtemplates]
+Entity name[equipments] Url [equipments]
+Entity name[exchangesyncidmappings] Url [exchangesyncidmappings]
+Entity name[faxes] Url [faxes]
+Entity name[feedback] Url [feedback]
+Entity name[fieldpermissions] Url [fieldpermissions]
+Entity name[fieldsecurityprofiles] Url [fieldsecurityprofiles]
+Entity name[fixedmonthlyfiscalcalendars] Url [fixedmonthlyfiscalcalendars]
+Entity name[goalrollupqueries] Url [goalrollupqueries]
+Entity name[goals] Url [goals]
+Entity name[importdataset] Url [importdataset]
+Entity name[importentitymappings] Url [importentitymappings]
+Entity name[importfiles] Url [importfiles]
+Entity name[importjobs] Url [importjobs]
+Entity name[importlogs] Url [importlogs]
+Entity name[importmaps] Url [importmaps]
+Entity name[imports] Url [imports]
+Entity name[incidentknowledgebaserecords] Url [incidentknowledgebaserecords]
+Entity name[incidentresolutions] Url [incidentresolutions]
+Entity name[incidents] Url [incidents]
+Entity name[invaliddependencies] Url [invaliddependencies]
+Entity name[invoicedetails] Url [invoicedetails]
+Entity name[invoices] Url [invoices]
+Entity name[kbarticlecomments] Url [kbarticlecomments]
+Entity name[kbarticles] Url [kbarticles]
+Entity name[kbarticletemplates] Url [kbarticletemplates]
+Entity name[knowledgearticlecategories] Url [knowledgearticlecategories]
+Entity name[knowledgearticleincidents] Url [knowledgearticleincidents]
+Entity name[knowledgearticles] Url [knowledgearticles]
+Entity name[knowledgearticleviews] Url [knowledgearticleviews]
+Entity name[knowledgebaserecords] Url [knowledgebaserecords]
+Entity name[languagelocale] Url [languagelocale]
+Entity name[leadaddresses] Url [leadaddresses]
+Entity name[leadcompetitorscollection] Url [leadcompetitorscollection]
+Entity name[leadproducts] Url [leadproducts]
+Entity name[leads] Url [leads]
+Entity name[letters] Url [letters]
+Entity name[listmembers] Url [listmembers]
+Entity name[lists] Url [lists]
+Entity name[mailboxes] Url [mailboxes]
+Entity name[mailmergetemplates] Url [mailmergetemplates]
+Entity name[metrics] Url [metrics]
+Entity name[mobileofflineprofileitemassociations] Url [mobileofflineprofileitemassociations]
+Entity name[mobileofflineprofileitems] Url [mobileofflineprofileitems]
+Entity name[mobileofflineprofiles] Url [mobileofflineprofiles]
+Entity name[monthlyfiscalcalendars] Url [monthlyfiscalcalendars]
+Entity name[new_atests] Url [new_atests]
+Entity name[officegraphdocuments] Url [officegraphdocuments]
+Entity name[opportunities] Url [opportunities]
+Entity name[opportunitycloses] Url [opportunitycloses]
+Entity name[opportunitycompetitorscollection] Url [opportunitycompetitorscollection]
+Entity name[opportunityproducts] Url [opportunityproducts]
+Entity name[ordercloses] Url [ordercloses]
+Entity name[organizations] Url [organizations]
+Entity name[personaldocumenttemplates] Url [personaldocumenttemplates]
+Entity name[phonecalls] Url [phonecalls]
+Entity name[pluginassemblies] Url [pluginassemblies]
+Entity name[plugintracelogs] Url [plugintracelogs]
+Entity name[plugintypes] Url [plugintypes]
+Entity name[positions] Url [positions]
+Entity name[postcomments] Url [postcomments]
+Entity name[postfollows] Url [postfollows]
+Entity name[postlikes] Url [postlikes]
+Entity name[postregardings] Url [postregardings]
+Entity name[posts] Url [posts]
+Entity name[pricelevels] Url [pricelevels]
+Entity name[principalentitymaps] Url [principalentitymaps]
+Entity name[principalobjectaccessset] Url [principalobjectaccessset]
+Entity name[privileges] Url [privileges]
+Entity name[productassociations] Url [productassociations]
+Entity name[productpricelevels] Url [productpricelevels]
+Entity name[products] Url [products]
+Entity name[productsalesliteratures] Url [productsalesliteratures]
+Entity name[productsubstitutes] Url [productsubstitutes]
+Entity name[publisheraddresses] Url [publisheraddresses]
+Entity name[publishers] Url [publishers]
+Entity name[quarterlyfiscalcalendars] Url [quarterlyfiscalcalendars]
+Entity name[queueitems] Url [queueitems]
+Entity name[queuememberships] Url [queuememberships]
+Entity name[queues] Url [queues]
+Entity name[quotecloses] Url [quotecloses]
+Entity name[quotedetails] Url [quotedetails]
+Entity name[quotes] Url [quotes]
+Entity name[ratingmodels] Url [ratingmodels]
+Entity name[ratingvalues] Url [ratingvalues]
+Entity name[recommendeddocuments] Url [recommendeddocuments]
+Entity name[recurringappointmentmasters] Url [recurringappointmentmasters]
+Entity name[reportcategories] Url [reportcategories]
+Entity name[reports] Url [reports]
+Entity name[resourcegroups] Url [resourcegroups]
+Entity name[resources] Url [resources]
+Entity name[resourcespecs] Url [resourcespecs]
+Entity name[roleprivilegescollection] Url [roleprivilegescollection]
+Entity name[roles] Url [roles]
+Entity name[roletemplateprivilegescollection] Url [roletemplateprivilegescollection]
+Entity name[roletemplates] Url [roletemplates]
+Entity name[salesliteratureitems] Url [salesliteratureitems]
+Entity name[salesliteratures] Url [salesliteratures]
+Entity name[salesorderdetails] Url [salesorderdetails]
+Entity name[salesorders] Url [salesorders]
+Entity name[savedqueries] Url [savedqueries]
+Entity name[savedqueryvisualizations] Url [savedqueryvisualizations]
+Entity name[sdkmessagefilters] Url [sdkmessagefilters]
+Entity name[sdkmessageprocessingstepimages] Url [sdkmessageprocessingstepimages]
+Entity name[sdkmessageprocessingsteps] Url [sdkmessageprocessingsteps]
+Entity name[sdkmessageprocessingstepsecureconfigs] Url [sdkmessageprocessingstepsecureconfigs]
+Entity name[sdkmessages] Url [sdkmessages]
+Entity name[semiannualfiscalcalendars] Url [semiannualfiscalcalendars]
+Entity name[serviceappointments] Url [serviceappointments]
+Entity name[servicecontractcontactscollection] Url [servicecontractcontactscollection]
+Entity name[serviceendpoints] Url [serviceendpoints]
+Entity name[services] Url [services]
+Entity name[sharepointdocumentlocations] Url [sharepointdocumentlocations]
+Entity name[sharepointsites] Url [sharepointsites]
+Entity name[similarityrules] Url [similarityrules]
+Entity name[sites] Url [sites]
+Entity name[slaitems] Url [slaitems]
+Entity name[slakpiinstances] Url [slakpiinstances]
+Entity name[slas] Url [slas]
+Entity name[socialactivities] Url [socialactivities]
+Entity name[socialprofiles] Url [socialprofiles]
+Entity name[solutioncomponents] Url [solutioncomponents]
+Entity name[solutions] Url [solutions]
+Entity name[subjects] Url [subjects]
+Entity name[subscriptionmanuallytrackedobjects] Url [subscriptionmanuallytrackedobjects]
+Entity name[subscriptionstatisticsofflineset] Url [subscriptionstatisticsofflineset]
+Entity name[subscriptionstatisticsoutlookset] Url [subscriptionstatisticsoutlookset]
+Entity name[subscriptionsyncentriesoffline] Url [subscriptionsyncentriesoffline]
+Entity name[subscriptionsyncentriesoutlook] Url [subscriptionsyncentriesoutlook]
+Entity name[syncerrors] Url [syncerrors]
+Entity name[systemforms] Url [systemforms]
+Entity name[systemuserlicensescollection] Url [systemuserlicensescollection]
+Entity name[systemuserprofilescollection] Url [systemuserprofilescollection]
+Entity name[systemuserrolescollection] Url [systemuserrolescollection]
+Entity name[systemusers] Url [systemusers]
+Entity name[systemusersyncmappingprofilescollection] Url [systemusersyncmappingprofilescollection]
+Entity name[tasks] Url [tasks]
+Entity name[teammemberships] Url [teammemberships]
+Entity name[teamprofilescollection] Url [teamprofilescollection]
+Entity name[teamrolescollection] Url [teamrolescollection]
+Entity name[teams] Url [teams]
+Entity name[teamsyncattributemappingprofilescollection] Url [teamsyncattributemappingprofilescollection]
+Entity name[teamtemplates] Url [teamtemplates]
+Entity name[templates] Url [templates]
+Entity name[territories] Url [territories]
+Entity name[themes] Url [themes]
+Entity name[timestampdatemappings] Url [timestampdatemappings]
+Entity name[timezonedefinitions] Url [timezonedefinitions]
+Entity name[timezonelocalizednames] Url [timezonelocalizednames]
+Entity name[timezonerules] Url [timezonerules]
+Entity name[tracelogs] Url [tracelogs]
+Entity name[transactioncurrencies] Url [transactioncurrencies]
+Entity name[uoms] Url [uoms]
+Entity name[uomschedules] Url [uomschedules]
+Entity name[userforms] Url [userforms]
+Entity name[userqueries] Url [userqueries]
+Entity name[userqueryvisualizations] Url [userqueryvisualizations]
+Entity name[usersettingscollection] Url [usersettingscollection]
+Entity name[webresourceset] Url [webresourceset]
+Entity name[webwizards] Url [webwizards]
+Entity name[workflowlogs] Url [workflowlogs]
+Entity name[workflows] Url [workflows]
+        */
+
+    </script>
+
+</body>
+</html>

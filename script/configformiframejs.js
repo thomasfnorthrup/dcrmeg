@@ -2381,6 +2381,13 @@ function InitializeSetupRoutines() {
         SetParentFormDirty();
     });
 
+    $('#relatedEntityLookupSelect').on('change', function (e) {
+        var val = $(this).val();
+        _thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName = val;
+        $('#relatedEntityLookup').val(val);
+        SetParentFormDirty();
+    });
+
     $('#displaySum').on('click', function (e) {
         _thisGlobals._CurConfiguration.DisplaySum = $(this).prop('checked');
 
@@ -2955,8 +2962,8 @@ function ResetEntityGrid() {
             var config = FindDCrmEGConfigurationByLiId($(li[i]).attr('id'));
             // Reset relationships to the parent
             var related = RetreiveEntityRelationShips(config.Entity.SchemaName);
-            config.Entity.RelatedToDisplayOnEntity = (related) ? true : false;;
-            config.Entity.RelatedToDisplayOnLookupSchemaName = (related) ? related : undefined;
+            config.Entity.RelatedToDisplayOnEntity = (related.length > 0) ? true : false;;
+            config.Entity.RelatedToDisplayOnLookupSchemaName = (related.length > 0) ? related[0] : undefined;
         }
     }
     ResetAllUI();
@@ -3008,24 +3015,39 @@ function ResetEntityGridDisplayOrder() {
 /*Entity relationship related*/
 function RetreiveEntityRelationShips(logicalName) {
     $('#entitiesAreRelated').prop('checked', false);
+    $('#relatedEntityLookupSelect').empty();
     $('#relatedEntityLookup').val('');
 
     var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Relationships'], logicalName, true);
     if ((result) && (result.length > 0)) {
-        return GetEntityRelationships(result[0].ManyToOneRelationships);
+        var data = GetEntityRelationshipsMain(result[0].ManyToOneRelationships);
+        if (data.length > 0) {
+            $('#relatedEntityLookupSelect').find('option:eq(0)').prop('selected', true);
+        }
+        return data;
     }
     return false;
 }
 
-function RetreiveEntityRelationShipsCallback(result) {
+function GetEntityRelationshipsMain(data, displayon) {
 
-    if (result.length == 0) {
-        LogEx("Exception: unable to retreive entity relationship.");
-        return;
+    displayon = displayon || GetHiddenFieldValue(1);
+    var relationships = [];
+
+    if (displayon) {
+        if ((data) && (data.length)) {
+            for (var index = 0; index < data.length; index++) {
+                if (data[index].ReferencedEntity == displayon) {
+
+                    relationships.push(data[index].ReferencingAttribute);
+                    console.log("getting [" + data[index].ReferencingAttribute + "]");
+                    $('#relatedEntityLookupSelect')
+                        .append('<option value="' + data[index].ReferencingAttribute + '">' + data[index].ReferencingAttribute + '</option>');
+                }
+            }
+        }
     }
-
-    var relationships = result[0].ManyToOneRelationships;
-    GetEntityRelationships(relationships);
+    return relationships;
 }
 
 function GetEntityRelationships(data, displayon) {
@@ -3035,6 +3057,7 @@ function GetEntityRelationships(data, displayon) {
 
     if (displayon) {
         if ((data) && (data.length)) {
+
             for (var index = 0; index < data.length; index++) {
                 if (data[index].ReferencedEntity == displayon) {
                     foundit = data[index].ReferencingAttribute;
@@ -3062,9 +3085,13 @@ var DCrmEGConfigurationManager = (function () {
         var related = undefined;
 
         if (data.related) {
+            RetreiveEntityRelationShips(data.SchemaName);
             related = data.related;
         } else {
-            related = RetreiveEntityRelationShips(data.SchemaName);
+            var tmpRelated = RetreiveEntityRelationShips(data.SchemaName);
+            if (tmpRelated.length > 0) {
+                related = tmpRelated[0];
+            }
         }
 
         self.Entity = {
@@ -3245,10 +3272,13 @@ function DisplaySelectedEntityInfo(li, schema) {
 
     if (_thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnEntity) {
         $('#entitiesAreRelated').prop('checked', true);
+        $('#relatedEntityLookupSelect').val(_thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName);
         $('#relatedEntityLookup').val(_thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName);
+        console.log("Setting [" + _thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName + "]");
         DisplaySectionGroup(2, true);
     } else {
         $('#entitiesAreRelated').prop('checked', false);
+        $('#relatedEntityLookupSelect').empty();
         $('#relatedEntityLookup').val('');
         DisplaySectionGroup(2, false);
     }

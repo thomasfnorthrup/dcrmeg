@@ -169,17 +169,23 @@
 	    </div>
 
 	    <div class="section group displaynone" id="maincontentsect2">
-            <div class="col span_1_of_2">
-		        <div class="col span_1_of_3">
+            <div class="col span_6_of_6">
+		        <div class="col span_1_of_6">
 		            <label id="dcrmeg_displayonlyrelatedrecords" class="ElipseText" for="entitiesAreRelated">Display only related records</label>
 		        </div>
-		        <div class="col span_1_of_7">
+		        <div class="col" style="width:3%;">
 		            <input type="checkbox" id="entitiesAreRelated" />
 		        </div>
-		        <div class="col span_1_of_3">
-		            <label for="relatedEntityLookup" class="ElipseText" id="dcrmeg_relatedentitylookup">Related entitiy lookup</label>
+		        <div class="col span_1_of_6">
+		            <label for="relatedEntityLookupSelect" class="ElipseText" id="dcrmeg_relatedentitylookup">Related entitiy lookup(s)</label>
 		        </div>
-		        <div class="col span_1_of_7">
+                <div class="col span_1_of_6">
+                    <select style="width:90%;" id="relatedEntityLookupSelect"></select>
+                </div>
+                <div class="col span_1_of_6">
+                    <label for="relatedEntityLookup" class="ElipseText" id="relatedEntityLookupLabel">Selected Relationship</label>
+                </div>
+		        <div class="col span_1_of_6">
 		            <input readonly="readonly" id="relatedEntityLookup" type="text" />
 		        </div>
             </div>

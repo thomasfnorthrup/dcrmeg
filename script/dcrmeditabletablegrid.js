@@ -5811,7 +5811,6 @@ function DisplayNewButtonMenu(self, $this) {
     menu.find('a').click(function (e) {
         var id = $(this).attr('id');
         var msg = undefined;
-
         if (id == 'newinline') {
             msg = CreateInlineRecord(self);
 
@@ -5827,11 +5826,23 @@ function DisplayNewButtonMenu(self, $this) {
  parameters["parentcustomerid"] = "2878282E-94D6-E111-9B1D-00155D9D700B";
  parameters["parentcustomeridname"] = "Contoso";
  parameters["parentcustomeridtype"] = "account";
+
+For simple lookups you must set the value and the text to display in the lookup. Use the suffix “name” with the name of the attribute to set the value for the text.
+Don’t use any other arguments.
+For customer and owner lookups you must set the value and the name in the same way you set them for simple lookups. In addition you must use the suffix “type” to specify the type of entity. Allowable values are account, contact, systemuser, and team.
+You can’t set the values for partylist or regarding lookups.
                     */
                     var parameters = {};
+
                     parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName] = self.activeOptions.ParentChildLookupInfo.Guid;
                     parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName + "name"] = lookupname;
-                    parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName + "type"] = self.activeOptions.ParentChildLookupInfo.ParentSchemaName;
+
+                    var tmp = self.activeOptions.ParentChildLookupInfo.LookupSchemaName;
+
+                    if (tmp.endsWith('customerid') || tmp.endsWith('ownerid')) {
+                        parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName + "type"] = self.activeOptions.ParentChildLookupInfo.ParentSchemaName;
+                    }
+
                     window.parent.Xrm.Utility.openEntityForm(self.activeOptions.entityschemaName, null, parameters);
                 } else {
                     window.parent.Xrm.Utility.openEntityForm(self.activeOptions.entityschemaName, null, null);
@@ -8040,6 +8051,8 @@ function LoadDCrmEGConfigurationCallback(fetchResults) {
         _thisHelpers.WaitDialog();
         return;
     }
+
+    console.log("Loading....");
 
     var val = fetchResults[0].attributes['dcrmeg_headerfieldnameshidden'].value;
     // Display order

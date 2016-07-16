@@ -144,6 +144,7 @@ Array.prototype.ExactMatchExists = function (str) {
                     var $thecontainer = $('<div></div').addClass('flyout-ContentContainer').appendTo($parentContainer);
 
                     var ChkClicked = CheckFieldClicked;
+                    // Re enable pre filtering (field condition) in configuration
                     $.each(fields, function (index, item) {
 
                         tip = '<div><table><tbody><tr><td>SchemaName</td><td>' + item.SchemaName +
@@ -243,147 +244,149 @@ Array.prototype.ExactMatchExists = function (str) {
                             });
                         }
 
-                        //// Add button if not read only
-                        //if (!_thisGlobals.FormIsReadOnly) {
-                        //    var btnclass = 'fieldoptionsettingbutton';
-                        //    var btntooltip = _thisGlobals.Translation_Labels.FieldConditionBtn;
-                        //    if (tmpcondition) {
-                        //        btnclass += ' checklistbuttoncondition';
-                        //        btntooltip = '<span>' + item.Name +
-                        //            ' ' + GetFieldConditionSelectOptionLabelByValue(tmpcondition.CrmFieldType, tmpcondition.ConditonOperator) +
-                        //            ' ' + (((tmpcondition.ConditionLabel) && (tmpcondition.ConditionLabel != 'undefined')) ? tmpcondition.ConditionLabel : '') + '</span>';
-                        //    }
-                        //    $('<button></button>')
-                        //        .attr('data-tilename-id', id)
-                        //        .attr('data-tooltip', btntooltip)
-                        //        .attr('id', btnid)
-                        //        .addClass(btnclass)
-                        //        .addClass(_thisGlobals.ToolTipClassSelector)
-                        //        .appendTo($td)
-                        //        .on('click', function (e) {
-                        //            e.stopPropagation();
-                        //            var $tile = $('#' + $(this).attr('data-tilename-id'));
-                        //            var thisid = $(this).attr('id');
-                        //            var attrtype = $tile.attr('data-item-attrtype');
-                        //            var select = FieldConditionSelectId(attrtype);
-                        //            _thisGlobals.CurFieldCondition = FindCondition($tile.attr('data-item-schema'));
-                        //            if (_thisGlobals.CurFieldCondition) {
-                        //                $("#removefieldcondition").show();
-                        //                _thisGlobals.CurFieldCondition.LookupEntities = undefined;
-                        //                _thisGlobals.CurFieldCondition.LookupData = [];
-                        //                _thisGlobals.CurFieldCondition.PicklistData = [];
-                        //                _thisGlobals.CurFieldCondition.ConditionAttributeOrg = $tile.attr('data-item-schema');
-                        //                _thisGlobals.CurFieldCondition.CrmFieldLabel = $tile.attr('data-item-label');
-                        //                if ((_thisGlobals.CurFieldCondition.ConditionValue) && (_thisGlobals.CurFieldCondition.ConditionValue != 'undefined')) {
-                        //                    if ((_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.BooleanType) ||
-                        //                        (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.OptionSetType) ||
-                        //                        (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.State) ||
-                        //                        (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.Status)) {
-                        //                        if (!_thisGlobals.CurFieldCondition.ConditionValue.contains('%')) {
-                        //                            var arrv = _thisGlobals.CurFieldCondition.ConditionValue.split(';');
-                        //                            var arrl = _thisGlobals.CurFieldCondition.ConditionLabel.split(';');
-                        //                            for (var i = 0; i < arrv.length; i++) {
-                        //                                _thisGlobals.CurFieldCondition.PicklistData.push({ Label: arrl[i], Value: arrv[i] });
-                        //                            }
-                        //                        } else {
-                        //                            select.ShowSelectBtn = false;
-                        //                            _thisGlobals.CurFieldCondition.ConditionAttributeOptionset = _thisGlobals.CurFieldCondition.ConditionAttribute;
-                        //                        }
-                        //                    } else if ((_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.LookupType) ||
-                        //                        (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.CustomerType) ||
-                        //                        (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.OwnerType)) {
-                        //                        if (!_thisGlobals.CurFieldCondition.ConditionValue.contains('%')) {
-                        //                            var arrv = _thisGlobals.CurFieldCondition.ConditionValue.split(';');
-                        //                            var arrl = _thisGlobals.CurFieldCondition.ConditionLabel.split(';');
-                        //                            var arrnames = _thisGlobals.CurFieldCondition.LookupLogicalNames.split(';');
-                        //                            for (var i = 0; i < arrv.length; i++) {
-                        //                                _thisGlobals.CurFieldCondition.LookupData.push({ LookupName: arrl[i], LookupId: arrv[i], LookupLogicalName: arrnames[i] });
-                        //                            }
-                        //                        } else {
-                        //                            select.ShowLookupBtn = false;
-                        //                            _thisGlobals.CurFieldCondition.ConditionAttributeLookup = _thisGlobals.CurFieldCondition.ConditionAttribute;
-                        //                        }
-                        //                    }
-                        //                } else {
-                        //                    select.ShowSelectBtn = false;
-                        //                    select.ShowLookupBtn = false;
-                        //                }
-                        //            } else {
-                        //                _thisGlobals.CurFieldCondition = {};
-                        //                _thisGlobals.CurFieldCondition.ConditonOperator = select.SelectedOptionValue;
-                        //                _thisGlobals.CurFieldCondition.ConditionAttribute = $tile.attr('data-item-schema');
-                        //                _thisGlobals.CurFieldCondition.ConditionAttributeOrg = $tile.attr('data-item-schema');
-                        //                _thisGlobals.CurFieldCondition.CrmFieldLabel = $tile.attr('data-item-label');
-                        //                _thisGlobals.CurFieldCondition.CrmFieldType = $tile.attr('data-item-attrtype');
-                        //                _thisGlobals.CurFieldCondition.ConditionValue = undefined;
-                        //                _thisGlobals.CurFieldCondition.ConditionLabel = undefined;
-                        //                _thisGlobals.CurFieldCondition.LookupEntities = undefined;
-                        //                _thisGlobals.CurFieldCondition.LookupData = [];
-                        //                _thisGlobals.CurFieldCondition.PicklistData = [];
-                        //                $("#removefieldcondition").hide();
-                        //            }
-                        //            _thisGlobals.CurFieldCondition.BtnId = thisid;
-                        //            _thisGlobals.CurFieldCondition.Selectid = select.id;
-                        //            if ($tile.attr('data-item-lookuptargetentity')) {
-                        //                _thisGlobals.CurFieldCondition.LookupEntities = $tile.attr('data-item-lookuptargetentity').split(',');
-                        //            }
-                        //            $(select.id).attr('data-item-org-schema', $tile.attr('data-item-schema'));
-                        //            $(_thisGlobals.FieldIds.fieldconditioninput).removeAttr('readonly');
-                        //            $(_thisGlobals.FieldIds.fieldconditioninput).val('');
-                        //            $(_thisGlobals.FieldIds.dateconditioninput).val('');
-                        //            $(".conditionscontainer").addClass("hideconditionscontainer");
-                        //            $(select.label).addClass(_thisGlobals.ToolTipClassSelector).text($tile.attr('data-item-label')).attr('data-tooltip', $tile.attr('data-item-label'));
-                        //            $(select.id).parent().removeClass("hideconditionscontainer");
-                        //            //eq on eq-userid  --- contains;like
-                        //            var tmpArr = _thisGlobals.CurFieldCondition.ConditonOperator.split(';');
-                        //            _thisGlobals.CurFieldCondition.ConditonOperator = tmpArr[0];
-                        //            var showInputs = true;
-                        //            if (select.id == '#datetimeconditions') {
-                        //                // on on-or-after on-or-before olderthan-x-months
-                        //                showInputs = ((_thisGlobals.CurFieldCondition.ConditonOperator == 'on') || (_thisGlobals.CurFieldCondition.ConditonOperator == 'on-or-after')
-                        //                    || (_thisGlobals.CurFieldCondition.ConditonOperator == 'on-or-before') || (_thisGlobals.CurFieldCondition.ConditonOperator == 'olderthan-x-months'));
-                        //            } else {
-                        //                // eq-userid ne-userid eq-userteams eq-useroruserteams
-                        //                showInputs = ((_thisGlobals.CurFieldCondition.ConditonOperator != 'not-null') && (_thisGlobals.CurFieldCondition.ConditonOperator != 'null')
-                        //                    && (_thisGlobals.CurFieldCondition.ConditonOperator != 'eq-userid') && (_thisGlobals.CurFieldCondition.ConditonOperator != 'ne-userid')
-                        //                    && (_thisGlobals.CurFieldCondition.ConditonOperator != 'eq-userteams') && (_thisGlobals.CurFieldCondition.ConditonOperator != 'eq-useroruserteams'));
-                        //            }
-                        //            if (tmpArr.length > 1) {
-                        //                _thisGlobals.CurFieldCondition.OperatorFetchOp = tmpArr[1];
-                        //            }
-                        //            $(select.id).val(_thisGlobals.CurFieldCondition.ConditonOperator);
-                        //            if ((select.ShowInput) && (showInputs)) {
-                        //                $(_thisGlobals.FieldIds.fieldconditioninput).val(_thisGlobals.CurFieldCondition.ConditionLabel);
-                        //                $(_thisGlobals.FieldIds.fieldconditioninput).show();
-                        //            } else {
-                        //                $(_thisGlobals.FieldIds.fieldconditioninput).hide();
-                        //            }
-                        //            if ((select.ShowLookupBtn) && (showInputs)) {
-                        //                $(_thisGlobals.FieldIds.lookupsearchbtn).show();
-                        //                $(_thisGlobals.FieldIds.fieldconditioninput).attr('readonly', 'readonly');
-                        //            } else {
-                        //                $(_thisGlobals.FieldIds.lookupsearchbtn).hide();
-                        //            }
-                        //            if ((select.ShowSelectBtn) && (showInputs)) {
-                        //                $(_thisGlobals.FieldIds.picklistselect).show();
-                        //            } else {
-                        //                $(_thisGlobals.FieldIds.fieldconditioninput).attr('readonly', 'readonly');
-                        //                $(_thisGlobals.FieldIds.picklistselect).hide();
-                        //            }
-                        //            if ((select.ShowDate) && (showInputs)) {
-                        //                $(_thisGlobals.FieldIds.dateconditioninput).val(_thisGlobals.CurFieldCondition.ConditionLabel);
-                        //                $(_thisGlobals.FieldIds.dateconditioninput).show();
-                        //            } else {
-                        //                $(_thisGlobals.FieldIds.dateconditioninput).hide();
-                        //            }
-                        //            $(_thisGlobals.FieldIds.FieldConditionFlyout).show('slow');
-                        //            if ((select.ShowInput) && (showInputs)) {
-                        //                $(_thisGlobals.FieldIds.fieldconditioninput).focus();
-                        //            }
-                        //            ConditionSelectOnChange(select.id);
-                        //            CreateTooltip();
-                        //        });
-                        //}
+                        // Add button if not read only
+                        if (!_thisGlobals.FormIsReadOnly) {
+                            var tmpcondition = FindCondition(item.SchemaName);
+
+                            var btnclass = 'fieldoptionsettingbutton';
+                            var btntooltip = _thisGlobals.Translation_Labels.FieldConditionBtn;
+                            if (tmpcondition) {
+                                btnclass += ' checklistbuttoncondition';
+                                btntooltip = '<span>' + item.Name +
+                                    ' ' + GetFieldConditionSelectOptionLabelByValue(tmpcondition.CrmFieldType, tmpcondition.ConditonOperator) +
+                                    ' ' + (((tmpcondition.ConditionLabel) && (tmpcondition.ConditionLabel != 'undefined')) ? tmpcondition.ConditionLabel : '') + '</span>';
+                            }
+                            $('<button></button>')
+                                .attr('data-tilename-id', id)
+                                .attr('data-tooltip', btntooltip)
+                                .attr('id', btnid)
+                                .addClass(btnclass)
+                                .addClass(_thisGlobals.ToolTipClassSelector)
+                                .appendTo($td)
+                                .on('click', function (e) {
+                                    e.stopPropagation();
+                                    var $tile = $('#' + $(this).attr('data-tilename-id'));
+                                    var thisid = $(this).attr('id');
+                                    var attrtype = $tile.attr('data-item-attrtype');
+                                    var select = FieldConditionSelectId(attrtype);
+                                    _thisGlobals.CurFieldCondition = FindCondition($tile.attr('data-item-schema'));
+                                    if (_thisGlobals.CurFieldCondition) {
+                                        $("#removefieldcondition").show();
+                                        _thisGlobals.CurFieldCondition.LookupEntities = undefined;
+                                        _thisGlobals.CurFieldCondition.LookupData = [];
+                                        _thisGlobals.CurFieldCondition.PicklistData = [];
+                                        _thisGlobals.CurFieldCondition.ConditionAttributeOrg = $tile.attr('data-item-schema');
+                                        _thisGlobals.CurFieldCondition.CrmFieldLabel = $tile.attr('data-item-label');
+                                        if ((_thisGlobals.CurFieldCondition.ConditionValue) && (_thisGlobals.CurFieldCondition.ConditionValue != 'undefined')) {
+                                            if ((_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.BooleanType) ||
+                                                (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.OptionSetType) ||
+                                                (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.State) ||
+                                                (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.Status)) {
+                                                if (!_thisGlobals.CurFieldCondition.ConditionValue.contains('%')) {
+                                                    var arrv = _thisGlobals.CurFieldCondition.ConditionValue.split(';');
+                                                    var arrl = _thisGlobals.CurFieldCondition.ConditionLabel.split(';');
+                                                    for (var i = 0; i < arrv.length; i++) {
+                                                        _thisGlobals.CurFieldCondition.PicklistData.push({ Label: arrl[i], Value: arrv[i] });
+                                                    }
+                                                } else {
+                                                    select.ShowSelectBtn = false;
+                                                    _thisGlobals.CurFieldCondition.ConditionAttributeOptionset = _thisGlobals.CurFieldCondition.ConditionAttribute;
+                                                }
+                                            } else if ((_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.LookupType) ||
+                                                (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.CustomerType) ||
+                                                (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.OwnerType)) {
+                                                if (!_thisGlobals.CurFieldCondition.ConditionValue.contains('%')) {
+                                                    var arrv = _thisGlobals.CurFieldCondition.ConditionValue.split(';');
+                                                    var arrl = _thisGlobals.CurFieldCondition.ConditionLabel.split(';');
+                                                    var arrnames = _thisGlobals.CurFieldCondition.LookupLogicalNames.split(';');
+                                                    for (var i = 0; i < arrv.length; i++) {
+                                                        _thisGlobals.CurFieldCondition.LookupData.push({ LookupName: arrl[i], LookupId: arrv[i], LookupLogicalName: arrnames[i] });
+                                                    }
+                                                } else {
+                                                    select.ShowLookupBtn = false;
+                                                    _thisGlobals.CurFieldCondition.ConditionAttributeLookup = _thisGlobals.CurFieldCondition.ConditionAttribute;
+                                                }
+                                            }
+                                        } else {
+                                            select.ShowSelectBtn = false;
+                                            select.ShowLookupBtn = false;
+                                        }
+                                    } else {
+                                        _thisGlobals.CurFieldCondition = {};
+                                        _thisGlobals.CurFieldCondition.ConditonOperator = select.SelectedOptionValue;
+                                        _thisGlobals.CurFieldCondition.ConditionAttribute = $tile.attr('data-item-schema');
+                                        _thisGlobals.CurFieldCondition.ConditionAttributeOrg = $tile.attr('data-item-schema');
+                                        _thisGlobals.CurFieldCondition.CrmFieldLabel = $tile.attr('data-item-label');
+                                        _thisGlobals.CurFieldCondition.CrmFieldType = $tile.attr('data-item-attrtype');
+                                        _thisGlobals.CurFieldCondition.ConditionValue = undefined;
+                                        _thisGlobals.CurFieldCondition.ConditionLabel = undefined;
+                                        _thisGlobals.CurFieldCondition.LookupEntities = undefined;
+                                        _thisGlobals.CurFieldCondition.LookupData = [];
+                                        _thisGlobals.CurFieldCondition.PicklistData = [];
+                                        $("#removefieldcondition").hide();
+                                    }
+                                    _thisGlobals.CurFieldCondition.BtnId = thisid;
+                                    _thisGlobals.CurFieldCondition.Selectid = select.id;
+                                    if ($tile.attr('data-item-lookuptargetentity')) {
+                                        _thisGlobals.CurFieldCondition.LookupEntities = $tile.attr('data-item-lookuptargetentity').split(',');
+                                    }
+                                    $(select.id).attr('data-item-org-schema', $tile.attr('data-item-schema'));
+                                    $(_thisGlobals.FieldIds.fieldconditioninput).removeAttr('readonly');
+                                    $(_thisGlobals.FieldIds.fieldconditioninput).val('');
+                                    $(_thisGlobals.FieldIds.dateconditioninput).val('');
+                                    $(".conditionscontainer").addClass("hideconditionscontainer");
+                                    $(select.label).addClass(_thisGlobals.ToolTipClassSelector).text($tile.attr('data-item-label')).attr('data-tooltip', $tile.attr('data-item-label'));
+                                    $(select.id).parent().removeClass("hideconditionscontainer");
+                                    //eq on eq-userid  --- contains;like
+                                    var tmpArr = _thisGlobals.CurFieldCondition.ConditonOperator.split(';');
+                                    _thisGlobals.CurFieldCondition.ConditonOperator = tmpArr[0];
+                                    var showInputs = true;
+                                    if (select.id == '#datetimeconditions') {
+                                        // on on-or-after on-or-before olderthan-x-months
+                                        showInputs = ((_thisGlobals.CurFieldCondition.ConditonOperator == 'on') || (_thisGlobals.CurFieldCondition.ConditonOperator == 'on-or-after')
+                                            || (_thisGlobals.CurFieldCondition.ConditonOperator == 'on-or-before') || (_thisGlobals.CurFieldCondition.ConditonOperator == 'olderthan-x-months'));
+                                    } else {
+                                        // eq-userid ne-userid eq-userteams eq-useroruserteams
+                                        showInputs = ((_thisGlobals.CurFieldCondition.ConditonOperator != 'not-null') && (_thisGlobals.CurFieldCondition.ConditonOperator != 'null')
+                                            && (_thisGlobals.CurFieldCondition.ConditonOperator != 'eq-userid') && (_thisGlobals.CurFieldCondition.ConditonOperator != 'ne-userid')
+                                            && (_thisGlobals.CurFieldCondition.ConditonOperator != 'eq-userteams') && (_thisGlobals.CurFieldCondition.ConditonOperator != 'eq-useroruserteams'));
+                                    }
+                                    if (tmpArr.length > 1) {
+                                        _thisGlobals.CurFieldCondition.OperatorFetchOp = tmpArr[1];
+                                    }
+                                    $(select.id).val(_thisGlobals.CurFieldCondition.ConditonOperator);
+                                    if ((select.ShowInput) && (showInputs)) {
+                                        $(_thisGlobals.FieldIds.fieldconditioninput).val(_thisGlobals.CurFieldCondition.ConditionLabel);
+                                        $(_thisGlobals.FieldIds.fieldconditioninput).show();
+                                    } else {
+                                        $(_thisGlobals.FieldIds.fieldconditioninput).hide();
+                                    }
+                                    if ((select.ShowLookupBtn) && (showInputs)) {
+                                        $(_thisGlobals.FieldIds.lookupsearchbtn).show();
+                                        $(_thisGlobals.FieldIds.fieldconditioninput).attr('readonly', 'readonly');
+                                    } else {
+                                        $(_thisGlobals.FieldIds.lookupsearchbtn).hide();
+                                    }
+                                    if ((select.ShowSelectBtn) && (showInputs)) {
+                                        $(_thisGlobals.FieldIds.picklistselect).show();
+                                    } else {
+                                        $(_thisGlobals.FieldIds.fieldconditioninput).attr('readonly', 'readonly');
+                                        $(_thisGlobals.FieldIds.picklistselect).hide();
+                                    }
+                                    if ((select.ShowDate) && (showInputs)) {
+                                        $(_thisGlobals.FieldIds.dateconditioninput).val(_thisGlobals.CurFieldCondition.ConditionLabel);
+                                        $(_thisGlobals.FieldIds.dateconditioninput).show();
+                                    } else {
+                                        $(_thisGlobals.FieldIds.dateconditioninput).hide();
+                                    }
+                                    $(_thisGlobals.FieldIds.FieldConditionFlyout).show('slow');
+                                    if ((select.ShowInput) && (showInputs)) {
+                                        $(_thisGlobals.FieldIds.fieldconditioninput).focus();
+                                    }
+                                    ConditionSelectOnChange(select.id);
+                                    CreateTooltip();
+                                });
+                        }
                     });
 
                     $thecontainer.DestroyYourself = function () {
@@ -1680,11 +1683,14 @@ function DisplayConditions() {
 
     try {
         for (var index = 0; index < _thisGlobals.ReloadedFieldConditions.length; index++) {
-            Aattr = _thisGlobals.ReloadedFieldConditions[index].ConditionAttribute;
-            Aval = ((_thisGlobals.ReloadedFieldConditions[index].ConditionValue) && (_thisGlobals.ReloadedFieldConditions[index].ConditionValue != 'undefined'))
-                ? _thisGlobals.ReloadedFieldConditions[index].ConditionValue : '';
-            Aop = _thisGlobals.ReloadedFieldConditions[index].ConditonOperator;
-            Atype = _thisGlobals.ReloadedFieldConditions[index].CrmFieldType;
+            var reCond = _thisGlobals.ReloadedFieldConditions[index];
+
+            Aattr = reCond.ConditionAttribute;
+            Aval = ((reCond.ConditionValue) &&
+                (reCond.ConditionValue != 'undefined'))
+                ? reCond.ConditionValue : '';
+            Aop = reCond.ConditonOperator;
+            Atype = reCond.CrmFieldType;
 
             var condName = '';
             var tmp = '';
@@ -1692,7 +1698,7 @@ function DisplayConditions() {
 
             if ((_thisGlobals.AllFieldsMetadata) && (_thisGlobals.AllFieldsMetadata.length > 0)) {
                 for (var i = 0; i < _thisGlobals.AllFieldsMetadata.length; i++) {
-                    if (_thisGlobals.AllFieldsMetadata[i].SchemaName == _thisGlobals.ReloadedFieldConditions[index].ConditionAttributeOrg) {
+                    if (_thisGlobals.AllFieldsMetadata[i].SchemaName == reCond.ConditionAttributeOrg) {
                         condName = '<span style="font-weight:bold;">' + _thisGlobals.AllFieldsMetadata[i].Name + "</span><br />";
                         break;
                     }
@@ -1712,8 +1718,8 @@ function DisplayConditions() {
                     tmp += condName + '&lt;condition attribute="' + Aattr + '" operator="' + ((Aop == 'eq') ? 'in' : 'not-in') + '"&gt;<br />';
                 }
 
-                var uitypes = ((_thisGlobals.ReloadedFieldConditions[index].LookupLogicalNames) && (_thisGlobals.ReloadedFieldConditions[index].LookupLogicalNames.length > 0)) ? _thisGlobals.ReloadedFieldConditions[index].LookupLogicalNames.split(';') : [];
-                var uinames = ((_thisGlobals.ReloadedFieldConditions[index].ConditionLabel) && (_thisGlobals.ReloadedFieldConditions[index].ConditionLabel.length > 0)) ? _thisGlobals.ReloadedFieldConditions[index].ConditionLabel.split(';') : [];
+                var uitypes = ((reCond.LookupLogicalNames) && (reCond.LookupLogicalNames.length > 0)) ? reCond.LookupLogicalNames.split(';') : [];
+                var uinames = ((reCond.ConditionLabel) && (reCond.ConditionLabel.length > 0)) ? reCond.ConditionLabel.split(';') : [];
 
                 for (var i = 0; i < inarg.length; i++) {
                     if ((Atype == _thisGlobals.CrmFieldTypes.LookupType) || (Atype == _thisGlobals.CrmFieldTypes.CustomerType) || (Atype == _thisGlobals.CrmFieldTypes.OwnerType)) {
@@ -1735,7 +1741,7 @@ function DisplayConditions() {
             }
 
             if (tmp.length > 0) {
-                Aret += '<div class="displayconditionitem" data-item-schema="' + Aattr + '" data-item-org-schema="' + _thisGlobals.ReloadedFieldConditions[index].ConditionAttributeOrg + '">' + tmp + '</div>';
+                Aret += '<div class="displayconditionitem" data-item-schema="' + Aattr + '" data-item-org-schema="' + reCond.ConditionAttributeOrg + '">' + tmp + '</div>';
             }
 
         }
@@ -2278,7 +2284,7 @@ function InitializeSetupRoutines() {
     _thisGlobals.Translation_Labels.TragetEntityReq = "Target entity is requiered.";
     _thisGlobals.Translation_Labels.EntityToDisplayReq = "Entity to display the grid on is requiered.";
     _thisGlobals.Translation_Labels.FieldReq = "At leaset one field must be selected for";
-    _thisGlobals.Translation_Labels.FieldConditionBtn = "Field condition";
+    _thisGlobals.Translation_Labels.FieldConditionBtn = "Filter";
     _thisGlobals.Translation_Labels.ConditionMissingError = "Please enter a value for the condition";
     _thisGlobals.Translation_Labels.Aggregate = "Aggrgate";
 
@@ -2833,9 +2839,93 @@ function InitializeSetupRoutines() {
             }
         });
         EntityGridMakeSortable();
+
+    //    // Set up views
+    //    _thisGlobals.Select2Views = $("#userselectviews").select2({
+    //        placeholder: "Select a view",
+    //        //minimumResultsForSearch: Infinity,
+    //        allowClear: true
+    //    })
+    //        .on("select2:select", function (e) {
+    //            var input = _thisGlobals.Select2Views.find('option:selected');
+    //            console.log("select2:select id [" + $(input[0]).attr('id') + "] savedqueryid [" + $(input[0]).attr('savedqueryid')
+    //                + "] userqueryid [" + $(input[0]).attr('userqueryid') + "]");
+    //        })
+    //        .on("select2:unselect", function (e) {
+        //            console.log("select2:unselect", e); $(e.params.data.element).attr('savedqueryid') (points to currently selected option which will be set to un selected
+    //        });
+
+    //    var saveViewFetch =
+    //        '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
+    //          '<entity name="savedquery">' +
+    //            '<attribute name="name" />' +
+    //            '<attribute name="savedqueryid" />' +
+    //            '<attribute name="returnedtypecode" />' +
+    //            '<attribute name="fetchxml" />' +
+    //            '<order attribute="name" descending="false" />' +
+    //            '<filter>' +
+    //              '<condition attribute="statecode" operator="eq" value="0" />' +
+    //              '<condition attribute="querytype" operator="eq" value="0" />' +
+    //              '<condition attribute="fetchxml" operator="not-null" />' +
+    //            '</filter>' +
+    //          '</entity>' +
+    //        '</fetch>';
+        //    XrmServiceToolkit.Soap.Fetch(saveViewFetch, false, SavedViewsCallback);
+
     }
 
     CreateTooltip();
+}
+
+function SavedViewsCallback(result) {
+    var sys = $('<optgroup label="System" id="-1"></optgroup>');
+
+    console.log("Saved view callback [" + result.length + "]");
+
+    if ((result) && (result.length > 0)) {
+        for (var i = 0; i < result.length; i++) {
+            sys.append($('<option id="' + (i + 1) +
+                '" savedqueryid="' + result[i].attributes['savedqueryid'].value + '">' +
+                result[i].attributes['name'].value + '</option>'));
+        }
+    }
+    _thisGlobals.Select2Views.append(sys);
+
+    var fetch = 
+'<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
+  '<entity name="userquery">' +
+    '<attribute name="name" />' +
+    '<attribute name="userqueryid" />' +
+    '<attribute name="returnedtypecode" />' +
+    '<attribute name="fetchxml" />' +
+    '<attribute name="ownerid" />' +
+    '<order attribute="name" descending="false" />' +
+    '<filter>' +
+      '<condition attribute="statecode" operator="eq" value="0" />' +
+      '<condition attribute="querytype" operator="eq" value="0" />' +
+      '<condition attribute="fetchxml" operator="not-null" />' +
+      '<condition attribute="ownerid" operator="eq" value="' + _thisGlobals.LoggedInUserID + '" />' +
+    '</filter>' +
+  '</entity>' +
+'</fetch>';
+
+    XrmServiceToolkit.Soap.Fetch(fetch, false, UserViewsCallback);
+}
+
+function UserViewsCallback(result) {
+
+    var sys = $('<optgroup label="User" id="-2"></optgroup>');
+
+    if ((result) && (result.length > 0)) {
+        for (var i = 0; i < result.length; i++) {
+            sys.append($('<option id="' + (i + 10000) +
+                '" savedqueryid="' + result[i].attributes['userqueryid'].value + '">' +
+                result[i].attributes['name'].value + '</option>'));
+        }
+    }
+
+    _thisGlobals.Select2Views.append(sys);
+    _thisGlobals.Select2Views.val(null).trigger("change");
 }
 
 /* Make selected entities list items sortable */
@@ -2922,6 +3012,7 @@ function ResetAllUI() {
     if (_thisGlobals.SelectFieldsCheckboxList) {
         _thisGlobals.SelectFieldsCheckboxList.DestroyYourself();
     }
+
     DisplaySectionGroup(2, false);
     DisplaySectionGroup(4, false);
     DisplaySectionGroup(5, false);
@@ -3040,7 +3131,6 @@ function GetEntityRelationshipsMain(data, displayon) {
                 if (data[index].ReferencedEntity == displayon) {
 
                     relationships.push(data[index].ReferencingAttribute);
-                    console.log("getting [" + data[index].ReferencingAttribute + "]");
                     $('#relatedEntityLookupSelect')
                         .append('<option value="' + data[index].ReferencingAttribute + '">' + data[index].ReferencingAttribute + '</option>');
                 }
@@ -3084,7 +3174,7 @@ var DCrmEGConfigurationManager = (function () {
         var id = DCrmEditableGrid.Helper.GenerateUUID();
         var related = undefined;
 
-        if (data.related) {
+        if (data.isRelated) {
             RetreiveEntityRelationShips(data.SchemaName);
             related = data.related;
         } else {
@@ -3099,7 +3189,7 @@ var DCrmEGConfigurationManager = (function () {
             SchemaName: data.SchemaName,
             Label: data.Label,
 
-            RelatedToDisplayOnEntity: (related) ? true : false,
+            RelatedToDisplayOnEntity: data.isRelated,
             RelatedToDisplayOnLookupSchemaName: (related) ? related : undefined,
 
             ParentLiId: (data.ParentLiId) ? data.ParentLiId : undefined,
@@ -3270,16 +3360,19 @@ function DisplaySelectedEntityInfo(li, schema) {
 
     _thisGlobals._CurConfiguration = FindDCrmEGConfigurationBySchema(schema);
 
-    if (_thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnEntity) {
-        $('#entitiesAreRelated').prop('checked', true);
+    var tmpRel = RetreiveEntityRelationShips(schema);
+    if (tmpRel.length > 0) {
+
+        $('#entitiesAreRelated').prop('checked', _thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnEntity);
         $('#relatedEntityLookupSelect').val(_thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName);
         $('#relatedEntityLookup').val(_thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName);
-        console.log("Setting [" + _thisGlobals._CurConfiguration.Entity.RelatedToDisplayOnLookupSchemaName + "]");
+        console.log("Show");
         DisplaySectionGroup(2, true);
     } else {
         $('#entitiesAreRelated').prop('checked', false);
         $('#relatedEntityLookupSelect').empty();
         $('#relatedEntityLookup').val('');
+        console.log("hide");
         DisplaySectionGroup(2, false);
     }
 
@@ -3353,9 +3446,15 @@ function LoadDCrmEGConfiguration() {
         var tmp = FindEntityGridInfo(entities[i], entitesInfo);
 
         var data = { SchemaName: tmp[0], Label: tmp[1] };
+
+        data.isRelated = false;
+
         if (tmp[2] == 'true') {
+            data.isRelated = true;
             data.related = tmp[3];
         }
+
+        console.log("Is related [" + tmp[2] + "] Related [" + data.related + "]");
 
         // related to another entity in the list
         data.RelatedToParentLI = (tmp[4] == 'true') ? true : false;
@@ -3513,7 +3612,6 @@ function SaveDCrmEGConfiguration() {
     //        final.push(JSON.parse(inner.ChildConfigurations[0]));
     //        inner.ChildConfigurations = final;
     //    }
-    //    console.log("index");
     //}
 
     for (var i = 0; i < _thisGlobals.DCrmEGConfiguration.length; i++) {

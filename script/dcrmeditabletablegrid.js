@@ -1156,7 +1156,7 @@ $.fn.DCrmEditableGrid.DatePicker = function (table, editorsArrayi, requiredError
     $editor.EditorType = editorsArrayi.editor;
     var hasTime = ($editor.EditorType == DCrmEditableGrid.Editors.DateTimePicker);
     if (hasTime) {
-        DatePickerDateFormat += ' ' + TimeFormat;
+        DatePickerDateFormat += ' ' + _thisGlobals.userDatetimeSettings.TimeFormat;
     }
     var active, OriginalValue;
     var HasChanged = false;
@@ -1449,7 +1449,7 @@ $.fn.DCrmEditableGrid.SetEntityState = function (entityState, RecId, statusValue
     'use strict';
 
     var tmpId = _thisHelpers.GenerateUUID();
-    var $editor = $('<div class="DescriptionBox statusBoxControl"></div>')
+    var $editor = $('<div class="DescriptionBox statusBoxControl" style="height:100px;"></div>')
         .attr('id', tmpId)
         .hide()
         .appendTo('body');
@@ -1842,15 +1842,18 @@ $.fn.DCrmEditableGrid.EntityStatesBox = function (schemaName, editorsArrayi, tab
 
     $editor.SetInternals = function (curVal, recGuid) {
         $editor.RecId = recGuid;
-
+        var tname = schemaName;
+        if (tname == 'activitypointer') {
+            tname = 'activity';
+        }
         var fetch =
             '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
               '<entity name="' + schemaName + '">' +
-                '<attribute name="' + schemaName + 'id" />' +
+                '<attribute name="' + tname + 'id" />' +
                 '<attribute name="statuscode" />' +
                 '<attribute name="statecode" />' +
                 '<filter type="and">' +
-                  '<condition attribute="' + schemaName + 'id" operator="eq" uitype="' + schemaName +
+                  '<condition attribute="' + tname + 'id" operator="eq" uitype="' + schemaName +
                     '" value="' + _thisHelpers.AddCurlyBrace(recGuid) + '" />' +
                 '</filter>' +
               '</entity>' +
@@ -5088,7 +5091,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                     self.DeleteSelectedRows(finalToDel);
                     self.ResetColResizerHeight();
 
-                    self.activeOptions.TotalRecordsCount--;
+                    self.activeOptions.TotalRecordsCount = self.activeOptions.TotalRecordsCount - finalToDel.length;
 
                     $('#' + self.activeOptions.GridContainerIds.TotalRecords)
                         .text(_thisGlobals.Translation_Labels.TotalRecords + ' ' + self.activeOptions.TotalRecordsCount);
@@ -5298,10 +5301,14 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
     }
 
     function GetEntityCount(schemaName, filters, callback) {
+        var name = schemaName;
+        if (name == 'activitypointer') {
+            name = 'activity';
+        }
         var fetchXml =
             "<fetch mapping='logical' aggregate='true'>" +
                 "<entity name='" + schemaName + "'>" +
-                    "<attribute name='" + schemaName + "id' aggregate='count' alias='count' />";
+                    "<attribute name='" + name + "id' aggregate='count' alias='count' />";
         if (filters.length > 0) {
             fetchXml += '<filter type="and">' + filters + '</filter>';
         }
@@ -5817,10 +5824,8 @@ function DisplayNewButtonMenu(self, $this) {
         } else if (id == 'newwindow') {
             try {
                 if (self.activeOptions.ParentChildLookupInfo.Related) {
-                    var lookupname = GetLookupDisplayName(self.activeOptions.entityschemaName,
-                        self.activeOptions.ParentChildLookupInfo.LookupSchemaName,
-                        self.activeOptions.entityschemaName,
-                        self.activeOptions.ParentChildLookupInfo.Guid);
+                    var lookupname = window.parent.Xrm.Page.data.entity.getPrimaryAttributeValue();
+
                     /*
  var parameters = {};
  parameters["parentcustomerid"] = "2878282E-94D6-E111-9B1D-00155D9D700B";
@@ -6295,14 +6300,18 @@ function DisplayRecordState(entity, recGuid, refreshBtnId) {
     }
 
     // Get the actual values from the record
+    var tname = entity;
+    if (tname == 'activitypointer') {
+        tname = 'activity';
+    }
     var fetch =
         '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
           '<entity name="' + entity + '">' +
-            '<attribute name="' + entity + 'id" />' +
+            '<attribute name="' + tname + 'id" />' +
             '<attribute name="statuscode" />' +
             '<attribute name="statecode" />' +
             '<filter type="and">' +
-              '<condition attribute="' + entity + 'id" operator="eq" uitype="' + entity + '" value="' + _thisHelpers.AddCurlyBrace(recGuid) + '" />' +
+              '<condition attribute="' + tname + 'id" operator="eq" uitype="' + entity + '" value="' + _thisHelpers.AddCurlyBrace(recGuid) + '" />' +
             '</filter>' +
           '</entity>' +
         '</fetch>';
@@ -8723,11 +8732,13 @@ function GetLookupDisplayName(entitySchemaName, fieldSchemaName, uitype, guid) {
 
     var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
           '<entity name="' + entitySchemaName + '">' +
-          '<attribute name="' + fieldSchemaName + '" />' +
-            '<filter type="and">' +
-              '<condition attribute="' + fieldSchemaName + '" operator="eq" uitype="' + uitype + '" value="' + _thisHelpers.AddCurlyBrace(guid) + '" />' +
-            '</filter>' +
-          '</entity>' +
+          '<attribute name="' + fieldSchemaName + '" />';
+    if ((uitype) && (guid)) {
+        fetch += '<filter type="and">' +
+                  '<condition attribute="' + fieldSchemaName + '" operator="eq" uitype="' + uitype + '" value="' + _thisHelpers.AddCurlyBrace(guid) + '" />' +
+                '</filter>';
+    }
+    fetch += '</entity>' +
           '</fetch>';
 
     var result = XrmServiceToolkit.Soap.Fetch(fetch);
@@ -9172,15 +9183,21 @@ var GridLoaderHelper = (function () {
     }
 
     function GetEntityCount(schemaName, filters, callback) {
+        var name = schemaName;
+        if (name == 'activitypointer') {
+            name = 'activity';
+        }
         var fetchXml =
             "<fetch mapping='logical' aggregate='true'>" +
                 "<entity name='" + schemaName + "'>" +
-                    "<attribute name='" + schemaName + "id' aggregate='count' alias='count' />";
+                    "<attribute name='" + name + "id' aggregate='count' alias='count' />";
         if (filters.length > 0) {
             fetchXml += '<filter type="and">' + filters + '</filter>';
         }
         fetchXml += "</entity>" +
             "</fetch>";
+
+        console.log(fetchXml);
 
         XrmServiceToolkit.Soap.Fetch(fetchXml, true, callback);
     }

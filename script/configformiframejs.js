@@ -3313,34 +3313,27 @@ var DCrmEGConfigurationManager = (function () {
     //    var item = {
     //            SchemaName: this.Entity.SchemaName,
     //            Label: this.Entity.Label,
-
     //            RelatedToDisplayOnEntity: this.Entity.RelatedToDisplayOnEntity,
     //            RelatedToDisplayOnLookupSchemaName: this.Entity.RelatedToDisplayOnLookupSchemaName,
-
     //            RelatedToParentLI: this.Entity.RelatedToParentLI,
     //            ParentSchemaName: this.Entity.ParentSchemaName,
     //            RelatedToParentLILookupSchemaName: this.Entity.RelatedToParentLILookupSchemaName,
-
     //            HasStatusField: this.HasStatusField,
     //            DisplaySum: this.DisplaySum,
     //            FieldDisplayOption: this.FieldDisplayOption,
     //            RecordsPerPage: this.RecordsPerPage,
-
     //            AutoSaveChanges: this.AutoSaveChanges,
     //            AllowCreateNew: this.AllowCreateNew,
     //            AllowDelete: this.AllowDelete,
     //            RefreshAfterCreate: this.RefreshAfterCreate,
     //            RefreshAfterSave: this.RefreshAfterSave,
-
     //            SortOrder: this.SortOrder,
     //            NewBtnBehavoir: this.NewBtnBehavoir,
     //            BooleanEditorBehavoir: this.BooleanEditorBehavoir,
-
     //            EntityFields: this.EntityFields,
     //            EntityConditions: this.EntityConditions,
     //            ChildConfigurations: this.ChildConfigurations
     //    };
-
     //    return JSON.stringify(item);
     //}
 
@@ -3454,7 +3447,7 @@ function LoadDCrmEGConfiguration() {
             data.related = tmp[3];
         }
 
-        console.log("Is related [" + tmp[2] + "] Related [" + data.related + "]");
+        //console.log("Is related [" + tmp[2] + "] Related [" + data.related + "]");
 
         // related to another entity in the list
         data.RelatedToParentLI = (tmp[4] == 'true') ? true : false;

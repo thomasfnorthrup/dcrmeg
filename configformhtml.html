@@ -11,6 +11,7 @@
     <script src="dcrmeg_xrmservicetoolkit"></script>
     <script src="dcrmeg_xdate"></script>
     <script src="dcrmeg_jquerysortable"></script>
+    <script src="dcrmeg_select2js"></script>
     <script src="dcrmeg_configformiframejs"></script>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,32 +19,42 @@
 </head>
 <body>
     <div id="mainContainer" class="maincontent">
-	    <div class="section group" id="maincontentsect1">
+        <div class="section group" id="maincontentsect1">
 
             <div class="col span_2_of_7">
 
                 <div class="group">
-		            <div class="col span_1_of_2">
-		                <label for="displayonentity" style="width:100%;"><span class="ElipseText2" id="dcrmeg_displaygridonentity">Display grid on entity</span><span style="width:5%;display:inline-block;" class="Required">*</span></label>
-		            </div>
-		            <div class="col span_1_of_2">
-		                <select id="displayonentity" class="displayonentityclass"></select>
-		            </div>
+                    <div class="col span_1_of_2">
+                        <label for="displayonentity" style="width:100%;"><span class="ElipseText2" id="dcrmeg_displaygridonentity">Display grid on entity</span><span style="width:5%;display:inline-block;" class="Required">*</span></label>
+                    </div>
+                    <div class="col span_1_of_2">
+                        <select id="displayonentity" class="displayonentityclass"></select>
+                    </div>
                 </div>
 
                 <div class="group">
-		            <div class="col span_1_of_2">
-		                <label for="displayfromentity"><span class="ElipseText" id="dcrmeg_displaydatafromentity">Display data from</span></label>
-		            </div>
-		            <div class="col span_1_of_3">
-		                <select id="displayfromentity" class="displayonentityclass"></select>
-		            </div>
+                    <div class="col span_1_of_2">
+                        <label for="displayfromentity" style="width:100%;"><span class="ElipseText" id="dcrmeg_displaydatafromentity">Display data from</span></label>
+                    </div>
+                    <div class="col span_1_of_3">
+                        <select id="displayfromentity" class="displayonentityclass"></select>
+                    </div>
                     <div class="col span_1_of_7">
                         <button id="addentitytodisplaybutton" class="addentitylistbutton">+</button>
                     </div>
                 </div>
+
+                <div class="group" style="margin-top:5px;display:none;">
+                    <div class="col span_1_of_2">
+                        <label for="userselectviews" style="width:100%;"><span class="ElipseText">Views:</span></label>
+                    </div>
+                    <div class="col span_1_of_2">
+                        <select id="userselectviews"></select>
+                    </div>
+                </div>
+
                 <div class="group">
-                &nbsp;
+                    &nbsp;
                 </div>
 
                 <div class="group">
@@ -53,9 +64,9 @@
                 </div>
 
                 <div class="group">
-                     <div style="width:90%;">
+                    <div style="width:90%;">
                         <input style="width:98%;" id="configguid" type="text" readonly="readonly" />
-                    </div>               
+                    </div>
                 </div>
 
             </div>
@@ -69,12 +80,12 @@
 
             <div class="col span_2_of_7 conditionfetchcontainer displaynone" id="maincontentsect5">
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label id="autosavechanges_label" class="ElipseText" for="autosavechanges_check">Auto save changes</label>
-		            </div>
-		            <div class="col span_1_of_4">
-		                <input type="checkbox" checked="checked" id="autosavechanges_check" />
-		            </div>
+                    <div class="col span_2_of_3">
+                        <label id="autosavechanges_label" class="ElipseText" for="autosavechanges_check">Auto save changes</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="autosavechanges_check" />
+                    </div>
                 </div>
                 <div class="group">
                     <div class="col span_2_of_3">
@@ -85,76 +96,76 @@
                     </div>
                 </div>
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label id="allowcreate_label" class="ElipseText" for="allowcreate_check">Allow create new</label>
-		            </div>
-		            <div class="col span_1_of_4">
-		                <input type="checkbox" checked="checked" id="allowcreate_check" />
-		            </div>
+                    <div class="col span_2_of_3">
+                        <label id="allowcreate_label" class="ElipseText" for="allowcreate_check">Allow create new</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="allowcreate_check" />
+                    </div>
                 </div>
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label id="allowdelete_label" class="ElipseText" for="allowdelete_check">Allow delete</label>
-		            </div>
-		            <div class="col span_1_of_4">
-		                <input type="checkbox" checked="checked" id="allowdelete_check" />
-		            </div>
+                    <div class="col span_2_of_3">
+                        <label id="allowdelete_label" class="ElipseText" for="allowdelete_check">Allow delete</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="allowdelete_check" />
+                    </div>
                 </div>
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label id="refreshaftercreate_label" class="ElipseText" for="refreshaftercreate_check">Refresh after create new</label>
-		            </div>
-		            <div class="col span_1_of_4">
-		                <input type="checkbox" checked="checked" id="refreshaftercreate_check" />
-		            </div>
+                    <div class="col span_2_of_3">
+                        <label id="refreshaftercreate_label" class="ElipseText" for="refreshaftercreate_check">Refresh after create new</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="refreshaftercreate_check" />
+                    </div>
                 </div>
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label id="refreshaftersave_label" class="ElipseText" for="refreshaftersave_check">Refresh after save</label>
-		            </div>
-		            <div class="col span_1_of_4">
-		                <input type="checkbox" id="refreshaftersave_check" />
-		            </div>
+                    <div class="col span_2_of_3">
+                        <label id="refreshaftersave_label" class="ElipseText" for="refreshaftersave_check">Refresh after save</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" id="refreshaftersave_check" />
+                    </div>
                 </div>
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label id="dcrmeg_displaysumfornumericvalues" class="ElipseText" for="displaySum">Allow aggregates</label>
-		            </div>
-		            <div class="col span_1_of_4">
-		                <input type="checkbox" checked="checked" id="displaySum" />
-		            </div>
+                    <div class="col span_2_of_3">
+                        <label id="dcrmeg_displaysumfornumericvalues" class="ElipseText" for="displaySum">Allow aggregates</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="displaySum" />
+                    </div>
                 </div>
 
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label for="createnewbtnclick" class="ElipseText" id="createnewbtnclick_label">New button (+) behavior</label>
-		            </div>
-		            <div class="col span_1_of_4">
+                    <div class="col span_2_of_3">
+                        <label for="createnewbtnclick" class="ElipseText" id="createnewbtnclick_label">New button (+) behavior</label>
+                    </div>
+                    <div class="col span_1_of_4">
                         <select id="createnewbtnclick" class="displayonentityclass">
                             <option value="10">Create inline</option>
                             <option selected="selected" value="30">Display menu</option>
                             <option value="20">New window</option>
                         </select>
-		            </div>
+                    </div>
                 </div>
 
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label for="booleaneditorbehaviour" class="ElipseText" id="booleaneditorbehaviour_label">Boolean editor behavior</label>
-		            </div>
-		            <div class="col span_1_of_4">
+                    <div class="col span_2_of_3">
+                        <label for="booleaneditorbehaviour" class="ElipseText" id="booleaneditorbehaviour_label">Boolean editor behavior</label>
+                    </div>
+                    <div class="col span_1_of_4">
                         <select id="booleaneditorbehaviour" class="displayonentityclass">
                             <option value="10">One click change</option>
                             <option selected="selected" value="20">Display editor</option>
                         </select>
-		            </div>
+                    </div>
                 </div>
 
                 <div class="group">
-		            <div class="col span_2_of_3">
-		                <label for="maxrecordperpage" class="ElipseText" id="dcrmeg_maxrecordsperpage">Max records per page</label>
-		            </div>
-		            <div class="col span_1_of_4">
+                    <div class="col span_2_of_3">
+                        <label for="maxrecordperpage" class="ElipseText" id="dcrmeg_maxrecordsperpage">Max records per page</label>
+                    </div>
+                    <div class="col span_1_of_4">
                         <select id="maxrecordperpage" class="displayonentityclass">
                             <option selected="selected" value="5">5</option>
                             <option value="10">10</option>
@@ -162,37 +173,37 @@
                             <option value="30">30</option>
                             <option value="40">40</option>
                         </select>
-		            </div>
+                    </div>
                 </div>
             </div>
 
-	    </div>
+        </div>
 
-	    <div class="section group displaynone" id="maincontentsect2">
+        <div class="section group displaynone" id="maincontentsect2">
             <div class="col span_6_of_6">
-		        <div class="col span_1_of_6">
-		            <label id="dcrmeg_displayonlyrelatedrecords" class="ElipseText" for="entitiesAreRelated">Display only related records</label>
-		        </div>
-		        <div class="col" style="width:3%;">
-		            <input type="checkbox" id="entitiesAreRelated" />
-		        </div>
-		        <div class="col span_1_of_6">
-		            <label for="relatedEntityLookupSelect" class="ElipseText" id="dcrmeg_relatedentitylookup">Related entitiy lookup(s)</label>
-		        </div>
+                <div class="col span_1_of_6">
+                    <label id="dcrmeg_displayonlyrelatedrecords" class="ElipseText" for="entitiesAreRelated">Display only related records</label>
+                </div>
+                <div class="col" style="width:3%;">
+                    <input type="checkbox" id="entitiesAreRelated" />
+                </div>
+                <div class="col span_1_of_6">
+                    <label for="relatedEntityLookupSelect" class="ElipseText" id="dcrmeg_relatedentitylookup">Related entitiy lookup(s)</label>
+                </div>
                 <div class="col span_1_of_6">
                     <select style="width:90%;" id="relatedEntityLookupSelect"></select>
                 </div>
                 <div class="col span_1_of_6">
                     <label for="relatedEntityLookup" class="ElipseText" id="relatedEntityLookupLabel">Selected Relationship</label>
                 </div>
-		        <div class="col span_1_of_6">
-		            <input readonly="readonly" id="relatedEntityLookup" type="text" />
-		        </div>
+                <div class="col span_1_of_6">
+                    <input readonly="readonly" id="relatedEntityLookup" type="text" />
+                </div>
             </div>
-	    </div>
+        </div>
 
-		<div class="section group displaynone section4class" id="maincontentsect4">
-			<div class="col span_1_of_3">
+        <div class="section group displaynone section4class" id="maincontentsect4">
+            <div class="col span_1_of_3">
                 <div style="height:24px;">
                     <label for="displayentityfieldsoptions" id="listoffieldstoselectlabel"></label> <span class="Required">*</span>&nbsp;&nbsp;
                     <select id="displayentityfieldsoptions">
@@ -203,9 +214,9 @@
                     </select>&nbsp;&nbsp;
                     <input style="border:solid 1px lightgrey;" id="listoffieldstoselectfilter" type="text" />
                 </div>
-			    <div class="checklistcontainer" id="listoffieldstoselect"></div>
-			</div>
-			<div class="col span_2_of_3">
+                <div class="checklistcontainer" id="listoffieldstoselect"></div>
+            </div>
+            <div class="col span_2_of_3">
                 <div class="conditionfetchcontainer">
                     <div style="font-weight:bold;" id="multisortabletilescontainertitle"><span id="dcrmeg_selectedgridheaders">Selected grid headers</span></div>
                     <div class="configuresortingdiv"><button style="width:100px;" id="configuresorting">Configure Sorting</button></div>
@@ -213,21 +224,21 @@
                         <thead>
                             <tr>
                                 <th>&nbsp;</th>
-                                <th>Label</th>
-                                <th>Schema Name</th>
-                                <th>Field Type</th>
-                                <th>Required Level</th>
-                                <th>Read-only</th>
-                                <th>Width</th>
-                                <th>Create New, Default Value</th>
+                                <th><span title="Label">Label</span></th>
+                                <th><span title="Schema Name">Schema Name</span></th>
+                                <th><span title="Field Type">Field Type</span></th>
+                                <th><span title="Required Level">Required Level</span></th>
+                                <th><span title="Read-only">Read-only</span></th>
+                                <th><span title="Width">Width</span></th>
+                                <th><span title="Create New, Default Value">Create New, Default Value</span></th>
                                 <th>&nbsp;</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
-			</div>
-		</div>
+            </div>
+        </div>
     </div>
 
     <div class="section group displaynone" id="maincontentsect7">
@@ -242,155 +253,155 @@
         <div class="flyoutOverlayContent">
             <div class="flyoutOverlayContentValue">
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="datetimeconditionslabel" for="datetimeconditions">Field value</label>
-<select class="fieldconditionselect" id="datetimeconditions">
-<option value="on" data-fetchop="on" selected="selected">On</option>
-<option value="on-or-after" data-fetchop="on-or-after">On or After</option>
-<option value="on-or-before" data-fetchop="on-or-before">On or Before</option>
-<option value="yesterday">Yesterday</option>
-<option value="today">Today</option>
-<option value="tomorrow">Tomorrow</option>
-<option value="next-seven-days">Next 7 Days</option>
-<option value="last-seven-days">Last 7 Days</option>
-<option value="next-week">Next Week</option>
-<option value="last-week">Last Week</option>
-<option value="this-week">This Week</option>
-<option value="next-month">Next Month</option>
-<option value="last-month">Last Month</option>
-<option value="this-month">This Month</option>
-<option value="next-year">Next Year</option>
-<option value="last-year">Last Year</option>
-<option value="this-year">This Year</option>
-<option value="last-x-hours">Last X Hours</option>
-<option value="next-x-hours">Next X Hours</option>
-<option value="last-x-days">Last X Days</option>
-<option value="next-x-days">Next X Days</option>
-<option value="last-x-weeks">Last X Weeks</option>
-<option value="next-x-weeks">Next X Weeks</option>
-<option value="last-x-months">Last X Months</option>
-<option value="next-x-months">Next X Months</option>
-<option value="last-x-years">Last X Years</option>
-<option value="next-x-years">Next X Years</option>
-<option value="anytime">Any Time</option>
-<option value="olderthan-x-months" data-fetchop="olderthan-x-months">Older Than X Months</option>
-<option value="not-null">Contains Data</option>
-<option value="null">Does Not Contain Data</option>
-<option value="in-fiscal-year">In Fiscal Year</option>
-<option value="in-fiscal-period">In Fiscal Period</option>
-<option value="in-fiscal-period-and-year">In Fiscal Period and Year</option>
-<option value="in-or-after-fiscal-period-and-year">In or After Fiscal Period</option>
-<option value="in-or-before-fiscal-period-and-year">In or Before Fiscal Period</option>
-<option value="last-fiscal-year">Last Fiscal Year</option>
-<option value="this-fiscal-year">This Fiscal Year</option>
-<option value="next-fiscal-year">Next Fiscal Year</option>
-<option value="last-x-fiscal-years">Last X Fiscal Years</option>
-<option value="next-x-fiscal-years">Next X Fiscal Years</option>
-<option value="last-fiscal-period">Last Fiscal Period</option>
-<option value="this-fiscal-period">This Fiscal Period</option>
-<option value="next-fiscal-period">Next Fiscal Period</option>
-<option value="last-x-fiscal-periods">Last X Fiscal Periods</option>
-<option value="next-x-fiscal-periods">Next X Fiscal Periods</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="datetimeconditionslabel" for="datetimeconditions">Field value</label>
+                    <select class="fieldconditionselect" id="datetimeconditions">
+                        <option value="on" data-fetchop="on" selected="selected">On</option>
+                        <option value="on-or-after" data-fetchop="on-or-after">On or After</option>
+                        <option value="on-or-before" data-fetchop="on-or-before">On or Before</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="today">Today</option>
+                        <option value="tomorrow">Tomorrow</option>
+                        <option value="next-seven-days">Next 7 Days</option>
+                        <option value="last-seven-days">Last 7 Days</option>
+                        <option value="next-week">Next Week</option>
+                        <option value="last-week">Last Week</option>
+                        <option value="this-week">This Week</option>
+                        <option value="next-month">Next Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="this-month">This Month</option>
+                        <option value="next-year">Next Year</option>
+                        <option value="last-year">Last Year</option>
+                        <option value="this-year">This Year</option>
+                        <option value="last-x-hours">Last X Hours</option>
+                        <option value="next-x-hours">Next X Hours</option>
+                        <option value="last-x-days">Last X Days</option>
+                        <option value="next-x-days">Next X Days</option>
+                        <option value="last-x-weeks">Last X Weeks</option>
+                        <option value="next-x-weeks">Next X Weeks</option>
+                        <option value="last-x-months">Last X Months</option>
+                        <option value="next-x-months">Next X Months</option>
+                        <option value="last-x-years">Last X Years</option>
+                        <option value="next-x-years">Next X Years</option>
+                        <option value="anytime">Any Time</option>
+                        <option value="olderthan-x-months" data-fetchop="olderthan-x-months">Older Than X Months</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="in-fiscal-year">In Fiscal Year</option>
+                        <option value="in-fiscal-period">In Fiscal Period</option>
+                        <option value="in-fiscal-period-and-year">In Fiscal Period and Year</option>
+                        <option value="in-or-after-fiscal-period-and-year">In or After Fiscal Period</option>
+                        <option value="in-or-before-fiscal-period-and-year">In or Before Fiscal Period</option>
+                        <option value="last-fiscal-year">Last Fiscal Year</option>
+                        <option value="this-fiscal-year">This Fiscal Year</option>
+                        <option value="next-fiscal-year">Next Fiscal Year</option>
+                        <option value="last-x-fiscal-years">Last X Fiscal Years</option>
+                        <option value="next-x-fiscal-years">Next X Fiscal Years</option>
+                        <option value="last-fiscal-period">Last Fiscal Period</option>
+                        <option value="this-fiscal-period">This Fiscal Period</option>
+                        <option value="next-fiscal-period">Next Fiscal Period</option>
+                        <option value="last-x-fiscal-periods">Last X Fiscal Periods</option>
+                        <option value="next-x-fiscal-periods">Next X Fiscal Periods</option>
+                    </select>
+                </div>
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="numericconditionslabel" for="numericconditions">Field value</label>
-<select class="fieldconditionselect" id="numericconditions">
-<option value="eq" data-fetchop="eq" selected="selected">Equals</option>
-<option value="ne" data-fetchop="ne">Does Not Equal</option>
-<option value="gt" data-fetchop="gt">Is Greater Than</option>
-<option value="ge" data-fetchop="ge">Is Greater Than or Equal To</option>
-<option value="lt" data-fetchop="lt">Is Less Than</option>
-<option value="le" data-fetchop="le">Is Less Than or Equal To</option>
-<option value="not-null">Contains Data</option>
-<option value="null">Does Not Contain Data</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="numericconditionslabel" for="numericconditions">Field value</label>
+                    <select class="fieldconditionselect" id="numericconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="gt" data-fetchop="gt">Is Greater Than</option>
+                        <option value="ge" data-fetchop="ge">Is Greater Than or Equal To</option>
+                        <option value="lt" data-fetchop="lt">Is Less Than</option>
+                        <option value="le" data-fetchop="le">Is Less Than or Equal To</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                    </select>
+                </div>
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="stringconditionslabel" for="stringconditions">Field value</label>
-<select class="fieldconditionselect" id="stringconditions">
-<option value="eq" data-fetchop="eq" selected="selected">Equals</option>
-<option value="ne" data-fetchop="ne">Does Not Equal</option>
-<option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
-<option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
-<option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
-<option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
-<option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
-<option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
-<option value="not-null">Contains Data</option>
-<option value="null">Does Not Contain Data</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="stringconditionslabel" for="stringconditions">Field value</label>
+                    <select class="fieldconditionselect" id="stringconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                    </select>
+                </div>
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="optionsetconditionslabel" for="optionsetconditions">Field value</label>
-<select class="fieldconditionselect" id="optionsetconditions">
-<option  value="eq" data-fetchop="eq" selected="selected">Equals</option>
-<option  value="ne" data-fetchop="ne">Does Not Equal</option>
-<option  value="not-null">Contains Data</option>
-<option  value="null">Does Not Contain Data</option>
-<option  value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
-<option  value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
-<option  value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
-<option  value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
-<option  value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
-<option  value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="optionsetconditionslabel" for="optionsetconditions">Field value</label>
+                    <select class="fieldconditionselect" id="optionsetconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="lookupconditionslabel" for="lookupconditions">Field value</label>
-<select class="fieldconditionselect" id="lookupconditions">
-<option  value="eq" data-fetchop="eq" selected="selected">Equals</option>
-<option  value="ne" data-fetchop="ne">Does Not Equal</option>
-<option  value="not-null">Contains Data</option>
-<option  value="null">Does Not Contain Data</option>
-<option  value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
-<option  value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
-<option  value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
-<option  value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
-<option  value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
-<option  value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="lookupconditionslabel" for="lookupconditions">Field value</label>
+                    <select class="fieldconditionselect" id="lookupconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="systemuserctllabel" for="systemuserlookup">Field value</label>
-<select class="fieldconditionselect" id="systemuserlookup">
-    <option value="eq-userid" selected="selected">Equals Current User</option>
-    <option value="ne-userid">Does Not Equal Current User</option>
-    <option value="eq-userteams">Equals Current User's Teams</option>
-    <option value="eq-useroruserteams">Equals Current User Or User's Teams</option>
-    <option value="eq" data-fetchop="eq">Equals</option>
-    <option value="ne" data-fetchop="ne">Does Not Equal</option>
-    <option value="not-null">Contains Data</option>
-    <option value="null">Does Not Contain Data</option>
-    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
-    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
-    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
-    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
-    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
-    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="systemuserctllabel" for="systemuserlookup">Field value</label>
+                    <select class="fieldconditionselect" id="systemuserlookup">
+                        <option value="eq-userid" selected="selected">Equals Current User</option>
+                        <option value="ne-userid">Does Not Equal Current User</option>
+                        <option value="eq-userteams">Equals Current User's Teams</option>
+                        <option value="eq-useroruserteams">Equals Current User Or User's Teams</option>
+                        <option value="eq" data-fetchop="eq">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
 
-<div class="conditionscontainer hideconditionscontainer">
-<label class="FitText" id="customerlookuplabel" for="customerlookup">Field value</label>
-<select class="fieldconditionselect" id="customerlookup">
-    <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
-    <option value="ne" data-fetchop="ne">Does Not Equal</option>
-    <option value="not-null">Contains Data</option>
-    <option value="null">Does Not Contain Data</option>
-    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
-    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
-    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
-    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
-    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
-    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
-</select>
-</div>
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="customerlookuplabel" for="customerlookup">Field value</label>
+                    <select class="fieldconditionselect" id="customerlookup">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
 
                 <input class="conditioninputs" id="fieldconditioninput" type="text" />
                 <input class="conditioninputs" readonly="readonly" id="dateconditioninput" type="text" />
@@ -415,14 +426,14 @@
         </div>
     </div>
 
-    <div id="dcrmegProcessingDialog" class="dcrmegdialogprocessing"> 
+    <div id="dcrmegProcessingDialog" class="dcrmegdialogprocessing">
         <div class="dcrmegprocessingtitle">
             <div class="dcrmegprocessingimg"><img src="/_imgs/processing_loader.gif" /></div>
             <div>Loading...</div>
         </div>
     </div>
 
-    <div id="colsorttypedilog" class="flyoutOverlay"> 
+    <div id="colsorttypedilog" class="flyoutOverlay">
         <div class="flyoutSortorder">
             <table class="sorttypetable">
                 <tr><td colspan="2"><span style="font-size:14px;">Configure Sort Order</span></td></tr>

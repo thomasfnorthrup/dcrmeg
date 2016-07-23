@@ -821,6 +821,15 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
             throw new Error("Sdk.WebAPI.invokeUnboundAction callerId parameter must be a string or null.");
         }
 
+        /*
+         Invoke Action with custom parameters
+         Action name new_TestAction
+    var parameterObj = { 
+        "Description": "Test description", 
+        "Subject": "Invoking from Web API" 
+    };
+    actionName = "accounts(DE57510E-59A3-E511-80E4-3863BB35AD90)/Microsoft.Dynamics.CRM.new_TestAction"; 
+         */
 
         var req = new XMLHttpRequest();
         req.open("POST", encodeURI(getWebAPIPath() + actionName), true);
@@ -1080,6 +1089,11 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         req.send();
 
     }
+
+    //============================== Begin New Functions
+    // uri
+    // getWebAPIPath() + accounts(DE57510E-59A3-E511-80E4-3863BB35AD90)
+
     this.getEntityCount = function (entitySetName, successCallback, errorCallback, onlyActive) {
         if (!isString(entitySetName)) {
             throw new Error("Sdk.WebAPI.queryEntitySet entitySetName parameter must be a string.");
@@ -1155,8 +1169,193 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         };
         req.send();
     }
+    this.GetEntityAttributes = function (SchemaName, successCallback, errorCallback) {
+        if (!isString(SchemaName)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttributes entitySetName parameter must be a string.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttributes successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttributes errorCallback parameter must be a function or null.");
+        }
 
-    // Wrappers
+        // Get Entity metadata specific values (DisplayName,...)
+        //var url = getWebAPIPath() + "EntityDefinitions?$select=DisplayName&$filter=SchemaName eq '" + SchemaName + "'";
+        // Gets all entity metadata without Attributes and relationships collections
+        //var url = getWebAPIPath() + "EntityDefinitions?$filter=SchemaName eq '" + SchemaName + "'";
+
+        // SchemaName 'Account, LogicalName 'account', LogicalCollectionName 'accounts'
+        // PrimaryIdAttribute 'accountid', PrimaryNameAttribute 'name'
+        var url = getWebAPIPath() + "EntityDefinitions?$select=SchemaName,PrimaryIdAttribute,PrimaryNameAttribute,LogicalCollectionName"
+            + "&$filter=SchemaName eq '" + SchemaName + "'&$expand=Attributes"
+            + "($filter=(AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Picklist' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'String' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Memo' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Lookup' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Boolean' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Datetime' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Integer' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Double' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Decimal' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Money' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Customer' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Owner' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'State' or"
+            + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Status')"
+            + " and AttributeOf eq null" +
+            // Excluded
+            " and (LogicalName ne 'createdonbehalfby' and"
+            + " LogicalName ne 'exchangerate' and"
+            + " LogicalName ne 'importsequencenumber' and"
+            + " LogicalName ne 'modifiedonbehalfby' and"
+            + " LogicalName ne 'overriddencreatedon' and"
+            + " LogicalName ne 'owningbusinessunit' and"
+            + " LogicalName ne 'owningteam' and"
+            + " LogicalName ne 'owninguser' and"
+            + " LogicalName ne 'timezoneruleversionnumber' and"
+            + " LogicalName ne 'utcconversiontimezonecode' and"
+            + " LogicalName ne 'versionnumber'))";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", encodeURI(url), true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 200) {
+                    if (successCallback)
+                        successCallback(JSON.parse(this.response).value);
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                }
+            }
+        };
+        req.send();
+    }
+    this.getManyToOneRelationships = function (SchemaName, successCallback, errorCallback) {
+        if (!isString(SchemaName)) {
+            throw new Error("Sdk.WebAPI.getManyToOneRelationships entitySetName parameter must be a string.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.getManyToOneRelationships successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.getManyToOneRelationships errorCallback parameter must be a function or null.");
+        }
+
+        // Gets all N:1 relationships
+        // Can not use RelationshipDefinitions
+        // The properties available when querying RelationshipDefinitions entity set are limited to those in the RelationshipMetadataBase EntityType.
+        // OneToManyRelationshipMetadata and ManyToManyRelationshipMetadata
+         var url = getWebAPIPath() + "EntityDefinitions?$select=SchemaName&$filter=SchemaName eq '" + SchemaName + "'&$expand=ManyToOneRelationships";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", encodeURI(url), true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 200) {
+                    if (successCallback)
+                        successCallback(JSON.parse(this.response).value);
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                }
+            }
+        };
+        req.send();
+    }
+    this.getOneToManyRelationships = function (SchemaName, referencingEntity, successCallback, errorCallback) {
+        if (!isString(SchemaName)) {
+            throw new Error("Sdk.WebAPI.getOneToManyRelationships entitySetName parameter must be a string.");
+        }
+        if (!isStringOrNullOrUndefined(referencingEntity)) {
+            throw new Error("Sdk.WebAPI.getOneToManyRelationships referencingEntity parameter must be a string, null or undefined.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.getOneToManyRelationships successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.getOneToManyRelationships errorCallback parameter must be a function or null.");
+        }
+
+        var url = getWebAPIPath() + "RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata?$select=ReferencingAttribute,ReferencedAttribute&$filter=ReferencedEntity eq '" + SchemaName.toLowerCase() + "' and ReferencingEntity eq '" + referencingEntity + "'";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", encodeURI(url), true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 200) {
+                    if (successCallback)
+                        successCallback(JSON.parse(this.response).value);
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                }
+            }
+        };
+        req.send();
+    }
+    this.getFetchXml = function (entitySetName, fetchXml, successCallback, errorCallback) {
+        if (isNullOrUndefined(entitySetName)) {
+            throw new Error("Sdk.WebAPI.getFetchXml entitySetName parameter must not be null or undefined.");
+        }
+        if (!isString(fetchXml)) {
+            throw new Error("Sdk.WebAPI.getFetchXml fetchXml parameter must be a string.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.getFetchXml successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.getFetchXml errorCallback parameter must be a function or null.");
+        }
+
+        fetchXml = fetchXml.replace(/\"/g, "'");
+
+        var url = getWebAPIPath() + entitySetName + "?fetchXml=" + encodeURI(fetchXml);
+
+        var req = new XMLHttpRequest();
+        req.open("GET", encodeURI(url), true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                switch (this.status) {
+                    case 200:
+                        if (successCallback)
+                            successCallback(JSON.parse(this.response).value);
+                        break;
+                    default:
+                        if (errorCallback)
+                            errorCallback(Sdk.WebAPI.errorHandler(this));
+                        break;
+                }
+            }
+        };
+        req.send();
+
+    }
     this.versionNumber = function (successCallback, errorCallback) {
         /// <summary>Retrieve an array of entities available from the service</summary>
         /// <param name="successCallback" type="Function">The function to call when the results are returned. The results of the operation will be passed to this function.</param>
@@ -1205,6 +1404,8 @@ function WhoAmIFunctionSuccess(WhoAmIResponse) {
 }
          */
     }
+
+    //============================== End New Functions
 
     //A helper for generating a unique changelist value for execute batch
     this.getRandomId = function () {
@@ -1398,6 +1599,7 @@ function WhoAmIFunctionSuccess(WhoAmIResponse) {
         return false;
     }
 
+
     // This function is called when an error callback parses the JSON response
     // It is a public function because the error callback occurs within the onreadystatechange 
     // event handler and an internal function would not be in scope.
@@ -1426,3 +1628,49 @@ function WhoAmIFunctionSuccess(WhoAmIResponse) {
     }
 
 }).call(Sdk.WebAPI);
+
+
+/*
+Macros for
+var isObject = function (elem) {
+  return getType(elem) === 'Object';
+};
+
+ * Sample calls
+axis.isArray([]); // true
+axis.isObject({}); // true
+axis.isString(''); // true
+axis.isDate(new Date()); // true
+axis.isRegExp(/test/i); // true
+axis.isFunction(function () {}); // true
+axis.isBoolean(true); // true
+axis.isNumber(1); // true
+axis.isNull(null); // true
+axis.isUndefined(); // true
+ */
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory;
+    } else {
+        root.axis = factory();
+    }
+})(this, function () {
+    'use strict';
+    var exports = {};
+    var types = 'Array Object String Date RegExp Function Boolean Number Null Undefined'.split(' ');
+    var type = function () {
+        return Object.prototype.toString.call(this).slice(8, -1);
+    };
+
+    for (var i = types.length; i--;) {
+        exports['is' + types[i]] = (function (self) {
+            return function (elem) {
+                return type.call(elem) === self;
+            };
+        })(types[i]);
+    }
+
+    return exports;
+});

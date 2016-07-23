@@ -625,6 +625,7 @@ var _thisHelpers = DCrmEditableGrid.Helper;
 _thisGlobals.xrmPage = window.parent.Xrm.Page;
 _thisGlobals.LoggedInUserID = _thisGlobals.xrmPage.context.getUserId();
 
+
 function LogIt(s) {
     if ( (_thisGlobals.Debug) && (typeof console != "undefined") && (typeof console.debug != "undefined")) {
         console.log(s);
@@ -1318,34 +1319,100 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
 
     var $input = $('<input type="checkbox" />')
         .attr('id', Input_ID)
+        .addClass('cmn-toggle cmn-toggle-yes-no')
         .appendTo($editor);
-    var $CheckboxLabel = $('<label></label>').attr('id', Label_ID).attr('for', Input_ID).appendTo($editor);
+    var $CheckboxLabel = $('<label></label>')
+        .attr('id', Label_ID)
+        .attr('for', Input_ID)
+        .attr('data-on', CheckedText)
+        .attr('data-off', UncheckedText)
+        .appendTo($editor);
 
     $editor.SetInternals = function (curText) {
         var initVal = (curText == CheckedText) ? true : false;
         $input.prop('checked', initVal);
-        $CheckboxLabel.text(initVal ? CheckedText : UncheckedText);
-        $editor.show();
-        $input.focus();
+        $CheckboxLabel.width($editor.width() - 3).height($editor.height() - 4);
+        $editor.show().focus();
 
-        $(window.document).off('mousedown').on('mousedown', function (e) {
+        $(window.document).off('mousedown').off('keydown').on('mousedown', function (e) {
             if (e.target) {
                 var ctlid = $(e.target).attr('id');
                 if ((ctlid == Input_ID) || (ctlid == Label_ID) || (ctlid == Div_ID)) {
                     return false;
                 } else {
-                    $(window.document).off('mousedown');
+                    $(window.document).off('keydown').off('mousedown');
                     $editor.hide();
                     $(e.target).focus();
                 }
+            }
+        })
+        .on('keydown', function (e) {
+            console.log("Handling IE 10-11 specific! Does not fire in Chrome, FF, ...");
+            var tkey = e.which || e.keycode;
+            var prevent = false;
+            var isTabKeydown = false;
+            if (tkey === DCrmEditableGrid.Keys.ESC) {
+                prevent = true;
+                $editor.hide();
+                active = table.activeCell;
+                if ((active) && (active.length)) {
+                    active.focus();
+                }              
+            }
+            if (tkey == DCrmEditableGrid.Keys.TAB) {
+                isTabKeydown = true;
+                tkey = DCrmEditableGrid.Keys.ARROWRIGHT;
+            }
+            if ((tkey >= DCrmEditableGrid.Keys.ARROWLEFT) && (tkey <= DCrmEditableGrid.Keys.ARROWDOWN)) { // Arrow keys
+                $editor.hide();
+                prevent = true;
+                active = table.activeCell;
+                if ((active) && (active.length)) {
+                    var possibleMove = _thisHelpers.Movement(active, tkey);
+                    if ((possibleMove) && (possibleMove.length) && (possibleMove.length > 0)) {
+                        $editor.PossibleMove = possibleMove;
+                        $editor.PossibleMove.focus();
+
+                        if (isTabKeydown) {
+                            setTimeout(function () {
+                                $editor.PossibleMove.trigger("click");
+                            }, 50);
+                        }
+                    } else {
+                        active.focus();
+                    }
+                }
+            } else if (tkey == 32) {
+                prevent = true;
+                $input.trigger("click");
+            }
+
+            if (prevent) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
             }
         });
     };
 
     $editor.CloseEditor = function () {
         if ($editor.is(':visible')) {
+            $(window.document).off('keydown').off('mousedown');
             $editor.hide();
         }
+    };
+
+    $editor.IsVisible = function () {
+        return $editor.is(':visible');
+    };
+
+    $editor.SimulateClick = function () {
+        $input.trigger("click");
+    };
+
+    $editor.SetWidthAndLocation = function (data) {
+        $editor.offset({ 'left': data.left, 'top': data.top }).width(data.width + 1);
+        $CheckboxLabel.width($editor.width() - 3).height($editor.height() - 4);
     };
 
     $input.on('click', function (e) {
@@ -1381,60 +1448,11 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
         }
 
         if (textUpdated) {
-            // update TableManager cache
             $editor.theUpdater(active, originalVal);
-            $CheckboxLabel.text(text);
         } else {
-            // Reset
             $input.prop("checked", !$input.prop('checked'));
         }
-    })
-        .on('keydown', function (e) {
-            var tkey = e.which || e.keycode;
-            var prevent = false;
-
-            if (tkey === DCrmEditableGrid.Keys.ESC) {
-                prevent = true;
-                $editor.hide();
-                active = table.activeCell;
-                if ((active) && (active.length)) {
-                    active.focus();
-                }              
-            }
-
-            if (tkey == DCrmEditableGrid.Keys.TAB) {
-                tkey = DCrmEditableGrid.Keys.ARROWRIGHT;
-            }
-
-            if ((tkey >= DCrmEditableGrid.Keys.ARROWLEFT) && (tkey <= DCrmEditableGrid.Keys.ARROWDOWN)) { // Arrow keys
-                $editor.hide();
-                prevent = true;
-                //if (!$editor.RefreshOnSave) {
-                    active = table.activeCell;
-                    if ((active) && (active.length)) {
-
-                        var possibleMove = _thisHelpers.Movement(active, tkey);
-                        if ((possibleMove) && (possibleMove.length) && (possibleMove.length > 0)) {
-                            $editor.PossibleMove = possibleMove;
-                            setTimeout(function () {
-                                $editor.PossibleMove.focus();
-                                $editor.PossibleMove.trigger("click");
-                            }, 50);
-                        } else {
-                            active.focus();
-                        }
-
-                    }
-                //}
-            }
-
-            if (prevent) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-
-        });
+    });
 
     $editor.DestroyEditor = function () {
         $input.off('click').off('keydown');
@@ -1630,6 +1648,7 @@ $.fn.DCrmEditableGrid.EntityStatesBox = function (schemaName, editorsArrayi, tab
     $editor.EntityStates = { SchemaName: schemaName, Status: [], StatusReason: [] };
     $editor.RefreshOnSave = false;
     $editor.RecId = null;
+    $editor.PrimaryIdAttribute = null;
 
     function StateCodeCallback(optionset) {
         if (optionset.length > 0) {
@@ -1842,18 +1861,14 @@ $.fn.DCrmEditableGrid.EntityStatesBox = function (schemaName, editorsArrayi, tab
 
     $editor.SetInternals = function (curVal, recGuid) {
         $editor.RecId = recGuid;
-        var tname = schemaName;
-        if (tname == 'activitypointer') {
-            tname = 'activity';
-        }
         var fetch =
             '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
               '<entity name="' + schemaName + '">' +
-                '<attribute name="' + tname + 'id" />' +
+                '<attribute name="' + $editor.PrimaryIdAttribute + '" />' +
                 '<attribute name="statuscode" />' +
                 '<attribute name="statecode" />' +
                 '<filter type="and">' +
-                  '<condition attribute="' + tname + 'id" operator="eq" uitype="' + schemaName +
+                  '<condition attribute="' + $editor.PrimaryIdAttribute + '" operator="eq" uitype="' + schemaName +
                     '" value="' + _thisHelpers.AddCurlyBrace(recGuid) + '" />' +
                 '</filter>' +
               '</entity>' +
@@ -2718,6 +2733,11 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
         }
     });
 
+    $editor.SetWidthAndLocation = function (data) {
+        $editor.offset({ 'left': data.left, 'top': data.top }).width(data.width + 1);
+        $input.width($editor.width() - 30);
+    };
+
     $editor.SetInternals = function (curText, Guid, LogicalName) {
         if (!LookupDataInitialized) {
             InitializaLookupData();
@@ -3256,15 +3276,54 @@ var CrmEditableGrid = (function () {
         self.errorcontainer = $("#" + self.activeOptions.RequiredErrorContainer);
         self.inputFormatErrorContainer = $('#' + self.activeOptions.InputFormatErrorContainer);
 
-        self.GridEditors = CreateEditors(self.activeOptions.columneditors,
-            self.mainTable, self.errorcontainer,
-            self.inputFormatErrorContainer,
-            self.activeOptions.ParentEntityInfo.ParentEntitySchemaname);
         self.activeCell = undefined;
         self.contextMenuTarget = undefined;
         self.SelectedRecordGuid = undefined;
         self.HighlightedRow = undefined;
         self.GridConfiguration = FindDCrmEGConfigurationBySchema(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname);
+
+        self.GetParentPrimaryNameAttributeValueCallback = function (result) {
+            if (result && result.length > 0) {
+                self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue = result[0].attributes[self.activeOptions.ParentChildLookupInfo.PrimaryNameAttribute].value;
+            }
+            //console.log("self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue [" + self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue + "]");
+
+            // Find the filter, if exists, update it
+            var filter = self.GridConfiguration.GetInlineFilterBySchemaName(self.activeOptions.ParentChildLookupInfo.LookupSchemaName);
+            if (filter) {
+                filter.Value = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;
+            }
+        };
+        self.GetParentPrimaryAttributesCallback = function (entityMetaData) {
+            if (entityMetaData && entityMetaData.length === 1) {
+                self.activeOptions.ParentChildLookupInfo.PrimaryIdAttribute = entityMetaData[0].PrimaryIdAttribute;
+                self.activeOptions.ParentChildLookupInfo.PrimaryNameAttribute = entityMetaData[0].PrimaryNameAttribute;
+            }
+
+            // Need to get the primarAttributeName value for related lookup
+            var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
+              '<entity name="' + self.activeOptions.ParentChildLookupInfo.ParentSchemaName + '">' +
+                  '<attribute name="' + self.activeOptions.ParentChildLookupInfo.PrimaryNameAttribute + '" />' +
+                  '<filter type="and">' +
+                    '<condition attribute="' +
+                        self.activeOptions.ParentChildLookupInfo.PrimaryIdAttribute + '" operator="eq" value="' +
+                        _thisHelpers.AddCurlyBrace(self.activeOptions.ParentChildLookupInfo.Guid) + '" />' +
+                  '</filter>' +
+              '</entity>' +
+          '</fetch>';
+            XrmServiceToolkit.Soap.Fetch(fetch, false, self.GetParentPrimaryNameAttributeValueCallback);
+        };
+
+        // Get the parent primary id and name attribute names for related lookups, if related
+        if (self.activeOptions.ParentChildLookupInfo.Related) {
+            XrmServiceToolkit.Soap.RetrieveEntityMetadata("Entity",
+                self.activeOptions.ParentChildLookupInfo.ParentSchemaName, true, self.GetParentPrimaryAttributesCallback);
+        }
+
+        self.GridEditors = CreateEditors(self.activeOptions.columneditors,
+            self.mainTable, self.errorcontainer,
+            self.inputFormatErrorContainer,
+            self.activeOptions.ParentEntityInfo.ParentEntitySchemaname);
         
         self.showEditor = function (e) {
             self.mainTable.activeCell = undefined;
@@ -3332,7 +3391,7 @@ var CrmEditableGrid = (function () {
                         curEditor
                             .css('left', self.activeCell.offset().left)
                             .css('top', self.activeCell.offset().top)
-                            .width(self.activeCell.width())
+                            .width(self.activeCell.width() + 1)
                             .height(self.activeCell.outerHeight() - 1)
                             .SetInternals(curText);
                     } else {
@@ -3488,7 +3547,9 @@ var CrmEditableGrid = (function () {
                         }
                     }
 
-                    if ((self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid)) && (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid).trim().length > 0)) {
+                    if ((contextMenuTargetText.length > 0) &&
+                        (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid)) &&
+                        (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid).trim().length > 0)) {
                         if (haveanymenu) {
                             $('<li class="divider"></li>').appendTo(menu);
                         }
@@ -3511,7 +3572,8 @@ var CrmEditableGrid = (function () {
                         }
                     }
 
-                    if (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Format) == 'url') {
+                    if ((contextMenuTargetText.length > 0) && 
+                        (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Format) == 'url')) {
                         if (haveanymenu) {
                             $('<li class="divider"></li>').appendTo(menu);
                         }
@@ -3539,7 +3601,7 @@ var CrmEditableGrid = (function () {
                             }
                         } else if (id == 'OpenRecordCtxMenuItem') {
                             if (self.contextMenuTarget) {
-                                openEntityRecord(self.activeOptions.entityschemaName, self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.RecordGuid));
+                                openEntityRecord(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname, self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.RecordGuid));
                             }
                         } else if (id == 'OpenLookupRecordCtxMenuItem') {
                             openEntityRecord(self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName), self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid));
@@ -3581,9 +3643,11 @@ var CrmEditableGrid = (function () {
                             $bg.remove();
                             menu.remove();
                             if (self.contextMenuTarget) {
-                                setTimeout(DisplayRecordState, 100, self.activeOptions.ParentEntityInfo.ParentEntitySchemaname,
-                                        self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.RecordGuid),
-                                        self.activeOptions.GridContainerIds.RefreshGrid);
+                                setTimeout(DisplayRecordState, 100,
+                                    self.activeOptions.ParentEntityInfo.ParentEntitySchemaname,
+                                    self.activeOptions.ParentEntityInfo.PrimaryIdAttribute,
+                                    self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.RecordGuid),
+                                    self.activeOptions.GridContainerIds.RefreshGrid);
                                 self.contextMenuTarget = undefined;
                             }
                             return false;
@@ -3626,24 +3690,45 @@ var CrmEditableGrid = (function () {
             })
             .on('keydown' ,function (e) {
                 var tkey = e.which || e.keycode;
+                //console.log("tKey [" + tkey + "]");
+
                 var prevent = false;
+                var isTabkeydown = false;
 
                 if (tkey == DCrmEditableGrid.Keys.TAB) {
+                    isTabkeydown = true;
                     tkey = DCrmEditableGrid.Keys.ARROWRIGHT;
                 }
 
                 if ((tkey >= DCrmEditableGrid.Keys.ARROWLEFT) && (tkey <= DCrmEditableGrid.Keys.ARROWDOWN)) {
+                    var checkboxWasvisible = false;
+                    for (var i = 0; i < self.GridEditors.length; i++) {
+                        if ((self.GridEditors[i] != null) && (self.GridEditors[i].EditorType == DCrmEditableGrid.Editors.Checkbox)) {
+                            if (self.GridEditors[i].IsVisible()) {
+                                self.GridEditors[i].CloseEditor();
+                                checkboxWasvisible = true;
+                                break;
+                            }
+                        }
+                    }
+
                     var possibleMove = _thisHelpers.Movement($(e.target), tkey);
                     if ((possibleMove) && (possibleMove.length) && (possibleMove.length > 0)) {
                         self.mainTable.focus();
                         possibleMove.focus();
-                        if (possibleMove.attr(_thisGlobals.DataAttr.Cell.FooterCell) != _thisGlobals.DataAttr.NO) {
-                            self.activeCell = $(possibleMove);
+                        if ((possibleMove[0].cellIndex > 0) &&
+                            (possibleMove.attr(_thisGlobals.DataAttr.Cell.FooterCell) != _thisGlobals.DataAttr.NO)) {
+                            self.activeCell = possibleMove;
                             if (self.activeCell.hasClass('IsDirty')) {
                                 $('#' + self.activeOptions.GridContainerIds.UndoChanges).removeClass('GreyImage');
                             } else {
                                 $('#' + self.activeOptions.GridContainerIds.UndoChanges).addClass('GreyImage');
                             }
+
+                            if ((checkboxWasvisible) && (isTabkeydown)) {
+                                self.showEditor();
+                            }
+
                         } else {
                             $('#' + self.activeOptions.GridContainerIds.UndoChanges).addClass('GreyImage');
                             self.activeCell = undefined;
@@ -3654,10 +3739,34 @@ var CrmEditableGrid = (function () {
                     self.activeCell = self.mainTable.find('td:focus');
                     prevent = ((self.activeCell) && (self.activeCell.length) && (self.activeCell[0].cellIndex > 0) && (self.activeCell.attr(_thisGlobals.DataAttr.Cell.FooterCell) != _thisGlobals.DataAttr.NO));
                     if (prevent) {
-                        $(self.activeCell).focus();
+                        self.activeCell.focus();
                         self.showEditor();
                     } else {
                         self.activeCell = undefined;
+                    }
+                } else if (tkey == DCrmEditableGrid.Keys.ESC) {
+
+                    for (var i = 0; i < self.GridEditors.length; i++) {
+                        if ((self.GridEditors[i] != null) && (self.GridEditors[i].EditorType == DCrmEditableGrid.Editors.Checkbox)) {
+                            if (self.GridEditors[i].IsVisible) {
+                                self.GridEditors[i].CloseEditor();
+                                if (self.activeCell) {
+                                    self.activeCell.focus();
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if (tkey == 32) {
+                    for (var i = 0; i < self.GridEditors.length; i++) {
+                        if ((self.GridEditors[i] != null) && (self.GridEditors[i].EditorType == DCrmEditableGrid.Editors.Checkbox)) {
+                            if (self.GridEditors[i].IsVisible) {
+                                prevent = true;
+                                self.GridEditors[i].SimulateClick();
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -3667,7 +3776,7 @@ var CrmEditableGrid = (function () {
                     return false;
                 }
             });
-        
+
         // ensure events are fired for tds
         self.mainTable.find('td').prop('tabindex', 1);
 
@@ -3954,7 +4063,7 @@ var CrmEditableGrid = (function () {
             self.activeOptions.selectedRows = [];
             self.activeOptions.DirtyCells = [];
 
-            GetEntityCount(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname,
+            GetEntityCount(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname, self.activeOptions.ParentEntityInfo.PrimaryIdAttribute,
                 self.GridConfiguration.GetFetchXmlFilters(), self.RecordCountCallback);
         };
 
@@ -4271,13 +4380,31 @@ var CrmEditableGrid = (function () {
 
         self.HeaderOnDragHandler = function (e) {
             var columns = $(e.currentTarget).find("th");
-
+            // Resize any active inline editor
             if ((columns) && (self.activeCell) && (self.activeCell.length)) {
                 var column = $(columns[self.activeCell[0].cellIndex]);
                 var curEditor = self.GridEditors[self.activeCell[0].cellIndex];
 
                 if (curEditor.is(':visible')) {
-                    curEditor.offset({ top: curEditor.offset().top, left: column.offset().left }).width(column.width());
+                    if ((curEditor.EditorType == DCrmEditableGrid.Editors.Text) ||
+                        (curEditor.EditorType == DCrmEditableGrid.Editors.Numeric) ||
+                        (curEditor.EditorType == DCrmEditableGrid.Editors.Decimal) ||
+                        (curEditor.EditorType == DCrmEditableGrid.Editors.Currency)) {
+                        curEditor.offset({ top: curEditor.offset().top, left: column.offset().left }).width(column.width() - 5);
+
+                    } else if (curEditor.EditorType == DCrmEditableGrid.Editors.Checkbox) {
+                        curEditor.SetWidthAndLocation({ top: curEditor.offset().top, left: column.offset().left, width: column.width() });
+
+                    } else if (curEditor.EditorType == DCrmEditableGrid.Editors.Lookup) {
+                        curEditor.SetWidthAndLocation({ top: curEditor.offset().top, left: column.offset().left, width: column.width() });
+
+                    } else if (curEditor.EditorType == DCrmEditableGrid.Editors.OptionSet) {
+                        curEditor.css({ left: column.offset().left, top: curEditor.offset().top })
+                            .width(column.width() - 1);
+
+                    } else {
+                        curEditor.offset({ top: curEditor.offset().top, left: column.offset().left });
+                    }
                 }
                 if (self.errorcontainer.is(':visible')) {
                     var etop = curEditor.offset().top - (self.errorcontainer.height() + 8);
@@ -4674,6 +4801,7 @@ var CrmEditableGrid = (function () {
                     self.GridEditors[i].theUpdater = self.updateCell;
                 } else {
                     self.GridEditors[i].theUpdater = self.RefreshGridRows;
+                    self.GridEditors[i].PrimaryIdAttribute = self.activeOptions.ParentEntityInfo.PrimaryIdAttribute;
                 }
             }
         }
@@ -4682,9 +4810,7 @@ var CrmEditableGrid = (function () {
         self.UpdatePagerButtons();
 
         if ((self.activeOptions.EntityCurrencyid) && (self.activeOptions.HaveNumericFields.HavePrecision)) {
-            setTimeout(function () {
-                XrmServiceToolkit.Soap.Fetch(GetCurrencyFetch(self.activeOptions.EntityCurrencyid), false, self.CurrencySymbolCallback);
-            }, 150);
+            XrmServiceToolkit.Soap.Fetch(GetCurrencyFetch(self.activeOptions.EntityCurrencyid), false, self.CurrencySymbolCallback);
         }
 
         $(window).on('resize', function () {
@@ -4711,7 +4837,7 @@ var CrmEditableGrid = (function () {
         SetupRowHighlighting(self);
     }
 
-    // Prototypes???
+    // Instance
 
     function openEntityRecord(enityLogicalName, guid) {
         var randomnumber = 100000000 + Math.floor(Math.random() * 900000000);
@@ -4988,7 +5114,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 DisplayNewButtonMenu(who, $(this));
             } else if (self.activeOptions.NewBtnBehavoir == "20") {
                 try {
-                    window.parent.Xrm.Utility.openEntityForm(self.activeOptions.entityschemaName);
+                    window.parent.Xrm.Utility.openEntityForm(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname);
                 } catch (e) {
                     msg = e.message;
                 }
@@ -5037,7 +5163,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                 if (window.parent.DCrmEgGridDeleting) {
                     if (!window.parent.DCrmEgGridDeleting(toDelGuids, self.activeOptions.ParentEntityInfo)) {
-                        //LogIt("Deleting cancelled by user");
+                        LogIt("Deleting cancelled by user");
                         window.parent.Xrm.Utility.alertDialog("Delete operation cancelled by javascript callback.");
                         return;
                     }
@@ -5052,7 +5178,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                 for (var i = 0; i < toDelGuids.length; i++) {
                     try {
-                        XrmServiceToolkit.Soap.Delete(self.activeOptions.entityschemaName, toDelGuids[i]);
+                        XrmServiceToolkit.Soap.Delete(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname, toDelGuids[i]);
                         finalToDel.push(toDel[i]);
                         finalToCheck.push(toCheckForSubgrid[i]);
                     } catch (e) {
@@ -5074,7 +5200,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                                     var subgridid = finalToCheck[i][0].DSubGridRow.attr(_thisGlobals.DataAttr.Row.SubGrid.Id);
                                     finalToCheck[i][0].DSubGridRow = undefined;
 
-                                    if (self.options.HasChildGrids) {
+                                    if (self.activeOptions.HasChildGrids) {
                                         self.SelectedRecordGuid = finalToCheck[i].attr(_thisGlobals.DataAttr.Cell.RecordGuid);
                                         ParentGridSelectedRecord(self, subgridid, true);
                                     }
@@ -5170,34 +5296,35 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
         self.mainTable.find(_thisGlobals.DefaultGridOptions.selectorBodyRows).off('mouseover').off('mouseleave')
             .on('mouseover', function (e) {
-            var $tmp = $(e.target);
-            tname = $tmp.parent()[0].tagName;
+                var $tmp = $(e.target);
+                tname = $tmp.parent()[0].tagName;
 
-            if ((e.target.tagName == 'SPAN') || (e.target.tagName == 'BUTTON') || (e.target.tagName == 'IMG') || (e.target.tagName == 'INPUT')) {
-                if (tname == 'TD') {
-                    self.HighlightedRow = $tmp.parent().parent();
+                if ((e.target.tagName == 'SPAN') || (e.target.tagName == 'BUTTON') || (e.target.tagName == 'IMG') || (e.target.tagName == 'INPUT')) {
+                    if (tname == 'TD') {
+                        self.HighlightedRow = $tmp.parent().parent();
+                    }
+                } else if (e.target.tagName == 'TD') {
+                    self.HighlightedRow = $tmp.parent();
                 }
-            } else if (e.target.tagName == 'TD') {
-                self.HighlightedRow = $tmp.parent();
-            }
-            if (self.HighlightedRow) {
-                if (self.HighlightedRow.attr(_thisGlobals.DataAttr.Row.SubGrid.Row.Id)) {
-                } else {
-                    self.HighlightedRow.addClass('rowheaderhovercolor');
+                if (self.HighlightedRow) {
+                    if (self.HighlightedRow.attr(_thisGlobals.DataAttr.Row.SubGrid.Row.Id)) {
+                    } else {
+                        self.HighlightedRow.addClass('rowheaderhovercolor');
+                    }
                 }
-            }
-        }).on('mouseleave', function (e) {
-            if (self.HighlightedRow) {
-                self.HighlightedRow.removeClass('rowheaderhovercolor');
-                self.HighlightedRow = undefined;
-            }
+        })
+            .on('mouseleave', function (e) {
+                if (self.HighlightedRow) {
+                    self.HighlightedRow.removeClass('rowheaderhovercolor');
+                    self.HighlightedRow = undefined;
+                }
         });
     }
 
     function UpdateCrmField(toSave, who) {
         //Update Entity
         $.each(toSave, function (i, field) {
-            var updateEntity = new XrmServiceToolkit.Soap.BusinessEntity(who.activeOptions.entityschemaName, field.RecGuid);
+            var updateEntity = new XrmServiceToolkit.Soap.BusinessEntity(who.activeOptions.ParentEntityInfo.ParentEntitySchemaname, field.RecGuid);
             // If value to save is empty, we need to pass null to empty the contents of the crm field
             var val = null;
             var tmp = null;
@@ -5249,7 +5376,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 if (field.FieldSchemaName == 'ownerid') {
                     // Set the owner
                     try {
-                        var res = XrmServiceToolkit.Soap.Assign(who.activeOptions.entityschemaName, field.RecGuid, field.LookupLogicalName, field.LookupId);
+                        var res = XrmServiceToolkit.Soap.Assign(who.activeOptions.ParentEntityInfo.ParentEntitySchemaname, field.RecGuid, field.LookupLogicalName, field.LookupId);
                     } catch (e) {
                         LogEx("Exception: Setting owner " + e.message);
                     }
@@ -5300,15 +5427,11 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
         return true;
     }
 
-    function GetEntityCount(schemaName, filters, callback) {
-        var name = schemaName;
-        if (name == 'activitypointer') {
-            name = 'activity';
-        }
+    function GetEntityCount(schemaName, primaryidattr, filters, callback) {
         var fetchXml =
             "<fetch mapping='logical' aggregate='true'>" +
                 "<entity name='" + schemaName + "'>" +
-                    "<attribute name='" + name + "id' aggregate='count' alias='count' />";
+                    "<attribute name='" + primaryidattr + "' aggregate='count' alias='count' />";
         if (filters.length > 0) {
             fetchXml += '<filter type="and">' + filters + '</filter>';
         }
@@ -5440,7 +5563,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                         var $parentrow = $(this).parent().parent();
                         if (($parentrow) && ($parentrow.length > 0)) {
-                            window.parent.Xrm.Utility.openEntityForm(gridOptions.entityschemaName,
+                            window.parent.Xrm.Utility.openEntityForm(gridOptions.ParentEntityInfo.ParentEntitySchemaname,
                                 $($parentrow).attr(_thisGlobals.DataAttr.Cell.RecordGuid));
                         }
                     }).appendTo($tmpCell);
@@ -5823,8 +5946,24 @@ function DisplayNewButtonMenu(self, $this) {
 
         } else if (id == 'newwindow') {
             try {
+
+                if (window.parent.DCrmEgGridBeforeCreateNewRecord) {
+                    var allow = window.parent.DCrmEgGridBeforeCreateNewRecord(null, self.activeOptions.ParentEntityInfo);
+                    if (!allow) {
+                        $bg.remove();
+                        menu.remove();
+                        window.parent.Xrm.Utility.alertDialog("Create operation cancelled by javascript callback.");
+                        return false;
+                    }
+                }
+
                 if (self.activeOptions.ParentChildLookupInfo.Related) {
-                    var lookupname = window.parent.Xrm.Page.data.entity.getPrimaryAttributeValue();
+                    if ((self.activeOptions.ParentChildLookupInfo.LookupSchemaName == 'regardingobjectid')) {
+                        $bg.remove();
+                        menu.remove();
+                        window.parent.Xrm.Utility.alertDialog("Unable to set Regarding. Please use the create Inline menu.\r\nMSDN: You can't set the values for partylist or regarding lookups using openEntityForm.");
+                        return false;
+                    }
 
                     /*
  var parameters = {};
@@ -5834,13 +5973,15 @@ function DisplayNewButtonMenu(self, $this) {
 
 For simple lookups you must set the value and the text to display in the lookup. Use the suffix “name” with the name of the attribute to set the value for the text.
 Don’t use any other arguments.
-For customer and owner lookups you must set the value and the name in the same way you set them for simple lookups. In addition you must use the suffix “type” to specify the type of entity. Allowable values are account, contact, systemuser, and team.
+For customer and owner lookups you must set the value and the name in the same way you set them for simple lookups.
+In addition you must use the suffix “type” to specify the type of entity.
+Allowable values are account, contact, systemuser, and team.
 You can’t set the values for partylist or regarding lookups.
                     */
                     var parameters = {};
 
                     parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName] = self.activeOptions.ParentChildLookupInfo.Guid;
-                    parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName + "name"] = lookupname;
+                    parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName + "name"] = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;
 
                     var tmp = self.activeOptions.ParentChildLookupInfo.LookupSchemaName;
 
@@ -5848,9 +5989,10 @@ You can’t set the values for partylist or regarding lookups.
                         parameters[self.activeOptions.ParentChildLookupInfo.LookupSchemaName + "type"] = self.activeOptions.ParentChildLookupInfo.ParentSchemaName;
                     }
 
-                    window.parent.Xrm.Utility.openEntityForm(self.activeOptions.entityschemaName, null, parameters);
+                    window.parent.Xrm.Utility.openEntityForm(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname, null, parameters);
+
                 } else {
-                    window.parent.Xrm.Utility.openEntityForm(self.activeOptions.entityschemaName, null, null);
+                    window.parent.Xrm.Utility.openEntityForm(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname, null, null);
                 }
             } catch (e) {
                 msg = e.message;
@@ -6000,7 +6142,7 @@ function CreateInlineRecord(self) {
 
                             var $parentrow = $(this).parent().parent();
                             if (($parentrow) && ($parentrow.length > 0)) {
-                                window.parent.Xrm.Utility.openEntityForm(self.activeOptions.entityschemaName,
+                                window.parent.Xrm.Utility.openEntityForm(self.activeOptions.ParentEntityInfo.ParentEntitySchemaname,
                                     $($parentrow).attr(_thisGlobals.DataAttr.Cell.RecordGuid));
                             }
                         }).appendTo($tmpCell);
@@ -6011,7 +6153,7 @@ function CreateInlineRecord(self) {
 
         cells = $cloneRow[0].cells;
 
-        var recSchema = self.activeOptions.entityschemaName;
+        var recSchema = self.activeOptions.ParentEntityInfo.ParentEntitySchemaname;
 
         var recNew = new XrmServiceToolkit.Soap.BusinessEntity(recSchema);
         var exclude = ['transactioncurrencyid', 'createdby', 'createdon', , 'modifiedby', 'modifiedon', 'ownerid'];
@@ -6168,15 +6310,19 @@ function CreateInlineRecord(self) {
                         .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, recNew.attributes[schema].id)
                         .attr(_thisGlobals.DataAttr.Cell.Lookup.OriginalLogicalName, recNew.attributes[schema].logicalName);
 
-                    //LogIt("Schema [" + schema + "] logicalname [" +
+
+                    self.activeOptions.columneditors[tmpLookupStruc.Index - 1].LookupName = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;
+                    $cell = $($cloneRow[0].cells[tmpLookupStruc.Index]);
+                    _thisHelpers.SetActiveCellText($cell, self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue);
+
+                    //console.log("Schema [" + schema + "] logicalname [" +
                     //    recNew.attributes[schema].logicalName + "] ID [" +
                     //    recNew.attributes[schema].id + "] type [" +
-                    //    recNew.attributes[schema].type + "]");
+                    //    recNew.attributes[schema].type + "] LookupLabel [" + self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue + "]");
 
                 } else if (defaultVal) {
                     var parts = defaultVal.split("{}");
                     //LogIt("Label [" + parts[0] + "] LogicalName [" + parts[2] + "] Guid [{" + parts[1] + "}]");
-
                     recNew.attributes[schema] = {
                         id: "{" + parts[1] + "}",
                         logicalName: parts[2],
@@ -6204,6 +6350,15 @@ function CreateInlineRecord(self) {
 
         }
 
+        if (window.parent.DCrmEgGridBeforeCreateNewRecord) {
+            var allow = window.parent.DCrmEgGridBeforeCreateNewRecord(recNew, self.activeOptions.ParentEntityInfo);
+            if (!allow) {
+                _thisHelpers.WaitDialog();
+                window.parent.Xrm.Utility.alertDialog("Create operation cancelled by javascript callback.");
+                return;
+            }
+        }
+
         var newRecGuid = XrmServiceToolkit.Soap.Create(recNew);
         $cloneRow.attr(_thisGlobals.DataAttr.Cell.RecordGuid, newRecGuid);
         $cloneRow.attr(_thisGlobals.DataAttr.Row.SubGrid.ChildGridOpen, _thisGlobals.DataAttr.NO);
@@ -6213,13 +6368,6 @@ function CreateInlineRecord(self) {
                 $cell = $(cells[i]);
                 $cell.attr(_thisGlobals.DataAttr.Cell.RecordGuid, newRecGuid);
             }
-        }
-
-        if ((self.activeOptions.ParentChildLookupInfo.Related) && (tmpLookupStruc.Index > -1)) {
-            val = GetLookupDisplayName(recSchema, tmpLookupStruc.Schema, tmpLookupStruc.UiType, self.activeOptions.ParentChildLookupInfo.Guid);
-            self.activeOptions.columneditors[tmpLookupStruc.Index - 1].LookupName = val;
-            $cell = $($cloneRow[0].cells[tmpLookupStruc.Index]);
-            _thisHelpers.SetActiveCellText($cell, val);
         }
 
         self.mainTable.find('tbody:first').append($cloneRow);
@@ -6236,7 +6384,6 @@ function CreateInlineRecord(self) {
             $('#' + self.activeOptions.GridContainerIds.Pager).show();
         }
 
-        
         if (window.parent.DCrmEgGridCreateNewRecord) {
             var callbackData = { NewRecordGuid: newRecGuid };
             window.parent.DCrmEgGridCreateNewRecord(callbackData, self.activeOptions.ParentEntityInfo);
@@ -6263,7 +6410,7 @@ function EntityStateExists(entity) {
     return null;
 }
 
-function DisplayRecordState(entity, recGuid, refreshBtnId) {
+function DisplayRecordState(entity, primaryidattr, recGuid, refreshBtnId) {
 
     var entityState = EntityStateExists(entity);
     
@@ -6300,18 +6447,14 @@ function DisplayRecordState(entity, recGuid, refreshBtnId) {
     }
 
     // Get the actual values from the record
-    var tname = entity;
-    if (tname == 'activitypointer') {
-        tname = 'activity';
-    }
     var fetch =
         '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
           '<entity name="' + entity + '">' +
-            '<attribute name="' + tname + 'id" />' +
+            '<attribute name="' + primaryidattr + '" />' +
             '<attribute name="statuscode" />' +
             '<attribute name="statecode" />' +
             '<filter type="and">' +
-              '<condition attribute="' + tname + 'id" operator="eq" uitype="' + entity + '" value="' + _thisHelpers.AddCurlyBrace(recGuid) + '" />' +
+              '<condition attribute="' + primaryidattr + '" operator="eq" uitype="' + entity + '" value="' + _thisHelpers.AddCurlyBrace(recGuid) + '" />' +
             '</filter>' +
           '</entity>' +
         '</fetch>';
@@ -7898,6 +8041,14 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
       <condition attribute="createdon" operator="last-x-days" value="5" />
     </filter>
     <order attribute="name" />
+
+    '<link-entity name="incident" from="customerid" to="accountid" alias="aa">' +
+	'<attribute name="CCCname" />' +
+      '<filter type="and">' +
+        '<condition attribute="primarycontactidname" operator="like" value="fjghg%" />' +
+      '</filter>' +
+    '</link-entity>' +
+
   </entity>
 </fetch>
 
@@ -8031,15 +8182,7 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
 
             for (var i = 0; i < self.GridFetchXml.InlineFilters.length; i++) {
                 if (self.GridFetchXml.InlineFilters[i].Schema == schemaname) {
-                    return {
-                        Filter: self.GridFetchXml.InlineFilters[i].Filter,
-                        Operator: self.GridFetchXml.InlineFilters[i].Operator,
-                        Value: self.GridFetchXml.InlineFilters[i].Value,
-                        LookupGuid: self.GridFetchXml.InlineFilters[i].LookupGuid,
-                        LookupUiType: self.GridFetchXml.InlineFilters[i].LookupUiType,
-                        FetchValue: self.GridFetchXml.InlineFilters[i].FetchValue,
-                        FetchOp: self.GridFetchXml.InlineFilters[i].FecthOp
-                    };
+                    return self.GridFetchXml.InlineFilters[i];
                 }
             }
 
@@ -8060,8 +8203,6 @@ function LoadDCrmEGConfigurationCallback(fetchResults) {
         _thisHelpers.WaitDialog();
         return;
     }
-
-    console.log("Loading....");
 
     var val = fetchResults[0].attributes['dcrmeg_headerfieldnameshidden'].value;
     // Display order
@@ -8171,7 +8312,8 @@ Related [false] RelatedEntityLookup [undefined]
                     .addClass('gridSpacerDiv')
                     .appendTo($parentContainer);
             }
-            CreateAndPopulateGrid(_thisGlobals.DCrmEGConfiguration[i], $parentContainer);
+            CreateAndPopulateGrid(_thisGlobals.DCrmEGConfiguration[i], $parentContainer, null,
+                window.parent.Xrm.Page.data.entity.getPrimaryAttributeValue());
         }
     } catch (e) {
         LogEx("Unable to create grid due to exception:\r\n" + e.message);
@@ -8179,7 +8321,7 @@ Related [false] RelatedEntityLookup [undefined]
 }
 
 // data: instance of DCrmEGConfigurationManager
-function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGuid) { 
+function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGuid, relationShipLookupLabel) { 
 
    if (data.SelectedFields.length == 0) {
         return null;
@@ -8267,17 +8409,39 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         Related: EntitiesAreRelated,
         LookupSchemaName: RelatedEntityLookup, // primarycontactid
         ParentSchemaName: data.Entity.ParentSchemaName, // contact
-        Guid: relationshipparentEntityGuid,
+        Guid: relationshipparentEntityGuid, // this contact record guid
         Type: 'EntityReference'
     };
 
     if (EntitiesAreRelated) {
+
+        var pushToInlineIndex = -1;
+        for (var headerIndex = 0; headerIndex < data.SelectedFields.length; headerIndex++) {
+            var item = data.SelectedFields[headerIndex];
+            if (item.SchemaName == RelatedEntityLookup) {
+                filterIndexes.push(headerIndex);
+                pushToInlineIndex = headerIndex;
+                break;
+            }
+        }
+        var relCondition = '';
+
         if (relationshipparentEntityGuid) {
-            EntityFetchParts.Filters.push('<condition attribute="' + RelatedEntityLookup + '" operator="eq" uitype="' + data.Entity.ParentSchemaName + '" value="' + _thisHelpers.AddCurlyBrace(relationshipparentEntityGuid) + '" />');
+            relCondition = '<condition attribute="' + RelatedEntityLookup + '" operator="eq" uitype="' + data.Entity.ParentSchemaName + '" value="' + _thisHelpers.AddCurlyBrace(relationshipparentEntityGuid) + '" />';
+            if (pushToInlineIndex > -1) {
+                EntityFetchParts.InlineFilters.push(InlineFilterDataToStruct(RelatedEntityLookup, pushToInlineIndex, relCondition, 'eq', relationShipLookupLabel, null, null, relationshipparentEntityGuid, data.Entity.ParentSchemaName));
+            } else {
+                EntityFetchParts.Filters.push(relCondition);
+            }
         } else {
             parentChildLookupInfo.ParentSchemaName = _thisGlobals.ParentFormEntityName.toLowerCase();
             parentChildLookupInfo.Guid = _thisGlobals.ParentFormEntityId;
-            EntityFetchParts.Filters.push('<condition attribute="' + RelatedEntityLookup + '" operator="eq" uitype="' + _thisGlobals.ParentFormEntityName.toLowerCase() + '" value="' + _thisHelpers.AddCurlyBrace(_thisGlobals.ParentFormEntityId) + '" />');
+            relCondition = '<condition attribute="' + RelatedEntityLookup + '" operator="eq" uitype="' + _thisGlobals.ParentFormEntityName.toLowerCase() + '" value="' + _thisHelpers.AddCurlyBrace(_thisGlobals.ParentFormEntityId) + '" />';
+            if (pushToInlineIndex > -1) {
+                EntityFetchParts.InlineFilters.push(InlineFilterDataToStruct(RelatedEntityLookup, pushToInlineIndex, relCondition, 'eq', relationShipLookupLabel, null, null, _thisGlobals.ParentFormEntityId, _thisGlobals.ParentFormEntityName.toLowerCase()));
+            } else {
+                EntityFetchParts.Filters.push(relCondition);
+            }
         }
     }
 
@@ -8603,20 +8767,13 @@ function ParentGridSelectedRecord(data, parentdiv, deleteSubgrid) {
 
         if (deleteSubgrid) {
             var tableParentId = undefined;
-
-            LogIt('================subgrid parentdivid ' + parentdiv);
-
             for (var i = 0; i < config.ChildConfigurations.length; i++) {
                 tt = config.ChildConfigurations[i].ThisGrid;
                 if (tt) {
                     var ids = tt.activeOptions.GridContainerIds;
-
                     tableParentId = parentdiv || tt.ParentDivContainer;
-
                     // When called from parent, will have tableParentId value
                     if (ids.ParentGridDivContainer == tableParentId) {
-                        LogIt("Found ParentGridDivContainer to remove " + ids.ParentGridDivContainer);
-
                         // Has subgrids
                         if (config.ChildConfigurations[i].length > 0) {
                             LogIt("Grid has subgrid");
@@ -8642,7 +8799,8 @@ function ParentGridSelectedRecord(data, parentdiv, deleteSubgrid) {
 
             var insertAfter = parentdiv || data.mainTable;
             for (var i = 0; i < config.ChildConfigurations.length; i++) {
-                CreateAndPopulateGrid(config.ChildConfigurations[i], insertAfter, data.SelectedRecordGuid);
+                CreateAndPopulateGrid(config.ChildConfigurations[i], insertAfter,
+                    data.SelectedRecordGuid, null);
 
                 if (i > 0) {
                     $('<div></div>')
@@ -8732,13 +8890,11 @@ function GetLookupDisplayName(entitySchemaName, fieldSchemaName, uitype, guid) {
 
     var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
           '<entity name="' + entitySchemaName + '">' +
-          '<attribute name="' + fieldSchemaName + '" />';
-    if ((uitype) && (guid)) {
-        fetch += '<filter type="and">' +
+          '<attribute name="' + fieldSchemaName + '" />' + 
+          '<filter type="and">' +
                   '<condition attribute="' + fieldSchemaName + '" operator="eq" uitype="' + uitype + '" value="' + _thisHelpers.AddCurlyBrace(guid) + '" />' +
-                '</filter>';
-    }
-    fetch += '</entity>' +
+                '</filter>' +
+                '</entity>' +
           '</fetch>';
 
     var result = XrmServiceToolkit.Soap.Fetch(fetch);
@@ -8803,6 +8959,7 @@ schema  [primarycontactid] schemaindex [-1] condition [<condition attribute="pri
 
         try {
             $.each(arr, function (index, item) {
+                console.log("Item [" + item + "]");
                 var items = item.split('||');
 
                 if (items.length == 1) {
@@ -8987,6 +9144,8 @@ var GridLoaderHelper = (function () {
         self.parentChildLookupInfo = parentChildLookupInfo;
         self.NumericFields = NumericFields;
         self.Grid = undefined;
+        self.PrimaryIdAttribute = null;
+        self.PrimaryNameAttribute = null;
 
         self.TotalRecordCount = -1;
 
@@ -9120,16 +9279,19 @@ var GridLoaderHelper = (function () {
             var options = {
                 HasChildGrids: (self.data.ChildConfigurations.length > 0) ? true : false,
                 Country: _thisGlobals.DefaultCountry,
+
                 GridContainerIds: self.ContainerIds,
                 columneditors: self.ceditors,
-                entityschemaName: self.data.Entity.SchemaName,
+
                 EntityCurrencyid: EntityCurrencyid,
                 EntityCurrencySymbol: undefined,
                 EntityCurrencyPrecision: undefined,
 
                 ParentEntityInfo: {
                     ParentEntityName: self.data.Entity.Label,
-                    ParentEntitySchemaname: self.data.Entity.SchemaName
+                    ParentEntitySchemaname: self.data.Entity.SchemaName,
+                    PrimaryIdAttribute: self.PrimaryIdAttribute,
+                    PrimaryNameAttribute: self.PrimaryNameAttribute
                 },
                 ParentChildLookupInfo: self.parentChildLookupInfo,
 
@@ -9150,9 +9312,7 @@ var GridLoaderHelper = (function () {
                 UserCanUpdate: !_thisGlobals.FormIsReadOnly,
 
                 DisplayFieldsSum: self.data.DisplaySum,
-
                 HaveNumericFields: self.NumericFields,
-
                 AutoSaveChanges: self.data.AutoSaveChanges,
                 AllowDelete: self.data.AllowDelete,
                 RefreshAfterCreate: self.data.RefreshAfterCreate,
@@ -9179,27 +9339,34 @@ var GridLoaderHelper = (function () {
             XrmServiceToolkit.Soap.Fetch(self.data.GetFetchXml(), false, self.RecordCallback);
         };
 
-        GetEntityCount(self.data.Entity.SchemaName, data.GetFetchXmlFilters(), self.RecordCountCallback);
-    }
+        self.GetEntityCount = function () {
+            var filters = data.GetFetchXmlFilters();
+            var fetchXml =
+                "<fetch mapping='logical' aggregate='true'>" +
+                    "<entity name='" + self.data.Entity.SchemaName + "'>" +
+                        "<attribute name='" + self.PrimaryIdAttribute + "' aggregate='count' alias='count' />";
+            if (filters.length > 0) {
+                fetchXml += '<filter type="and">' + filters + '</filter>';
+            }
+            fetchXml += "</entity>" +
+                "</fetch>";
+            //console.log(fetchXml);
+            XrmServiceToolkit.Soap.Fetch(fetchXml, true, self.RecordCountCallback);
+        };
 
-    function GetEntityCount(schemaName, filters, callback) {
-        var name = schemaName;
-        if (name == 'activitypointer') {
-            name = 'activity';
-        }
-        var fetchXml =
-            "<fetch mapping='logical' aggregate='true'>" +
-                "<entity name='" + schemaName + "'>" +
-                    "<attribute name='" + name + "id' aggregate='count' alias='count' />";
-        if (filters.length > 0) {
-            fetchXml += '<filter type="and">' + filters + '</filter>';
-        }
-        fetchXml += "</entity>" +
-            "</fetch>";
+        self.GetPrimaryAttributesCallback = function (entityMetaData) {
+            if (entityMetaData && entityMetaData.length === 1) {
+                self.PrimaryIdAttribute = entityMetaData[0].PrimaryIdAttribute;
+                self.PrimaryNameAttribute = entityMetaData[0].PrimaryNameAttribute;
+            }
+            //console.log("self.PrimaryIdAttribute [" + self.PrimaryIdAttribute + "] self.PrimaryNameAttribute [" + self.PrimaryNameAttribute + "]");
+            self.GetEntityCount();
+        };
 
-        console.log(fetchXml);
-
-        XrmServiceToolkit.Soap.Fetch(fetchXml, true, callback);
+        // Get this primary id and name attribute names, normally (schemaname + id) and (name)
+        // There are exeptions. example: activitypointer -> activityid
+        XrmServiceToolkit.Soap.RetrieveEntityMetadata("Entity",
+            self.data.Entity.SchemaName, true, self.GetPrimaryAttributesCallback);
     }
 
     return GridLoaderHelper;

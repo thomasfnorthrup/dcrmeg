@@ -122,10 +122,8 @@
     border: none;
     margin: 0;
     background-color: transparent; 
-    /*background-color: white;*/
     outline: none;
     padding: 0 0 2px 0;
-    /*display: inline;*/
     vertical-align: middle;
 }
 
@@ -143,7 +141,6 @@
     background-color: #f7f3f7;
     border: 2px solid #f7f7f7;
     outline: 1px solid #949694;
-
     z-index: 100009;
 }
 
@@ -784,11 +781,11 @@ there's a rowspan on the first cell. Case added to the tests. issue#432 */
     position:absolute;
 }
     .TextEditors:hover {
-                -moz-box-shadow: 1px 1px 2px #ccc;
-                -webkit-box-shadow: 1px 1px 2px #ccc;
-                box-shadow: 1px 1px 2px #ccc;
-                border: solid 1px #CCCCCC;
-                background-color: #F3F1F1;
+        -moz-box-shadow: 1px 1px 2px #ccc;
+        -webkit-box-shadow: 1px 1px 2px #ccc;
+        box-shadow: 1px 1px 2px #ccc;
+        border: solid 1px #CCCCCC;
+        background-color: #F3F1F1;
     }
     .TextEditors:focus {
         border: solid 1px lightgray;
@@ -836,20 +833,23 @@ there's a rowspan on the first cell. Case added to the tests. issue#432 */
 
 /*  Context Menu */
 .contextMenuPlugin {
-  -webkit-user-select: none;
-  display: none;
-  font-family: tahoma, arial, sans-serif;
-  font-size: 11px;
-  position: absolute;
-  left: 100px;
-  top: 100px;
-  min-width: 100px;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  background-color: #f7f3f7;
-  border: 2px solid #f7f7f7;
-  outline: 1px solid #949694;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    display: none;
+    font-family: tahoma, arial, sans-serif;
+    font-size: 11px;
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    min-width: 100px;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    background-color: #f7f3f7;
+    border: 2px solid #f7f7f7;
+    outline: 1px solid #949694;
 }
 
 .contextMenuPlugin > li {
@@ -942,7 +942,7 @@ there's a rowspan on the first cell. Case added to the tests. issue#432 */
     margin: 0;
     background-color: white;
     border: solid 1px lightgray;
-    z-index: 10010;
+    vertical-align: bottom;
 }
 
 .statusBox {
@@ -1054,11 +1054,14 @@ there's a rowspan on the first cell. Case added to the tests. issue#432 */
   visibility: hidden;
 }
 .cmn-toggle + label {
-  display: inline-block;
-  position: relative;
-  cursor: pointer;
-  outline: none;
-  user-select: none;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 input.cmn-toggle-yes-no + label {
@@ -1166,10 +1169,8 @@ input.cmn-toggle-yes-no:checked + label:after {
 .xdsoft_noselect{
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
-	-khtml-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
-	-o-user-select: none;
 	user-select: none;
 }
 .xdsoft_noselect::selection { background: transparent; }

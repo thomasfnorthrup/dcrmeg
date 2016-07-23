@@ -1,9 +1,13 @@
 ﻿
 // testvalidation
 
-function Log(s) {
+function Log(s, a) {
     if (typeof console != "undefined" && typeof console.debug != "undefined") {
-        console.log(s);
+        if (a) {
+            console.log(s, a);
+        } else {
+            console.log(s);
+        }
     }
 }
 
@@ -13,6 +17,7 @@ function FormOnloadHandler(context) {
     window.parent.DCrmEgGridSaving = DCrmEgGridSaving;
     window.parent.DCrmEgGridDeleting = DCrmEgGridDeleting;
 
+    window.parent.DCrmEgGridBeforeCreateNewRecord = DCrmEgGridBeforeCreateNewRecord;
     window.parent.DCrmEgGridCreateNewRecord = DCrmEgGridCreateNewRecord;
     window.parent.DCrmEgGridOnload = DCrmEgGridOnload;
 }
@@ -151,6 +156,15 @@ function DCrmEgGridDeleting(data, entityinfo) {
     for (var i = 0; i < data.length; i++) {
         Log("Record Guid [" + data[i] + "]");
     }
+
+    return allow;
+}
+
+function DCrmEgGridBeforeCreateNewRecord(newRecStruct, entityinfo) {
+    var allow = true;
+    Log("ParentEntityName [" + entityinfo.ParentEntityName + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaname + "]");
+
+    Log("New Record Struct", newRecStruct);
 
     return allow;
 }

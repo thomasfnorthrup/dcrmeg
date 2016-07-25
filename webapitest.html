@@ -122,9 +122,11 @@
                 if (result == undefined)
                     return;
 
-                if ((result.length) && (result.length == 0))
+                if ((result.length) && (result.length == 0)) {
                     return;
-                var final = '';
+                }
+
+                var final = 'LogicalName [' + result[0].LogicalName + "] SchemaName [" + result[0].SchemaName + "] LogicalCollectionName [" + result[0].LogicalCollectionName + "] PrimaryIdAttribute [" + result[0].PrimaryIdAttribute + "] PrimaryNameAttribute [" + result[0].PrimaryNameAttribute + "]\r\n";
 
                 for (var i = 0; i < result[0].Attributes.length; i++) {
                     var attr = result[0].Attributes[i];
@@ -132,6 +134,7 @@
                 }
 
                 SetDisplay(final);
+                Sdk.WebAPI.getManyToOneRelationships(result[0].SchemaName, ManyToOneRelationshipCallback, FailCallback);
             }
 
             function ManyToOneRelationshipCallback(result) {
@@ -141,7 +144,7 @@
                 if ((result.length) && (result.length == 0))
                     return;
 
-                var final = 'ManyToOneRelationshipCallback\r\n';
+                var final = '\r\nManyToOneRelationshipCallback\r\n';
                 var aa = result[0].ManyToOneRelationships;
                 for (var i = 0; i < aa.length; i++) {
                     final += "ReferencingAttribute [" + aa[i].ReferencingAttribute + "] ReferencedAttribute [" + aa[i].ReferencedAttribute + "]\r\n";
@@ -177,23 +180,193 @@
                 SetDisplay(final);
             }
 
+            function RetreivewCallback(result) {
+                if (((result == undefined)) || ((result.length) && (result.length == 0))) {
+                    return;
+                }
+
+                //var donotemail = result["donotemail"];
+                //var donotemail_formatted = result["donotemail@OData.Community.Display.V1.FormattedValue"];
+                //var name = result["name"];
+                //var creditlimit = result["creditlimit"];
+                //var creditlimit_formatted = result["creditlimit@OData.Community.Display.V1.FormattedValue"];
+                //var websiteurl = result["websiteurl"];
+                
+                //SetDisplay(donotemail + '\r\n' + donotemail_formatted + '\r\n' + name + '\r\n' + creditlimit + '\r\n' + creditlimit_formatted + '\r\n' + websiteurl);
+            }
+
+            function RetrievePropertyValueCallback(result) {
+                // result = 9
+                if (((result == undefined)) || ((result.length) && (result.length == 0))) {
+                    SetDisplay("no Results");
+                    return;
+                }
+
+                SetDisplay("Result [" + result + "]");
+            }
+
+            function GetEntityAttributeCallback(result) {
+                if (((result == undefined)) || ((result.length) && (result.length == 0))) {
+                    SetDisplay("no Results");
+                    return;
+                }
+            }
+
+            function RetrieveGlobalOptionSetOptionsMetaDataCallback(result) {
+                if (((result == undefined)) || ((result.length) && (result.length == 0))) {
+                    SetDisplay("no Results");
+                    return;
+                }
+                var options = "";
+                for (var i = 0; i < result.length; i++) {
+                    var optionLabel = result[i].Label.UserLocalizedLabel.Label;
+                    var optionValue = result[i].Value;
+                    options += "value [" + optionValue + "] Label [" + optionLabel + "]\r\n";
+                }
+                SetDisplay(options);
+            }
+
+            function retrieveMetadataByMetadataIdCallback(attribute) {
+                if (attribute != null) {
+                    var final = '';
+                    ////set form control display name
+                    //$("#" + attribute.SchemaName + "Label")
+                    //    .html(attribute.DisplayName.LocalizedLabels[0].Label);
+
+                    ////set form control tooltip
+                    //$('[logicalname][logicalname=' + attribute.SchemaName + ']')
+                    //    .attr('title', attribute.Description.LocalizedLabels[0].Label);
+
+                    ////set form control requirement level 
+                    //if (attribute.RequiredLevel.Value == Constants.REQ_LEVEL_BUSINESS_REQUIRED) {
+                    //    $('[logicalname][logicalname=' + attribute.SchemaName + ']')
+                    //        .attr('required', true);
+                    //    $("#" + attribute.SchemaName + "Label")
+                    //        .append("<span class='requiredFieldIndication'> *</span>");
+                    //}
+
+                    //handle attribute according to type 
+                    switch (attribute.AttributeType) {
+                        case "Double":
+                        case "Money":
+                        case "Integer":
+                            //$('[logicalname][logicalname=' + attribute.SchemaName + ']')
+                            //    .attr('type', 'number')
+                            //    .attr('min', attribute.MinValue)
+                            //    .attr('max', attribute.MaxValue);
+                            break;
+                        case "String":
+                        case "Memo":
+                            //$('[logicalname][logicalname=' + attribute.SchemaName + ']')
+                            //    .attr('type', attribute.Format)
+                            //    .attr('maxlength', attribute.MaxLength);
+                            break;
+                        case "Picklist":
+                        case "Status":
+                        case "State":
+                            var options = attribute.OptionSet.Options;
+                            // attribute.SchemaName
+                            for (i = 0; i < options.length; i++) {
+                                var optionLabel = options[i].Label.LocalizedLabels[0].Label;
+                                var optionValue = options[i].Value;
+                                var state = options[i].State;
+                                final += "value [" + optionValue + "] Label [" + optionLabel + "] State [" + state + "]\r\n";
+                            }
+                            break;
+                        case "Boolean":
+                            //$('[logicalname][logicalname=' + attribute.SchemaName + ']')
+                            //    .prop('checked', attribute.DefaultValue === "true");
+                            var options = attribute.OptionSet;
+                            var falseLabel = options.FalseOption.Label.LocalizedLabels[0].Label;
+                            var trueLabel = options.TrueOption.Label.LocalizedLabels[0].Label;
+                            final = "default value [" + attribute.DefaultValue + "] falseLabel [" + falseLabel + "] trueLabel [" + trueLabel + "]";
+                        default:
+                            break;
+                    }
+                    SetDisplay(final);
+                } else {
+                    SetDisplay("No result");
+                }
+            }
+
             $('#cleardisplay').on('click', function (e) {
                 $('#displayresult').val('');
                 return false;
             });
 
             $('#btngo').on('click', function (e) {
-                //Sdk.WebAPI.versionNumber(versionNumberCallback, FailCallback);
-                Sdk.WebAPI.whoAmIFunction(whoAmICallback, FailCallback);
 
-                //Sdk.WebAPI.getEntityList(EntityListCallback, FailCallback);
+                //var selected = $('#entitylist').find('option:selected');
+                //Sdk.WebAPI.GetEntityAttributes(selected.val(), EntityAttributesCallback, FailCallback);
 
-                //Sdk.WebAPI.GetEntityAttributes('Account', EntityAttributesCallback, FailCallback);
+                //var uri = Sdk.WebAPI.GetUri('accounts', 'EA11CD25-AA42-E611-80CC-08002738AA19');
+                //Sdk.WebAPI.retrieve(uri, ['name', 'creditlimit', 'donotemail', 'websiteurl'], null, null, RetreivewCallback, FailCallback, true);
+                //Sdk.WebAPI.retrievePropertyValue(uri, 'industrycode', RetrievePropertyValueCallback, FailCallback);
 
-                //Sdk.WebAPI.getOneToManyRelationships('Account', 'contact', OneToManyRelationshipCallback, FailCallback);
+//                var translationFields = [
+//"dcrmeg_dcrmegtranslationid",
+//"dcrmeg_name",
+//"dcrmeg_lcid",
+//"dcrmeg_totalrecords",
+//"dcrmeg_copyvaluetoclipboard",
+//"dcrmeg_openrecordinnewwindow",
+//"dcrmeg_openlookuprecordinnewwindow",
+//"dcrmeg_clearvlaue",
+//"dcrmeg_ok",
+//"dcrmeg_cancel",
+//"dcrmeg_sum",
+//"dcrmeg_selectrecord",
+//"dcrmeg_selectallrecords",
+//"dcrmeg_undochanges",
+//"dcrmeg_undoallchanges",
+//"dcrmeg_newrecord",
+//"dcrmeg_deleteselectedrecords",
+//"dcrmeg_savechanges",
+//"dcrmeg_activateeditorondoubleclick",
+//"dcrmeg_entertexttosearch",
+//"dcrmeg_gotofirst",
+//"dcrmeg_gotonext",
+//"dcrmeg_gotoprevious",
+//"dcrmeg_gotolast",
+//"dcrmeg_pagesize",
+//"dcrmeg_lockedfield",
+//"dcrmeg_requiredfield",
+//"dcrmeg_incorrectformat",
+//"dcrmeg_readonly",
+//"dcrmeg_openrecord",
+//"dcrmeg_maxvalue",
+//"dcrmeg_minvalue",
+//"dcrmeg_notavalidentry",
+//"dcrmeg_lookupmorerecords",
+//"dcrmeg_openurlinnewwindow"
+                //                ];
+
+                //var uri = Sdk.WebAPI.GetUri('dcrmeg_dcrmegtranslations');
+                //Sdk.WebAPI.retrieve(uri, translationFields,"dcrmeg_lcid eq '1033'", null, RetreivewCallback, FailCallback, true);
+
+                // creditlimit description, we get Precision, MinValue, MaxValue, Format, MaxLength
+                //Sdk.WebAPI.GetEntityAttribute('accounts', 'description', GetEntityAttributeCallback, FailCallback);
+
+                //Sdk.WebAPI.getOneToManyRelationships('account', 'contact', OneToManyRelationshipCallback, FailCallback);
                 //Sdk.WebAPI.getManyToOneRelationships('Contact', ManyToOneRelationshipCallback, FailCallback);
+                //Sdk.WebAPI.getFetchXml('accounts', _Fetch, FetchCallback, FailCallback);
 
-                Sdk.WebAPI.getFetchXml('accounts', _Fetch, FetchCallback, FailCallback);
+                //Sdk.WebAPI.RetrieveGlobalOptionSetMetaDataId('budgetstatus', function (attributeMetadataId) {
+                //    Sdk.WebAPI.RetrieveGlobalOptionSetOptionsMetaData(attributeMetadataId,
+                //        RetrieveGlobalOptionSetOptionsMetaDataCallback,
+                //        FailCallback);
+                //}, FailCallback);
+
+                //// industrycode statuscode statecode donotpostalmail
+                //Sdk.WebAPI.retrieveMetadataByLogicalName('Account', 'donotpostalmail',
+                //function (attributeMetadata, entityMetadataId) {
+                //    Sdk.WebAPI.retrieveMetadataByMetadataId(
+                //        entityMetadataId,
+                //        attributeMetadata.MetadataId,
+                //        attributeMetadata.AttributeType,
+                //        retrieveMetadataByMetadataIdCallback, FailCallback);
+                //}, FailCallback);
+
                 return false;
             });
 
@@ -235,6 +408,10 @@ By default, the entity set name matches the EntityMetadata EntityType LogicalCol
 Source: https://msdn.microsoft.com/de-de/library/mt607990.aspx#bkmk_entityTypes
                 */
             }
+
+            Sdk.WebAPI.versionNumber(versionNumberCallback, FailCallback);
+            Sdk.WebAPI.whoAmIFunction(whoAmICallback, FailCallback);
+            Sdk.WebAPI.getEntityList(EntityListCallback, FailCallback);
 
             console.log("DONE");
         });

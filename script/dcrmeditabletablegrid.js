@@ -625,6 +625,9 @@ var _thisHelpers = DCrmEditableGrid.Helper;
 _thisGlobals.xrmPage = window.parent.Xrm.Page;
 _thisGlobals.LoggedInUserID = _thisGlobals.xrmPage.context.getUserId();
 
+function DisplayCrmAlertDialog(msg) {
+    window.parent.Xrm.Utility.alertDialog(msg);
+}
 
 function LogIt(s) {
     if ( (_thisGlobals.Debug) && (typeof console != "undefined") && (typeof console.debug != "undefined")) {
@@ -5089,7 +5092,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 menu.remove();
                 e.stopPropagation();
                 if (msg) {
-                    window.parent.Xrm.Utility.alertDialog("Unable to export due to exception:\r" + msg);
+                    DisplayCrmAlertDialog("Unable to export due to exception:\r" + msg);
                 }
                 return false;
             });
@@ -5123,7 +5126,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             }
 
             if (msg) {
-                window.parent.Xrm.Utility.alertDialog("Unable to create new record due to exception:\r" + msg);
+                DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + msg);
             }
 
             return false;
@@ -5164,7 +5167,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 if (window.parent.DCrmEgGridDeleting) {
                     if (!window.parent.DCrmEgGridDeleting(toDelGuids, self.activeOptions.ParentEntityInfo)) {
                         LogIt("Deleting cancelled by user");
-                        window.parent.Xrm.Utility.alertDialog("Delete operation cancelled by javascript callback.");
+                        //DisplayCrmAlertDialog("Delete operation cancelled by javascript callback.");
                         return;
                     }
                 }
@@ -5228,7 +5231,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 }
 
                 if (haveErrors.length > 0) {
-                    window.parent.Xrm.Utility.alertDialog("Error encountered during deletion.\r" + haveErrors);
+                    DisplayCrmAlertDialog("Error encountered during deletion.\r" + haveErrors);
                 }
             }
         });
@@ -5952,7 +5955,7 @@ function DisplayNewButtonMenu(self, $this) {
                     if (!allow) {
                         $bg.remove();
                         menu.remove();
-                        window.parent.Xrm.Utility.alertDialog("Create operation cancelled by javascript callback.");
+                        //DisplayCrmAlertDialog("Create operation cancelled by javascript callback.");
                         return false;
                     }
                 }
@@ -5961,7 +5964,7 @@ function DisplayNewButtonMenu(self, $this) {
                     if ((self.activeOptions.ParentChildLookupInfo.LookupSchemaName == 'regardingobjectid')) {
                         $bg.remove();
                         menu.remove();
-                        window.parent.Xrm.Utility.alertDialog("Unable to set Regarding. Please use the create Inline menu.\r\nMSDN: You can't set the values for partylist or regarding lookups using openEntityForm.");
+                        DisplayCrmAlertDialog("Unable to set Regarding. Please use the create Inline menu.\r\nMSDN: You can't set the values for partylist or regarding lookups using openEntityForm.");
                         return false;
                     }
 
@@ -6003,7 +6006,7 @@ You can’t set the values for partylist or regarding lookups.
         menu.remove();
         
         if (msg) {
-            window.parent.Xrm.Utility.alertDialog("Unable to create new record due to exception:\r" + msg);
+            DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + msg);
         }
     });
 
@@ -6354,7 +6357,7 @@ function CreateInlineRecord(self) {
             var allow = window.parent.DCrmEgGridBeforeCreateNewRecord(recNew, self.activeOptions.ParentEntityInfo);
             if (!allow) {
                 _thisHelpers.WaitDialog();
-                window.parent.Xrm.Utility.alertDialog("Create operation cancelled by javascript callback.");
+                //DisplayCrmAlertDialog("Create operation cancelled by javascript callback.");
                 return;
             }
         }
@@ -7234,7 +7237,7 @@ function InitializeSetupRoutines() {
                 inputVal = $('#fieldfilter_extrainput').val();
 
                 if (!$.isNumeric(inputVal)) {
-                    window.parent.Xrm.Utility.alertDialog("You must provide a number.");
+                    DisplayCrmAlertDialog("You must provide a number.");
                     return false;
                 }
             } else {
@@ -7250,7 +7253,7 @@ function InitializeSetupRoutines() {
             (ed == DCrmEditableGrid.Editors.Decimal)) {
             if (((inputVal != undefined) && (inputVal != 'undefined') && (inputVal.length > 0)) &&
                 (!$.isNumeric(inputVal.replace(_thisGlobals.userCurrencySettings.DecimalSymbol, '.')))) {
-                window.parent.Xrm.Utility.alertDialog("You must provide a number.");
+                DisplayCrmAlertDialog("You must provide a number.");
                 return false;
             }
         }
@@ -7277,7 +7280,7 @@ function InitializeSetupRoutines() {
             ((filter == 'eq') || (filter == 'ne')) ||
             ((filter.startsWith('next-x') || filter.startsWith('last-x') || filter == 'olderthan-x-months'))) {
             if ((inputVal == undefined) || (inputVal == 'undefined') || (inputVal.length == 0)) {
-                window.parent.Xrm.Utility.alertDialog("You must provide a value.");
+                DisplayCrmAlertDialog("You must provide a value.");
                 return false;
             }
         }

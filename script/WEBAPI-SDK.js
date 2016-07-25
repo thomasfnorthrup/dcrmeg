@@ -46,14 +46,14 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Create Entity");
                 }
             }
         };
         req.send(JSON.stringify(entity));
 
     };
-    this.retrieve = function (uri, properties, navigationproperties, successCallback, errorCallback, includeFormattedValues, eTag, unmodifiedCallback, callerId) {
+    this.retrieve = function (uri, properties, filters, navigationproperties, successCallback, errorCallback, includeFormattedValues, eTag, unmodifiedCallback, callerId) {
         /// <summary>Retrieve an entity</summary>
         /// <param name="uri" type="String">The Uri for the entity you want to retrieve</param>
         /// <param name="properties" type="Array">An array of strings representing the entity properties you want to retrieve.</param>
@@ -66,6 +66,9 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         /// <param name="callerId" type="String" optional="true">The systemuserid value of the user to impersonate</param>
         if (!isString(uri)) {
             throw new Error("Sdk.WebAPI.retrieve uri parameter must be a string.");
+        }
+        if (!isStringOrNull(filters)) {
+            throw new Error("Sdk.WebAPI.retrieve filters parameter must be null or string.");
         }
         if (!isStringArrayOrNull(properties)) {
             throw new Error("Sdk.WebAPI.retrieve properties parameter must be an array of strings or null.");
@@ -92,13 +95,14 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
             throw new Error("Sdk.WebAPI.retrieve callerId parameter must be a string null or undefined.");
         }
 
-        var url = getWebAPIPath() + uri;
-
         if (properties || navigationproperties) {
-            url += "?";
+            uri += "?";
         }
         if (properties) {
-            url += "$select=" + properties.join();
+            uri += "$select=" + properties.join();
+        }
+        if (filters) {
+            uri += '&$filter=' + filters;
         }
         if (navigationproperties) {
             if (properties) {
@@ -107,11 +111,10 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
             else {
                 url += "$expand=" + navigationproperties.join();
             }
-
         }
 
         var req = new XMLHttpRequest();
-        req.open("GET", encodeURI(url), true);
+        req.open("GET", encodeURI(uri), true);
         req.setRequestHeader("Accept", "application/json");
         if (callerId) {
             req.setRequestHeader("MSCRMCallerID", callerId);
@@ -123,7 +126,8 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         req.setRequestHeader("OData-MaxVersion", "4.0");
         req.setRequestHeader("OData-Version", "4.0");
         if (includeFormattedValues) {
-            req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\"");
+            req.setRequestHeader("Prefer", "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\"");
+            //req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\"");
         }
 
         req.onreadystatechange = function () {
@@ -132,7 +136,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 switch (this.status) {
                     case 200:
                         if (successCallback)
-                            successCallback(JSON.parse(this.response, dateReviver));
+                            successCallback(JSON.parse(this.response, dateReviver).value);
                         break;
                     case 304: //Not modified
                         if (isFunction(unmodifiedCallback))
@@ -140,7 +144,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                         break;
                     default:
                         if (errorCallback)
-                            errorCallback(Sdk.WebAPI.errorHandler(this));
+                            errorCallback(Sdk.WebAPI.errorHandler(this), "Retrieve Entity Properties");
                         break;
                 }
             }
@@ -194,7 +198,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                         break;
                     default:
                         if (errorCallback)
-                            errorCallback(Sdk.WebAPI.errorHandler(this));
+                            errorCallback(Sdk.WebAPI.errorHandler(this), "Retrieve Property Value");
                         break;
                 }
             }
@@ -242,7 +246,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Update Record");
                 }
             }
         };
@@ -292,7 +296,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Update Property Value");
                 }
             }
         };
@@ -362,7 +366,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                             }
                             else {
                                 if (errorCallback)
-                                    errorCallback(Sdk.WebAPI.errorHandler(this));
+                                    errorCallback(Sdk.WebAPI.errorHandler(this), "Upsert - Status 404");
                             }
                             break;
                         case 404:
@@ -372,12 +376,12 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                             }
                             else {
                                 if (errorCallback)
-                                    errorCallback(Sdk.WebAPI.errorHandler(this));
+                                    errorCallback(Sdk.WebAPI.errorHandler(this), "Upsert - Status 404");
                             }
                             break;
                         default:
                             if (errorCallback)
-                                errorCallback(Sdk.WebAPI.errorHandler(this));
+                                errorCallback(Sdk.WebAPI.errorHandler(this), "Upsert");
                             break;
 
                     }
@@ -426,7 +430,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Delete Record");
                 }
             }
         };
@@ -471,7 +475,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Delete Property Value");
                 }
             }
         };
@@ -521,7 +525,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Associate");
                 }
             }
         };
@@ -573,7 +577,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Disassociate");
                 }
             }
         };
@@ -621,7 +625,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Remove Reference");
                 }
             }
         };
@@ -672,7 +676,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Add Reference");
                 }
             }
         };
@@ -724,7 +728,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Invoke Bound Function");
                 }
             }
         };
@@ -792,7 +796,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Invoke Unbound Function");
                 }
             }
         };
@@ -863,7 +867,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Invoke Unbound Action");
                 }
             }
         };
@@ -921,11 +925,13 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         req.setRequestHeader("OData-MaxVersion", "4.0");
         req.setRequestHeader("OData-Version", "4.0");
         if (includeFormattedValues && maxPageSize) {
-            req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\",odata.maxpagesize=" + maxPageSize);
+            req.setRequestHeader("Prefer", "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\",odata.maxpagesize=" + maxPageSize);
+            //req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\",odata.maxpagesize=" + maxPageSize);
         }
         else {
             if (includeFormattedValues) {
-                req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\"");
+                req.setRequestHeader("Prefer", "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\"");
+                //req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\"");
             }
 
             if (maxPageSize) {
@@ -942,7 +948,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Query EntitySet");
                 }
             }
         };
@@ -985,7 +991,8 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         req.setRequestHeader("OData-MaxVersion", "4.0");
         req.setRequestHeader("OData-Version", "4.0");
         if (includeFormattedValues) {
-            req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\"");
+            req.setRequestHeader("Prefer", "odata.include-annotations=\"OData.Community.Display.V1.FormattedValue\"");
+            //req.setRequestHeader("Prefer", "odata.include-annotations=\"mscrm.formattedvalue\"");
         }
 
         if (maxPageSize) {
@@ -1001,7 +1008,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get Next Page");
                 }
             }
         };
@@ -1049,7 +1056,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Execute Batch");
                 }
             }
         };
@@ -1082,7 +1089,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get Entity List");
                 }
             }
         };
@@ -1090,9 +1097,8 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
 
     }
 
+    // SetStateDynamicEntityResponse
     //============================== Begin New Functions
-    // uri
-    // getWebAPIPath() + accounts(DE57510E-59A3-E511-80E4-3863BB35AD90)
 
     this.getEntityCount = function (entitySetName, successCallback, errorCallback, onlyActive) {
         if (!isString(entitySetName)) {
@@ -1121,12 +1127,13 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get Entity Count");
                 }
             }
         };
         req.send();
     }
+
     this.getUserSetttings = function (UserId, successCallback, errorCallback) {
         var prop = ["dateformatstring",
                          "dateseparator",
@@ -1162,15 +1169,16 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                         break;
                     default:
                         if (errorCallback)
-                            errorCallback(Sdk.WebAPI.errorHandler(this));
+                            errorCallback(Sdk.WebAPI.errorHandler(this), "Get User Setttings");
                         break;
                 }
             }
         };
         req.send();
     }
-    this.GetEntityAttributes = function (SchemaName, successCallback, errorCallback) {
-        if (!isString(SchemaName)) {
+
+    this.GetEntityAttributes = function (entitySetName, successCallback, errorCallback) {
+        if (!isString(entitySetName)) {
             throw new Error("Sdk.WebAPI.GetEntityAttributes entitySetName parameter must be a string.");
         }
         if (!isFunctionOrNull(successCallback)) {
@@ -1187,8 +1195,8 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
 
         // SchemaName 'Account, LogicalName 'account', LogicalCollectionName 'accounts'
         // PrimaryIdAttribute 'accountid', PrimaryNameAttribute 'name'
-        var url = getWebAPIPath() + "EntityDefinitions?$select=SchemaName,PrimaryIdAttribute,PrimaryNameAttribute,LogicalCollectionName"
-            + "&$filter=SchemaName eq '" + SchemaName + "'&$expand=Attributes"
+        var url = getWebAPIPath() + "EntityDefinitions?$select=LogicalName,SchemaName,PrimaryIdAttribute,PrimaryNameAttribute,LogicalCollectionName"
+            + "&$filter=LogicalCollectionName eq '" + entitySetName + "'&$expand=Attributes"
             + "($filter=(AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Picklist' or"
             + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'String' or"
             + " AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Memo' or"
@@ -1232,12 +1240,52 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get Entity Attributes");
                 }
             }
         };
         req.send();
     }
+    this.GetEntityAttribute = function (entitySetName, attributeSchemaName, successCallback, errorCallback) {
+        if (!isString(entitySetName)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttribute entitySetName parameter must be a string.");
+        }
+        if (!isString(attributeSchemaName)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttribute attributeSchemaName parameter must be a string.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttribute successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.GetEntityAttribute errorCallback parameter must be a function or null.");
+        }
+
+        var url = getWebAPIPath() + "EntityDefinitions?$select=LogicalName"
+            + "&$filter=LogicalCollectionName eq '" + entitySetName + "'&$expand=Attributes"
+            + "($filter=LogicalName eq '" + attributeSchemaName + "')";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", encodeURI(url), true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 200) {
+                    if (successCallback)
+                        successCallback(JSON.parse(this.response).value);
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get Entity Attributes");
+                }
+            }
+        };
+        req.send();
+    }
+
     this.getManyToOneRelationships = function (SchemaName, successCallback, errorCallback) {
         if (!isString(SchemaName)) {
             throw new Error("Sdk.WebAPI.getManyToOneRelationships entitySetName parameter must be a string.");
@@ -1270,15 +1318,15 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get ManyToOneRelationships");
                 }
             }
         };
         req.send();
     }
-    this.getOneToManyRelationships = function (SchemaName, referencingEntity, successCallback, errorCallback) {
-        if (!isString(SchemaName)) {
-            throw new Error("Sdk.WebAPI.getOneToManyRelationships entitySetName parameter must be a string.");
+    this.getOneToManyRelationships = function (referencedEntityLogicalName, referencingEntityLogicalName, successCallback, errorCallback) {
+        if (!isString(referencedEntityLogicalName)) {
+            throw new Error("Sdk.WebAPI.getOneToManyRelationships referencedEntityLogicalName parameter must be a string.");
         }
         if (!isStringOrNullOrUndefined(referencingEntity)) {
             throw new Error("Sdk.WebAPI.getOneToManyRelationships referencingEntity parameter must be a string, null or undefined.");
@@ -1290,7 +1338,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
             throw new Error("Sdk.WebAPI.getOneToManyRelationships errorCallback parameter must be a function or null.");
         }
 
-        var url = getWebAPIPath() + "RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata?$select=ReferencingAttribute,ReferencedAttribute&$filter=ReferencedEntity eq '" + SchemaName.toLowerCase() + "' and ReferencingEntity eq '" + referencingEntity + "'";
+        var url = getWebAPIPath() + "RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata?$select=ReferencingAttribute,ReferencedAttribute&$filter=ReferencedEntity eq '" + referencedEntityLogicalName + "' and ReferencingEntity eq '" + referencingEntityLogicalName + "'";
 
         var req = new XMLHttpRequest();
         req.open("GET", encodeURI(url), true);
@@ -1307,12 +1355,13 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                 }
                 else {
                     if (errorCallback)
-                        errorCallback(Sdk.WebAPI.errorHandler(this));
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Get OneToManyRelationships");
                 }
             }
         };
         req.send();
     }
+
     this.getFetchXml = function (entitySetName, fetchXml, successCallback, errorCallback) {
         if (isNullOrUndefined(entitySetName)) {
             throw new Error("Sdk.WebAPI.getFetchXml entitySetName parameter must not be null or undefined.");
@@ -1348,7 +1397,7 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
                         break;
                     default:
                         if (errorCallback)
-                            errorCallback(Sdk.WebAPI.errorHandler(this));
+                            errorCallback(Sdk.WebAPI.errorHandler(this), "Get FetchXml");
                         break;
                 }
             }
@@ -1356,6 +1405,187 @@ Sdk.WebAPI = Sdk.WebAPI || { __namespace: true };
         req.send();
 
     }
+
+    this.RetrieveGlobalOptionSetMetaDataId = function (optionSetSchemaName, successCallback, errorCallback) {
+        var globalOptionSetMetaDataId = null;
+        var uri = getWebAPIPath() + "GlobalOptionSetDefinitions?$select=Name";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", uri, true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+        req.send();
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (req.status == 201 || req.status == 200) {
+                    var RetrieveService = JSON.parse(this.response);
+                    if ((RetrieveService.value) && (RetrieveService.value.length > 0)) {
+                        for (var i = 0; i < RetrieveService.value.length; i++) {
+                            if (RetrieveService.value[i].Name == optionSetSchemaName) {
+                                globalOptionSetMetaDataId = RetrieveService.value[i].MetadataId;
+                                break;
+                            }
+                        }
+                    }
+                    if (successCallback) {
+                        successCallback(globalOptionSetMetaDataId);
+                    }
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Retrieve Global OptionSetOptions MetaDataId");
+                }
+            }
+        };
+    }
+    this.RetrieveGlobalOptionSetOptionsMetaData = function (globalOptionSetMetaDataId, successCallback, errorCallback) {
+        if (!isString(globalOptionSetMetaDataId)) {
+            throw new Error("Sdk.WebAPI.RetrieveGlobalOptionSetOptionsMetaData globalOptionSetMetaDataId parameter must be a string.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.RetrieveGlobalOptionSetOptionsMetaData successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.RetrieveGlobalOptionSetOptionsMetaData errorCallback parameter must be a function or null.");
+        }
+
+        var uri = getWebAPIPath() + "GlobalOptionSetDefinitions(" + globalOptionSetMetaDataId + ")";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", uri, true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+        req.send();
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (req.status == 201 || req.status == 200) {
+                    if (successCallback)
+                        successCallback(JSON.parse(this.response).Options);
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Retrieve Global OptionSetOptions MetaData");
+                }
+            }
+        };
+    }
+
+    this.retrieveMetadataByLogicalName = function (entitySchemaName, attributeLogicalName, successCallback, errorCallback) {
+        if (!isString(entitySchemaName)) {
+            throw new Error("Sdk.WebAPI.retrieveMetadataByLogicalName entitySchemaName parameter must be a string.");
+        }
+        if (!isString(attributeLogicalName)) {
+            throw new Error("Sdk.WebAPI.retrieveMetadataByLogicalName attributeLogicalName parameter must be a string.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.retrieveMetadataByLogicalName successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.retrieveMetadataByLogicalName errorCallback parameter must be a function or null.");
+        }
+
+        var uri = getWebAPIPath()
+            + "EntityDefinitions?$select=MetadataId&$filter=SchemaName eq '"
+            + entitySchemaName
+            + "'&$expand=Attributes($select=LogicalName,SchemaName,DisplayName,AttributeType;$filter=LogicalName eq '"
+            + attributeLogicalName.toLowerCase() + "')";
+
+        var req = new XMLHttpRequest();
+        req.open("GET", uri, true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 200) {
+                    var data = JSON.parse(this.response);
+                    successCallback(data.value[0].Attributes[0], data.value[0].MetadataId);
+                }
+                else {
+                    errorCallback(Sdk.WebAPI.errorHandler(this), "Retrieve Metadata By LogicalName");
+                }
+            }
+        };
+        req.send();
+    }
+    this.retrieveMetadataByMetadataId = function (entityMetadataId, attributMetadataId, attributeType, successHandler, failureHandler) {
+        //build query string 
+        var uri = getWebAPIPath() + buildQueryString(entityMetadataId, attributMetadataId, attributeType);
+
+        var req = new XMLHttpRequest();
+        req.open("GET", uri, true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 200) {
+                    successHandler(JSON.parse(this.response));
+                }
+                else {
+                    failureHandler(Sdk.WebAPI.errorHandler(this), "Retrieve Metadata By MetadataId");
+                }
+            }
+        };
+        req.send();
+    }
+
+    this.SetState = function (uri, statecode, statuscode, successCallback, errorCallback) {
+        if (!isString(uri)) {
+            throw new Error("Sdk.WebAPI.SetState uri parameter must be a string.");
+        }
+        if (!isNumber(statecode)) {
+            throw new Error("Sdk.WebAPI.SetState statecode parameter must be a number.");
+        }
+        if (!isNumber(statuscode)) {
+            throw new Error("Sdk.WebAPI.SetState statuscode parameter must be a number.");
+        }
+        if (!isFunctionOrNull(successCallback)) {
+            throw new Error("Sdk.WebAPI.SetState successCallback parameter must be a function or null.");
+        }
+        if (!isFunctionOrNull(errorCallback)) {
+            throw new Error("Sdk.WebAPI.SetState errorCallback parameter must be a function or null.");
+        }
+
+        var entity = {};
+        entity.statuscode = statuscode;
+        entity.statecode = statecode;
+
+        var req = new XMLHttpRequest();
+        req.open("PATCH", encodeURI(uri), true);
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 /* complete */) {
+                req.onreadystatechange = null;
+                if (this.status == 204) {
+                    if (successCallback)
+                        successCallback();
+                }
+                else {
+                    if (errorCallback)
+                        errorCallback(Sdk.WebAPI.errorHandler(this), "Set Record State");
+                }
+            }
+        };
+        req.send(JSON.stringify(entity));
+    }
+
     this.versionNumber = function (successCallback, errorCallback) {
         /// <summary>Retrieve an array of entities available from the service</summary>
         /// <param name="successCallback" type="Function">The function to call when the results are returned. The results of the operation will be passed to this function.</param>
@@ -1403,6 +1633,23 @@ function WhoAmIFunctionSuccess(WhoAmIResponse) {
  console.log("OrganizationId: " + WhoAmIResponse.OrganizationId);
 }
          */
+    }
+
+    // uri
+    // getWebAPIPath() + accounts(DE57510E-59A3-E511-80E4-3863BB35AD90)
+    // getWebAPIPath() + accounts
+    this.GetUri = function(entitySetName, Guid) {
+        if (!isString(entitySetName)) {
+            throw new Error("Sdk.WebAPI.GetUri entitySetName parameter must be a string.");
+        }
+        if (!isStringOrNullOrUndefined(Guid)) {
+            throw new Error("Sdk.WebAPI.GetUri Guid parameter must be a string, or null or underfined.");
+        }
+        var uri = getWebAPIPath() + entitySetName;
+        if (Guid) {
+            uri += "(" + Guid + ")";
+        }
+        return uri;
     }
 
     //============================== End New Functions
@@ -1471,6 +1718,49 @@ function WhoAmIFunctionSuccess(WhoAmIResponse) {
 
         return returnValue;
     }
+    //build OData query string for specific attribute characteristics 
+    function buildQueryString(entityMetadataId, attributMetadataId, attributeType) {
+        var result = "EntityDefinitions({0})/Attributes({1})";
+
+        result = result
+            .replace("{0}", entityMetadataId)
+            .replace("{1}", attributMetadataId)
+
+        if ((attributeType != null) && (attributeType != undefined)) {
+            switch (attributeType) {
+                case "State":
+                    result += "/Microsoft.Dynamics.CRM.StateAttributeMetadata?$expand=OptionSet";
+                    break;
+                case "Status":
+                    result += "/Microsoft.Dynamics.CRM.StatusAttributeMetadata?$expand=OptionSet";
+                    break;
+                case "Picklist":
+                    result += "/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$expand=OptionSet";
+                    break;
+                case "DateTime":
+                    //result += "/Microsoft.Dynamics.CRM.DateTimeAttributeMetadata";
+                    break;
+                case "Double":
+                    //result += "/Microsoft.Dynamics.CRM.DoubleAttributeMetadata";
+                case "Money":
+                    //result += "/Microsoft.Dynamics.CRM.MoneyAttributeMetadata";
+                case "Integer":
+                    //result += "/Microsoft.Dynamics.CRM.IntegerAttributeMetadata";
+                    break;
+                case "String":
+                    //result += "/Microsoft.Dynamics.CRM.StringAttributeMetadata";
+                case "Memo":
+                    //result += "/Microsoft.Dynamics.CRM.MemoAttributeMetadata";
+                    break;
+                case "Boolean":
+                    result += "/Microsoft.Dynamics.CRM.BooleanAttributeMetadata?$expand=OptionSet";
+                default:
+                    break;
+            }
+        }
+        return result;
+    }
+
 
     //Internal validation functions
     function isFunctionOrNullOrUndefined(obj) {
@@ -1598,7 +1888,21 @@ function WhoAmIFunctionSuccess(WhoAmIResponse) {
         }
         return false;
     }
-
+    function isNullOrObject(obj) {
+        if (isNull(obj)) {
+            return true;
+        }
+        if (Object.prototype.toString.call(this).slice(8, -1) === 'Object') {
+            return true;
+        }
+        return false;
+    }
+    function isArrayOrNull(obj) {
+        if (isNull(obj) || isArray(obj)) {
+            return true;
+        }
+        return false;
+    }
 
     // This function is called when an error callback parses the JSON response
     // It is a public function because the error callback occurs within the onreadystatechange 

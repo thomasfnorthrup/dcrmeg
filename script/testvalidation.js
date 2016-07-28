@@ -20,6 +20,7 @@ function FormOnloadHandler(context) {
     window.parent.DCrmEgGridBeforeCreateNewRecord = DCrmEgGridBeforeCreateNewRecord;
     window.parent.DCrmEgGridCreateNewRecord = DCrmEgGridCreateNewRecord;
     window.parent.DCrmEgGridOnload = DCrmEgGridOnload;
+    window.parent.DCrmEgGridRowOnload = DCrmEgGridRowOnload;
 }
 
 
@@ -175,10 +176,94 @@ function DCrmEgGridCreateNewRecord(data, entityinfo) {
     Log("Record Guid [" + data.NewRecordGuid + "]");
 }
 
-function DCrmEgGridOnload(data, entityinfo) {
-    Log("Onload - ParentEntityName [" + entityinfo.ParentEntityName + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaname + "]");
+function DCrmEgGridRowOnload(rowData, entityinfo) {
+    return;
+    Log("ParentEntityName [" + entityinfo.ParentEntityName + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaname + "]");
+    Log("Record Guid [" + rowData.RecordGuid + "]");
 
-    //data.Option.readonly = (data.Option.text == "Web");
+    if (rowData.InlineCreate) {
+        Log("Create inline record is used. One row is being added.");
+    }
+
+    var CrmFieldTypes = {
+        LookupType: "lookup",
+        CustomerType: 'customer',
+        OwnerType: 'owner',
+        BooleanType: "boolean",
+        OptionSetType: "picklist",
+        DateTimeType: "datetime",
+        TextType: "string",
+        MemoType: "memo",
+        IntegerType: "integer",
+        DoubleType: "double",
+        DecimalType: "decimal",
+        MoneyType: "money",
+        State: 'state', // Status statecode
+        Status: 'status' // Status Reason statuscode
+    };
+
+    for (var i = 0; i < rowData.Fields.length; i++) {
+        var field = rowData.Fields[i];
+        Log("Field schema name [" + field.SchemaName + "] field.FieldType [" + field.FieldType + "]");
+
+        switch (field.FieldType) {
+            case CrmFieldTypes.TextType:
+            case CrmFieldTypes.MemoType:
+                Log("Field ["
+                    + field.Value + "] Format ["
+                    + field.Format + "]");
+                break;
+            case CrmFieldTypes.LookupType:
+            case CrmFieldTypes.CustomerType:
+            case CrmFieldTypes.OwnerType:
+                Log("Field Lookup Guid ["
+                    + field.LookupGuid + "] Lookup LogicalName ["
+                    + field.LookupLogicalName + "] Lookup Name ["
+                    + field.LookupName + "] Value ["
+                    + field.Value + "]");
+                break;
+            case CrmFieldTypes.IntegerType:
+            case CrmFieldTypes.DoubleType:
+            case CrmFieldTypes.DecimalType:
+            case CrmFieldTypes.MoneyType:
+                Log("Field FormattedValue ["
+                    + field.FormattedValue + "] Value ["
+                    + field.Value + "]");
+                break;
+            case CrmFieldTypes.DateTimeType:
+                Log("Field FormattedValue ["
+                    + field.FormattedValue + "]");
+                field.ReadOnly = true;
+                // Optional, set field (cell) background and forground colors
+                field.BackgroundColor = 'lightyellow';
+                field.ForgroundColor = 'black';
+                break;
+            case CrmFieldTypes.OptionSetType:
+            case CrmFieldTypes.BooleanType:
+                Log("Field FormattedValue ["
+                    + field.FormattedValue + "] Value [" + field.Value + "]");
+                field.ReadOnly = true;
+                field.BackgroundColor = '#CCCCCC';
+                field.ForgroundColor = 'blue';
+                break;
+            case CrmFieldTypes.State:
+            case CrmFieldTypes.Status:
+                Log("Field FormattedValue ["
+                    + field.FormattedValue + "] Value [" + field.Value + "]");
+            default:
+                break;
+        }
+
+    }
+
+
+}
+
+function DCrmEgGridOnload(data, entityinfo) {
+    return;
+    Log("Onload - ParentEntityName [" + entityinfo.ParentEntityLabel + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaName + "]");
+
+    data.Option.readonly = (data.Option.text == "Accounting") || (data.Option.text == "Consulting") || (data.Option.text == "Friday");
 
     Log("Option set - text [" + data.Option.text + "] value [" + data.Option.value + "] ReadOnly [" + data.Option.readonly + "]");
 }

@@ -1,4 +1,4 @@
-
+// version 4.5
 String.prototype.capitalizeFirstLetter = function () {
         return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
     };
@@ -558,6 +558,14 @@ Array.prototype.insert = function (index, item) {
                     }
                     return '';
                 },
+                "SetHeaderCellText": function ($cell, txt) {
+                    var span = $cell.find('span.headertitle');
+                    if ((span) && (span.length)) {
+                        span.text(txt);
+                        span.attr(DCrmEditableGrid.Globals.ToolTipAttrName, txt);
+                        span.parent().attr(DCrmEditableGrid.Globals.ToolTipAttrName, txt);
+                    }
+                },
                 "GetFooterCellText": function ($cell) {
                     var span = $cell.find('span.footercelltext');
                     if ((span) && (span.length)) {
@@ -613,6 +621,17 @@ Array.prototype.insert = function (index, item) {
                 },
                 "RemoveCurlyBraces": function (str) {
                     return str.replace('{', '').replace('}', '');
+                },
+                "GetUserLocalizedLabel": function (lbl, defaultVal) {
+                    if (lbl.UserLocalizedLabel) {
+                        return lbl.UserLocalizedLabel.Label;
+                    } else {
+                        if (lbl.LocalizedLabels.length > 0) {
+                            return lbl.LocalizedLabels[0].Label;
+                        } else {
+                            return (defaultVal) ? defaultVal : '';
+                        }
+                    }
                 }
             }
         }
@@ -1298,8 +1317,7 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
     
     var active;
     var validator = editorsArrayi.validator;
-    var CheckedText = editorsArrayi.CheckText;
-    var UncheckedText = editorsArrayi.UncheckedText;
+    var headerIDToSet = '#' + editorsArrayi.HeaderIdToUpdate;
     var CrmFieldInfo = {
         FieldSchemaName: editorsArrayi.FieldSchemaName,
         FieldLabel: editorsArrayi.FieldLabel,
@@ -1315,10 +1333,10 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
     $editor.RefreshOnSave = false;
 
     $editor.EditorType = editorsArrayi.editor;
-    $editor.CheckedLabel = CheckedText;
-    $editor.UncheckedLabel = UncheckedText;
+    $editor.CheckedLabel = editorsArrayi.CheckText;
+    $editor.UncheckedLabel = editorsArrayi.UncheckedText;
     $editor.PossibleMove = undefined;
-    $editor.optionsData = [{ text: CheckedText, value: '1' }, { text: UncheckedText, value: '0' }];
+    $editor.optionsData = [{ text: $editor.CheckedLabel, value: '1' }, { text: $editor.UncheckedLabel, value: '0' }];
 
     var $input = $('<input type="checkbox" />')
         .attr('id', Input_ID)
@@ -1327,12 +1345,12 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
     var $CheckboxLabel = $('<label></label>')
         .attr('id', Label_ID)
         .attr('for', Input_ID)
-        .attr('data-on', CheckedText)
-        .attr('data-off', UncheckedText)
+        .attr('data-on', $editor.CheckedLabel)
+        .attr('data-off', $editor.UncheckedLabel)
         .appendTo($editor);
 
     $editor.SetInternals = function (curText) {
-        var initVal = (curText == CheckedText) ? true : false;
+        var initVal = (curText == $editor.CheckedLabel) ? true : false;
         $input.prop('checked', initVal);
         $CheckboxLabel.width($editor.width() - 3).height($editor.height() - 4);
         $editor.show().focus();
@@ -1425,7 +1443,7 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
             return;
         }
 
-        var text = $input.is(':checked') ? CheckedText : UncheckedText;
+        var text = $input.is(':checked') ? $editor.CheckedLabel : $editor.UncheckedLabel;
         var activecelltext = _thisHelpers.GetActiveCellText(active);
         var originalVal = activecelltext;
 
@@ -1441,7 +1459,6 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
 
             ValidationResult = validator(param, CrmFieldInfo);
             if (ValidationResult === true) {
-                //active.text(text);
                 _thisHelpers.SetActiveCellText(active, text);
             } else {
                 textUpdated = false;
@@ -1462,6 +1479,23 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
         $editor.empty();
         $editor.remove();
     };
+
+    function GetBooleanLabelsCallback(optionset) {
+        if ((optionset) && (optionset.length > 0)) {
+            $editor.CheckedLabel = _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.TrueOption.Label);
+            $editor.UncheckedLabel = _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.FalseOption.Label);
+
+            $editor.optionsData[0].text = $editor.CheckedLabel;
+            $editor.optionsData[1].text = $editor.UncheckedLabel;
+
+            $(headerIDToSet).attr(_thisGlobals.DataAttr.Header.CheckedText, $editor.CheckedLabel)
+                .attr(_thisGlobals.DataAttr.Header.UncheckedText, $editor.UncheckedLabel);
+
+            $CheckboxLabel.attr('data-on', $editor.CheckedLabel).attr('data-off', $editor.UncheckedLabel);
+        }
+    };
+
+    XrmServiceToolkit.Soap.RetrieveAttributeMetadata(editorsArrayi.ParentEntitySchemaname, editorsArrayi.FieldSchemaName, true, GetBooleanLabelsCallback);
 
     return $editor;
 };
@@ -1658,7 +1692,7 @@ $.fn.DCrmEditableGrid.EntityStatesBox = function (schemaName, editorsArrayi, tab
             for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
                 $editor.EntityStates.Status.push(
                 {
-                    text: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
+                    text: _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
                     value: optionset[0].OptionSet.Options[i].Value
                 });
             }
@@ -1679,7 +1713,7 @@ $.fn.DCrmEditableGrid.EntityStatesBox = function (schemaName, editorsArrayi, tab
             for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
                 $editor.EntityStates.StatusReason.push(
                 {
-                    text: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
+                    text: _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
                     value: optionset[0].OptionSet.Options[i].Value,
                     // in case of status reason, contains which state this option of status reason belongs to
                     state: optionset[0].OptionSet.Options[i].State,
@@ -2120,11 +2154,10 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
             e.preventDefault();
             e.stopPropagation();
             return false;
-        }
-    }).on('keydown',function (e) {
+        }})
+    .on('keydown',function (e) {
         var tkey = e.which || e.keycode;
         var prevent = false;
-
         if (tkey === DCrmEditableGrid.Keys.ESC) {
             HideError();
             $editor.hide();
@@ -2136,11 +2169,9 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
             e.stopPropagation();
             return false;
         }
-
         if (tkey == DCrmEditableGrid.Keys.TAB) {
             tkey = DCrmEditableGrid.Keys.ARROWRIGHT;
         }
-
         if ((tkey >= DCrmEditableGrid.Keys.ARROWLEFT) && (tkey <= DCrmEditableGrid.Keys.ARROWDOWN)) { // Arrow keys
             prevent = true;
             $editor.hide();
@@ -2158,13 +2189,11 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
                 }
             }
         }
-
         if (prevent) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }
-
     })
     .css('position', 'absolute').hide()
     .appendTo(table.parent());
@@ -2175,17 +2204,6 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
     $editor.RefreshOnSave = false;
     $editor.EditorId = elemId;
     $editor.PossibleMove = undefined;
-
-    $.each($editor.optionsData, function (i, item) {
-        if (item.readonly) {
-            $editor.append($('<option disabled="true" value="' + item.value + '">' + item.text + '</option>'));
-        } else {
-            $editor.append($('<option>', {
-                value: item.value,
-                text: item.text
-            }));
-        }
-    });
 
     $editor.SetInternals = function (curText) {
         $.each($editor.optionsData, function (i, item) {
@@ -2212,6 +2230,43 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
         $editor.off('blur').off('change').off('keydown');
         $editor.remove();
     };
+
+    function GetOptionsetData(optionset) {
+        if ((optionset) && (optionset.length > 0)) {
+            var callbackData = { Option: undefined };
+
+            for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
+                //console.log("LocalizedLabels[0] [" + optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label + "]");
+
+                $editor.optionsData.push(
+                {
+                    text: _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
+                    value: optionset[0].OptionSet.Options[i].Value,
+                    // in case of status reason, contains which state this option of status reason belongs to
+                    // state: optionset[0].OptionSet.Options[i].State,
+                    readonly: false
+                });
+                if (window.parent.DCrmEgGridOnload) {
+                    callbackData.Option = $editor.optionsData[i];
+                    window.parent.DCrmEgGridOnload(callbackData, CrmFieldInfo);
+                }
+            }
+
+            $.each($editor.optionsData, function (i, item) {
+                if (item.readonly) {
+                    $editor.append($('<option disabled="true" value="' + item.value + '">' + item.text + '</option>'));
+                } else {
+                    $editor.append($('<option>', {
+                        value: item.value,
+                        text: item.text
+                    }));
+                }
+            });
+
+        }
+    };
+
+    XrmServiceToolkit.Soap.RetrieveAttributeMetadata(editorsArrayi.ParentEntitySchemaname, editorsArrayi.FieldSchemaName, true, GetOptionsetData);
 
     return $editor;
 };
@@ -2294,8 +2349,7 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
 
             var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'], listData.EntityTargets[i], true);
             if (result.length > 0) {
-                entityLocalizedLabels[i] = (((result[0].DisplayName.LocalizedLabels.length == 0) ? result[0].LogicalName : result[0].DisplayName.LocalizedLabels[0].Label));
-
+                entityLocalizedLabels[i] = _thisHelpers.GetUserLocalizedLabel(result[0].DisplayName, result[0].LogicalName);
                 var ent = undefined;
                 for (var index = 0, j = result[0].Attributes.length; index < j; index++) {
                     ent = result[0].Attributes[index];
@@ -2888,8 +2942,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
 
             var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'], $editor.LookupCtrData.EntityTargets[i], true);
             if (result.length > 0) {
-                entityLocalizedLabels[i] = (((result[0].DisplayName.LocalizedLabels.length == 0) ? result[0].LogicalName : result[0].DisplayName.LocalizedLabels[0].Label));
-
+                entityLocalizedLabels[i] = _thisHelpers.GetUserLocalizedLabel(result[0].DisplayName, result[0].LogicalName);
                 var ent = undefined;
                 for (var index = 0, j = result[0].Attributes.length; index < j; index++) {
                     ent = result[0].Attributes[index];
@@ -3260,7 +3313,6 @@ var CrmEditableGrid = (function () {
     
     function CrmEditableGrid($table, options) {
         var self = this;
-
         var defaults = {
             selectedRows: [],
             DirtyCells: [],
@@ -3316,7 +3368,6 @@ var CrmEditableGrid = (function () {
           '</fetch>';
             XrmServiceToolkit.Soap.Fetch(fetch, false, self.GetParentPrimaryNameAttributeValueCallback);
         };
-
         // Get the parent primary id and name attribute names for related lookups, if related
         if (self.activeOptions.ParentChildLookupInfo.Related) {
             XrmServiceToolkit.Soap.RetrieveEntityMetadata("Entity",
@@ -3334,7 +3385,10 @@ var CrmEditableGrid = (function () {
             self.activeCell = self.mainTable.find('td:focus');
             self.mainTable.activeCell = self.activeCell;
 
-            if ((self.activeCell) && (self.activeCell.length) && (self.activeCell[0].cellIndex > 0) && (self.activeCell.attr(_thisGlobals.DataAttr.Cell.FooterCell) != _thisGlobals.DataAttr.NO)) {
+            if ((self.activeCell) && (self.activeCell.length)
+                && (self.activeCell[0].cellIndex > 0)
+                && (self.activeCell.attr(_thisGlobals.DataAttr.Cell.FooterCell) != _thisGlobals.DataAttr.NO) 
+                && (self.activeCell.attr('data-user-disabledfield') != _thisGlobals.DataAttr.YES)) {
 
                 if (self.activeCell.hasClass('IsDirty')) {
                     $('#' + self.activeOptions.GridContainerIds.UndoChanges).removeClass('GreyImage');
@@ -3566,8 +3620,10 @@ var CrmEditableGrid = (function () {
 
                     if ((!self.activeOptions.ParentFormIsReadOnly) &&
                         (isrequiered == _thisGlobals.DataAttr.NO) &&
-                        (contextMenuTargetText.length > 0)) {
+                        (contextMenuTargetText.length > 0) &&
+                        (self.contextMenuTarget.attr('data-user-disabledfield') != _thisGlobals.DataAttr.YES)) {
                         var ed = parseInt($($theadcells[index]).attr(_thisGlobals.DataAttr.Header.EditorType));
+
                         if ((ed == DCrmEditableGrid.Editors.DatePicker) || (ed == DCrmEditableGrid.Editors.DateTimePicker)) {
                             haveanymenu = true;
                             $('<li class="divider"></li>').appendTo(menu);
@@ -4420,13 +4476,12 @@ var CrmEditableGrid = (function () {
             }
         };
 
-        op = {
+        self.ColumnResizer = new colResizable({
             liveDrag: true,
             firstColumnResizable: false,
             ParentControlClass: self,
             onDrag: self.HeaderOnDragHandler
-        };
-        self.ColumnResizer = new colResizable(op);
+        });
 
         self.UpdateCellDone = function () {
             _thisHelpers.WaitDialog();
@@ -4534,6 +4589,8 @@ var CrmEditableGrid = (function () {
                     var item = fieldsresult[i];
 
                     $tr = $('<tr' + extraRowHeight + '></tr>').attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id).appendTo($tbody);
+                    var callbackRowData = { RecordGuid: item.id, Fields: [], RowIndex: i };
+
                     for (var iinner = 0; iinner < SelectedFields.length; iinner++) {
                         var inneritem = SelectedFields[iinner];
                         var inneritemSchemaName = inneritem.SchemaName.toLowerCase();
@@ -4541,6 +4598,14 @@ var CrmEditableGrid = (function () {
                         fval = '';
                         selectedOptionsetValue = undefined;
                         ceditors = self.activeOptions.columneditors[iinner];
+
+                        var callbackField = {};
+                        callbackField.ReadOnly = false;
+                        callbackField.SchemaName = inneritemSchemaName;
+                        callbackField.FieldType = tmpLcase;
+                        callbackField.FieldIndex = iinner;
+                        callbackField.BackgroundColor = null;
+                        callbackField.ForgroundColor = null;
 
                         if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
                             (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
@@ -4553,10 +4618,14 @@ var CrmEditableGrid = (function () {
 
                             if (item.attributes[inneritemSchemaName]) {
                                 fval = item.attributes[inneritemSchemaName].formattedValue;
+                                callbackField.Value = item.attributes[inneritemSchemaName].value;
+
                                 if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
                                     (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
                                     (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
                                     selectedOptionsetValue = item.attributes[inneritemSchemaName].value;
+
+                                    callbackField.Value = selectedOptionsetValue;
                                 }
                             }
                         } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.LookupType) ||
@@ -4569,11 +4638,18 @@ var CrmEditableGrid = (function () {
                                 ceditors.LookupData.LookupLogicalName = item.attributes[inneritemSchemaName].logicalName;
                                 ceditors.LookupData.LookupName = fval;
 
+                                callbackField.LookupGuid = ceditors.LookupData.LookupId;
+                                callbackField.LookupLogicalName = ceditors.LookupData.LookupLogicalName;
+                                callbackField.LookupName = fval;
+                                callbackField.Value = fval;
                             }
 
                         } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) || (tmpLcase == _thisGlobals.CrmFieldTypes.MemoType)) {
                             if (item.attributes[inneritemSchemaName]) {
                                 fval = item.attributes[inneritemSchemaName].value;
+
+                                callbackField.Value = fval;
+                                callbackField.Format = ceditors.Format;
 
                                 if (((ceditors.Format == 'Text') || (ceditors.Format == 'Phone'))
                                     && (_thisHelpers.IsvalidPhoneNumber(fval + ''))) {
@@ -4583,9 +4659,12 @@ var CrmEditableGrid = (function () {
                         } else if (tmpLcase == _thisGlobals.CrmFieldTypes.DateTimeType) {
                             if (item.attributes[inneritemSchemaName]) {
                                 fval = item.attributes[inneritemSchemaName].formattedValue;
+
+                                callbackField.Value = fval;
                             }
                         }
 
+                        callbackField.FormattedValue = fval;
                         var $thistr = $('<td tabindex="1"></td>')
                             .attr(_thisGlobals.ToolTipAttrName, fval)
                             .attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id)
@@ -4618,7 +4697,10 @@ var CrmEditableGrid = (function () {
                                 $thistr.addClass("NumericTextbox");
                         }
 
+                        callbackRowData.Fields.push(callbackField);
                     }
+
+                    FireGridRowOnload($tr, callbackRowData, self.activeOptions.ParentEntityInfo);
                     refreshTrs.push($tr);
                 }
 
@@ -5466,7 +5548,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
             var c = $(table.tBodies[0].rows[i]);
 
-            $tmpCell = $('<td style="text-align:center"></td>'); //
+            $tmpCell = $('<td style="text-align:center"></td>');
             if ((!gridOptions.TableIsReadOnly) &&
                 (gridOptions.UserCanDelete) &&
                 (gridOptions.AllowDelete)) {
@@ -6170,6 +6252,9 @@ function CreateInlineRecord(self) {
         }
 
         var val = undefined;
+        var formattedVal = '';
+        var callbackRowData = { RecordGuid: undefined, Fields: [], RowIndex: -1, InlineCreate: true };
+
         for (var i = 1; i < $theadcells.length; i++) {
             $cell = $(cells[i]);
 
@@ -6178,6 +6263,18 @@ function CreateInlineRecord(self) {
             var schema = $thcell.attr(_thisGlobals.DataAttr.Header.SchemaName);
             var requier = ($thcell.attr(_thisGlobals.DataAttr.Header.Required) == _thisGlobals.DataAttr.YES) ? true : false;
             var defaultVal = $thcell.attr(_thisGlobals.DataAttr.Header.DefaultValueForCreate);
+            formattedVal = '';
+            val = undefined;
+
+            var callbackField = {};
+            callbackField.ReadOnly = false;
+            callbackField.SchemaName = schema;
+            callbackField.FieldType = $thcell.attr('data-crmfieldtype');
+            callbackField.FieldIndex = i;
+            callbackField.BackgroundColor = null;
+            callbackField.ForgroundColor = null;
+            callbackField.Value = undefined;
+            callbackField.FormattedValue = undefined;
 
             if (ed == DCrmEditableGrid.Editors.None) {
                 ed = parseInt($thcell.attr(_thisGlobals.DataAttr.Header.ReadOnlyEditorType));
@@ -6186,100 +6283,142 @@ function CreateInlineRecord(self) {
             if (!exclude.ExactMatchExists(schema)) {
                 if ((ed == DCrmEditableGrid.Editors.Text) || (ed == DCrmEditableGrid.Editors.Description)) {
                     if (defaultVal) {
-                        recNew.attributes[schema] = defaultVal;
-                        _thisHelpers.SetActiveCellText($cell, recNew.attributes[schema]);
+                        formattedVal = defaultVal;
+                        recNew.attributes[schema] = formattedVal;
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
-                        recNew.attributes[schema] = _thisHelpers.GetActiveCellText($thcell) + Math.floor((Math.random() * 1000) + 1);
-                        _thisHelpers.SetActiveCellText($cell, recNew.attributes[schema]);
+                        formattedVal = _thisHelpers.GetActiveCellText($thcell) + Math.floor((Math.random() * 1000) + 1);
+                        recNew.attributes[schema] = formattedVal;
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+
+                    val = formattedVal;
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.Numeric) {
                     if (defaultVal) {
-                        recNew.attributes[schema] = { value: parseInt(defaultVal), type: "int" };
-                        _thisHelpers.SetActiveCellText($cell, _thisHelpers.AddIntegerFormat(defaultVal));
+                        val = parseInt(defaultVal);
+                        recNew.attributes[schema] = { value: val, type: "int" };
+                        formattedVal = _thisHelpers.AddIntegerFormat(defaultVal);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
+                        val = 1;
                         recNew.attributes[schema] = { value: 1, type: "int" };
-                        _thisHelpers.SetActiveCellText($cell, _thisHelpers.AddIntegerFormat(recNew.attributes[schema].value));
+                        formattedVal = _thisHelpers.AddIntegerFormat(val);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.Decimal) {
                     if (defaultVal) {
-                        recNew.attributes[schema] = { value: parseFloat(defaultVal), type: "decimal" };
-                        _thisHelpers.SetActiveCellText($cell, _thisHelpers.AddDecimalFormat(recNew.attributes[schema].value,
-                            self.activeOptions.columneditors[i - 1].Precision));
+                        val = parseFloat(defaultVal);
+                        recNew.attributes[schema] = { value: val, type: "decimal" };
+                        formattedVal = _thisHelpers.AddDecimalFormat(val, self.activeOptions.columneditors[i - 1].Precision);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
-                        recNew.attributes[schema] = { value: 1.0, type: "decimal" };
-                        _thisHelpers.SetActiveCellText($cell, _thisHelpers.AddDecimalFormat(recNew.attributes[schema].value,
-                            self.activeOptions.columneditors[i - 1].Precision));
+                        val = 1.0;
+                        recNew.attributes[schema] = { value: val, type: "decimal" };
+                        formattedVal = _thisHelpers.AddDecimalFormat(val, self.activeOptions.columneditors[i - 1].Precision);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.Currency) {
                     if (defaultVal) {
-                        recNew.attributes[schema] = { value: parseFloat(defaultVal), type: "Money" };
-                        _thisHelpers.SetActiveCellText($cell, _thisHelpers.AddCurrencyFormat(recNew.attributes[schema].value,
-                            self.activeOptions.columneditors[i - 1].Precision, self.activeOptions.EntityCurrencySymbol));
+                        val = parseFloat(defaultVal);
+                        recNew.attributes[schema] = { value: val, type: "Money" };
+                        formattedVal = _thisHelpers.AddCurrencyFormat(val,
+                            self.activeOptions.columneditors[i - 1].Precision,
+                            self.activeOptions.EntityCurrencySymbol);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
-                        recNew.attributes[schema] = { value: 1.0, type: "Money" };
-                        _thisHelpers.SetActiveCellText($cell, _thisHelpers.AddCurrencyFormat(recNew.attributes[schema].value,
-                            self.activeOptions.columneditors[i - 1].Precision), self.activeOptions.EntityCurrencySymbol);
+                        val = 1.0;
+                        recNew.attributes[schema] = { value: val, type: "Money" };
+                        formattedVal = _thisHelpers.AddCurrencyFormat(val,
+                            self.activeOptions.columneditors[i - 1].Precision,
+                            self.activeOptions.EntityCurrencySymbol);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.DatePicker) {
                     if (defaultVal) {
                         val = Date.parseDate(defaultVal);
                         recNew.attributes[schema] = val;
-                        _thisHelpers.SetActiveCellText($cell, val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat));
+                        formattedVal = val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
                         val = new Date();
                         recNew.attributes[schema] = val;
-                        _thisHelpers.SetActiveCellText($cell, val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat));
+                        formattedVal = val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.DateTimePicker) {
                     if (defaultVal) {
                         val = Date.parseDate(defaultVal);
                         recNew.attributes[schema] = { value: val, type: "dateTime" };
-                        _thisHelpers.SetActiveCellText($cell, val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat + ' ' + _thisGlobals.userDatetimeSettings.TimeFormat));
+                        formattedVal = val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat + ' ' + _thisGlobals.userDatetimeSettings.TimeFormat);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
                         val = new Date();
                         recNew.attributes[schema] = { value: val, type: "dateTime" };
-                        _thisHelpers.SetActiveCellText($cell, val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat + ' ' + _thisGlobals.userDatetimeSettings.TimeFormat));
+                        formattedVal = val.dateFormat(_thisGlobals.userDatetimeSettings.DateFormat + ' ' + _thisGlobals.userDatetimeSettings.TimeFormat);
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.Checkbox) {
                     if (defaultVal) {
                         var parts = defaultVal.split("{}");
-                        var checked = (parts[1] == '1') ? true : false;
+                        val = (parts[1] == '1') ? true : false;
                         recNew.attributes[schema] = {
-                            value: checked,
+                            value: val,
                             type: "boolean"
                         };
+                        formattedVal = parts[0];
                         _thisHelpers.SetActiveCellText($cell, parts[0]);
                     } else if (requier) {
+                        val = true;
                         recNew.attributes[schema] = {
-                            value: true,
+                            value: val,
                             type: "boolean"
                         };
-                        _thisHelpers.SetActiveCellText($cell, self.activeOptions.columneditors[i - 1].CheckText);
+                        formattedVal = self.activeOptions.columneditors[i - 1].CheckText;
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.OptionSet) {
                     if (defaultVal) {
                         var parts = defaultVal.split("{}");
-                        val = parts[1];
-                        recNew.attributes[schema] = { value: parseInt(val), type: "OptionSetValue" };
+                        val = parseInt(parts[1]);
+                        recNew.attributes[schema] = { value: val, type: "OptionSetValue" };
+                        formattedVal = parts[0];
                         _thisHelpers.SetActiveCellText($cell, parts[0]);
 
                         $cell.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue, val)
                             .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, val);
                     } else if (requier) {
-                        val = self.activeOptions.columneditors[i - 1].OptionSetData[0].value;
-                        recNew.attributes[schema] = { value: parseInt(val), type: "OptionSetValue" };
-                        _thisHelpers.SetActiveCellText($cell, self.activeOptions.columneditors[i - 1].OptionSetData[0].text);
+
+                        val = parseInt(self.activeOptions.columneditors[i - 1].OptionSetData[0].value);
+                        recNew.attributes[schema] = { value: val, type: "OptionSetValue" };
+                        formattedVal = self.activeOptions.columneditors[i - 1].OptionSetData[0].text;
+                        _thisHelpers.SetActiveCellText($cell, formattedVal);
 
                         $cell.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue, val)
                             .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, val);
                     }
+                    callbackField.Value = val;
+                    callbackField.FormattedValue = formattedVal;
 
                 } else if (ed == DCrmEditableGrid.Editors.Status) {
                     LogIt("Detected state or state reason. By passing [" + schema + "]");
@@ -6288,7 +6427,8 @@ function CreateInlineRecord(self) {
 
             if ((ed == DCrmEditableGrid.Editors.Text) && (self.activeOptions.columneditors[i - 1]) &&
                 (self.activeOptions.columneditors[i - 1].Format)) {
-                $cell.attr(_thisGlobals.DataAttr.Cell.Format, self.activeOptions.columneditors[i - 1].Format.toLowerCase());
+                callbackField.Format = self.activeOptions.columneditors[i - 1].Format;
+                $cell.attr(_thisGlobals.DataAttr.Cell.Format, callbackField.Format);
             }
 
             if ((ed == DCrmEditableGrid.Editors.Numeric) ||
@@ -6317,6 +6457,12 @@ function CreateInlineRecord(self) {
                     self.activeOptions.columneditors[tmpLookupStruc.Index - 1].LookupName = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;
                     $cell = $($cloneRow[0].cells[tmpLookupStruc.Index]);
                     _thisHelpers.SetActiveCellText($cell, self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue);
+
+                    callbackField.LookupGuid = recNew.attributes[schema].id;
+                    callbackField.LookupLogicalName = recNew.attributes[schema].logicalName;
+                    callbackField.LookupName = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;;
+                    callbackField.FormattedValue = callbackField.LookupName;
+                    callbackField.Value = callbackField.LookupName;
 
                     //console.log("Schema [" + schema + "] logicalname [" +
                     //    recNew.attributes[schema].logicalName + "] ID [" +
@@ -6348,23 +6494,33 @@ function CreateInlineRecord(self) {
                     self.activeOptions.columneditors[tmpLookupStruc.Index - 1].LookupName = parts[0];
                     $cell = $($cloneRow[0].cells[tmpLookupStruc.Index]);
                     _thisHelpers.SetActiveCellText($cell, parts[0]);
+
+                    callbackField.LookupGuid = recNew.attributes[schema].id;
+                    callbackField.LookupLogicalName = recNew.attributes[schema].logicalName;
+                    callbackField.LookupName = parts[0];
+                    callbackField.FormattedValue = callbackField.LookupName;
+                    callbackField.Value = callbackField.LookupName;
                 }
             }
-
+            callbackRowData.Fields.push(callbackField);
         }
 
+        // JS callback
         if (window.parent.DCrmEgGridBeforeCreateNewRecord) {
             var allow = window.parent.DCrmEgGridBeforeCreateNewRecord(recNew, self.activeOptions.ParentEntityInfo);
             if (!allow) {
                 _thisHelpers.WaitDialog();
-                //DisplayCrmAlertDialog("Create operation cancelled by javascript callback.");
                 return;
             }
         }
 
         var newRecGuid = XrmServiceToolkit.Soap.Create(recNew);
-        $cloneRow.attr(_thisGlobals.DataAttr.Cell.RecordGuid, newRecGuid);
-        $cloneRow.attr(_thisGlobals.DataAttr.Row.SubGrid.ChildGridOpen, _thisGlobals.DataAttr.NO);
+        $cloneRow.attr(_thisGlobals.DataAttr.Cell.RecordGuid, newRecGuid)
+            .attr(_thisGlobals.DataAttr.Row.SubGrid.ChildGridOpen, _thisGlobals.DataAttr.NO);
+
+        // JS callback
+        callbackRowData.RecordGuid = newRecGuid;
+        FireGridRowOnload($cloneRow, callbackRowData, self.activeOptions.ParentEntityInfo);
 
         for (var i = 0; i < $theadcells.length; i++) {
             if (i > 0) {
@@ -6387,6 +6543,7 @@ function CreateInlineRecord(self) {
             $('#' + self.activeOptions.GridContainerIds.Pager).show();
         }
 
+        // JS callback
         if (window.parent.DCrmEgGridCreateNewRecord) {
             var callbackData = { NewRecordGuid: newRecGuid };
             window.parent.DCrmEgGridCreateNewRecord(callbackData, self.activeOptions.ParentEntityInfo);
@@ -6426,7 +6583,7 @@ function DisplayRecordState(entity, primaryidattr, recGuid, refreshBtnId) {
             for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
                 item.Status.push(
                 {
-                    text: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
+                    text: _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
                     value: optionset[0].OptionSet.Options[i].Value
                 });
             }
@@ -6438,7 +6595,7 @@ function DisplayRecordState(entity, primaryidattr, recGuid, refreshBtnId) {
             for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
                 item.StatusReason.push(
                 {
-                    text: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
+                    text: _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
                     value: optionset[0].OptionSet.Options[i].Value,
                     // in case of status reason, contains which state this option of status reason belongs to
                     state: optionset[0].OptionSet.Options[i].State,
@@ -7063,7 +7220,7 @@ function CreateGridContainers(entityname,
         .attr('id', containerIds.Table)
         .attr('data-item-schema', Schema)
         .attr('data-item-entityname', entityname)
-        .appendTo($parentContainer);
+        .appendTo($parentContainer).hide();
 
     return containerIds;
 }
@@ -8507,6 +8664,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         var ed = DCrmEditableGrid.Editors.None;
         var attrtype = item.AttrType.toLowerCase();
         var fieldIsReadOnly = (item.ReadOnly == 'true') || false;
+        var headerIdToUpdate = null;
 
         if (item.RequieredLevel.toLowerCase() != 'none') {
             requiered = true;
@@ -8549,45 +8707,21 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             NumericFields.HavePrecision = true;
 
         } else if (attrtype == _thisGlobals.CrmFieldTypes.OptionSetType) {
-            var optionset = XrmServiceToolkit.Soap.RetrieveAttributeMetadata(data.Entity.SchemaName, item.SchemaName.toLowerCase(), true);
-            var callbackData = {Option: undefined};
-
-            if (optionset.length > 0) {
-                for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
-                    opSetData.push(
-                    {
-                        text: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
-                        value: optionset[0].OptionSet.Options[i].Value,
-                        // in case of status reason, contains which state this option of status reason belongs to
-                        // state: optionset[0].OptionSet.Options[i].State,
-                        readonly: false
-                    });
-                    if (window.parent.DCrmEgGridOnload) {
-                        callbackData.Option = opSetData[i];
-                        window.parent.DCrmEgGridOnload(callbackData, { ParentEntityName: data.Entity.Label, ParentEntitySchemaname: data.Entity.SchemaName });
-                    }
-                }
-                if ((!fieldIsReadOnly) && (!requiered)) {
-                    opSetData.insert(0,
-                    {
-                        text: '',
-                        value: -1,
-                        state: undefined,
-                        readonly: false
-                    });
-                }
-                ed = DCrmEditableGrid.Editors.OptionSet;
+            if ((!fieldIsReadOnly) && (!requiered)) {
+                opSetData.insert(0,
+                {
+                    text: '',
+                    value: -1,
+                    state: undefined,
+                    readonly: false
+                });
             }
+            ed = DCrmEditableGrid.Editors.OptionSet;
+
         } else if (attrtype == _thisGlobals.CrmFieldTypes.BooleanType) {
-
-            var optionset = XrmServiceToolkit.Soap.RetrieveAttributeMetadata(data.Entity.SchemaName, item.SchemaName.toLowerCase(), true);
-            if (optionset.length > 0) {
-                booleanCheckText = optionset[0].OptionSet.TrueOption.Label.LocalizedLabels[0].Label;
-                booleanUncheckedText = optionset[0].OptionSet.FalseOption.Label.LocalizedLabels[0].Label;
-                ed = DCrmEditableGrid.Editors.Checkbox;
-                $theader.attr(_thisGlobals.DataAttr.Header.CheckedText, booleanCheckText);
-                $theader.attr(_thisGlobals.DataAttr.Header.UncheckedText, booleanUncheckedText);
-            }
+            headerIdToUpdate = _thisHelpers.GenerateUUID();
+            $theader.attr('id', headerIdToUpdate);
+            ed = DCrmEditableGrid.Editors.Checkbox;
 
         } else if ((attrtype == _thisGlobals.CrmFieldTypes.LookupType) ||
             (attrtype == _thisGlobals.CrmFieldTypes.CustomerType) ||
@@ -8617,8 +8751,9 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             $theader.attr(_thisGlobals.DataAttr.Header.ReadOnly, _thisGlobals.DataAttr.YES);
         }
 
-        $theader.attr(_thisGlobals.DataAttr.Header.EditorType, ed);
-        $theader.attr(_thisGlobals.DataAttr.Header.SchemaName, item.SchemaName.toLowerCase());
+        $theader.attr(_thisGlobals.DataAttr.Header.EditorType, ed)
+            .attr('data-crmfieldtype', attrtype)
+            .attr(_thisGlobals.DataAttr.Header.SchemaName, item.SchemaName.toLowerCase());
 
         if (item.DefaultValue) {
             $theader.attr(_thisGlobals.DataAttr.Header.DefaultValueForCreate, item.DefaultValue);
@@ -8744,6 +8879,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             RequireValue: requiered,
             validator: ValidateEditor,
 
+            HeaderIdToUpdate: headerIdToUpdate,
             CheckText: booleanCheckText,
             UncheckedText: booleanUncheckedText,
             OptionSetData: opSetData,
@@ -9149,187 +9285,233 @@ var GridLoaderHelper = (function () {
         self.Grid = undefined;
         self.PrimaryIdAttribute = null;
         self.PrimaryNameAttribute = null;
+        self.DataLoadErrorMessage = "Unable to load the grid data due to exceptions:\r\n";
+        self.TableVisible = false;
 
         self.TotalRecordCount = -1;
 
+        self.CallbackErrorHandler = function (errorMsg) {
+            DisplayCrmAlertDialog(self.DataLoadErrorMessage + errorMsg);
+            _thisHelpers.WaitDialog();
+        };
+
         self.RecordCallback = function (fieldsresult, hasMoreRecords, pagingCookie) {
 
-            var EntityCurrencyid = undefined;
-            if ((pagingCookie == undefined) || (pagingCookie == "undefined")) {
-                pagingCookie = null;
-            }
+            try {
+                var EntityCurrencyid = undefined;
+                if ((pagingCookie == undefined) || (pagingCookie == "undefined")) {
+                    pagingCookie = null;
+                }
 
-            if ((fieldsresult) && (fieldsresult.length) && (fieldsresult.length > 0)) {
+                if ((fieldsresult) && (fieldsresult.length) && (fieldsresult.length > 0)) {
 
-                if ((fieldsresult[0].attributes['transactioncurrencyid']) &&
-                    (fieldsresult[0].attributes['transactioncurrencyid'].id) &&
-                    (fieldsresult[0].attributes['transactioncurrencyid'].id.length)) {
+                    if ((fieldsresult[0].attributes['transactioncurrencyid']) &&
+                        (fieldsresult[0].attributes['transactioncurrencyid'].id) &&
+                        (fieldsresult[0].attributes['transactioncurrencyid'].id.length)) {
                         EntityCurrencyid = fieldsresult[0].attributes['transactioncurrencyid'].id;
-                }
-
-                var extraRowHeight = '';
-                var $tbody = $('#' + self.ContainerIds.Table).find('tbody:first');
-                var $tr, $td = undefined;
-                var fval = '';
-                var tmpLcase = '';
-                var selectedOptionsetValue = undefined;
-
-                try {
-                    if (_thisGlobals.xrmPage.context.client.getClient() == "Mobile") {
-                        extraRowHeight = ' style="height:30px;"';
                     }
-                } catch (e) {
-                }
 
-                for (var i = 0; i < fieldsresult.length; i++) {
-                    var item = fieldsresult[i];
+                    var extraRowHeight = '';
+                    var $tbody = $('#' + self.ContainerIds.Table).find('tbody:first');
+                    var $tr, $td = undefined;
+                    var fval = '';
+                    var tmpLcase = '';
+                    var selectedOptionsetValue = undefined;
 
-                    $tr = $('<tr' + extraRowHeight + '></tr>').attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id).appendTo($tbody);
-                    for (var iinner = 0; iinner < self.data.SelectedFields.length; iinner++) {
-                        var inneritem = self.data.SelectedFields[iinner];
-                        var inneritemSchemaName = inneritem.SchemaName.toLowerCase();
-                        tmpLcase = inneritem.AttrType.toLowerCase();
-                        fval = '';
-                        selectedOptionsetValue = undefined;
+                    try {
+                        if (_thisGlobals.xrmPage.context.client.getClient() == "Mobile") {
+                            extraRowHeight = ' style="height:30px;"';
+                        }
+                    } catch (e) {
+                    }
 
-                        if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.BooleanType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.MoneyType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.DecimalType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.DoubleType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.IntegerType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
+                    for (var i = 0; i < fieldsresult.length; i++) {
+                        var item = fieldsresult[i];
 
-                            if (item.attributes[inneritemSchemaName]) {
-                                fval = item.attributes[inneritemSchemaName].formattedValue;
-                                if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
-                                    (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
-                                    (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
-                                    selectedOptionsetValue = item.attributes[inneritemSchemaName].value;
+                        $tr = $('<tr' + extraRowHeight + '></tr>').attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id).appendTo($tbody);
+                        var callbackRowData = { RecordGuid: item.id, Fields: [], RowIndex: i };
+
+                        for (var iinner = 0; iinner < self.data.SelectedFields.length; iinner++) {
+                            var inneritem = self.data.SelectedFields[iinner];
+                            var inneritemSchemaName = inneritem.SchemaName.toLowerCase();
+                            tmpLcase = inneritem.AttrType.toLowerCase();
+                            fval = '';
+                            selectedOptionsetValue = undefined;
+
+                            var callbackField = {};
+                            callbackField.ReadOnly = false;
+                            callbackField.SchemaName = inneritemSchemaName;
+                            callbackField.FieldType = tmpLcase;
+                            callbackField.FieldIndex = iinner;
+                            callbackField.BackgroundColor = null;
+                            callbackField.ForgroundColor = null;
+
+                            if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.BooleanType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.MoneyType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.DecimalType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.DoubleType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.IntegerType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
+
+                                if (item.attributes[inneritemSchemaName]) {
+                                    fval = item.attributes[inneritemSchemaName].formattedValue;
+
+                                    callbackField.Value = item.attributes[inneritemSchemaName].value;
+
+                                    if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
+                                        (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
+                                        (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
+                                        selectedOptionsetValue = item.attributes[inneritemSchemaName].value;
+
+                                        callbackField.Value = selectedOptionsetValue;
+                                    }
+                                }
+                            } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.LookupType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.CustomerType) || (tmpLcase == _thisGlobals.CrmFieldTypes.OwnerType)) {
+
+                                if (item.attributes[inneritemSchemaName]) {
+                                    fval = item.attributes[inneritemSchemaName].name || '';
+
+                                    self.ceditors[iinner].LookupData.LookupId = item.attributes[inneritemSchemaName].id || '';
+                                    self.ceditors[iinner].LookupData.LookupLogicalName = item.attributes[inneritemSchemaName].logicalName;
+                                    self.ceditors[iinner].LookupData.LookupName = fval;
+
+                                    callbackField.LookupGuid = self.ceditors[iinner].LookupData.LookupId;
+                                    callbackField.LookupLogicalName = self.ceditors[iinner].LookupData.LookupLogicalName;
+                                    callbackField.LookupName = fval;
+                                    callbackField.Value = fval;
+                                }
+
+                            } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) || (tmpLcase == _thisGlobals.CrmFieldTypes.MemoType)) {
+                                if (item.attributes[inneritemSchemaName]) {
+                                    fval = item.attributes[inneritemSchemaName].value;
+
+                                    callbackField.Value = fval;
+                                    callbackField.Format = self.ceditors[iinner].Format;
+
+                                    if (((self.ceditors[iinner].Format == 'Text') || (self.ceditors[iinner].Format == 'Phone'))
+                                        && (_thisHelpers.IsvalidPhoneNumber(fval + ''))) {
+
+                                        ceditors[iinner].Format = "Phone";
+                                    }
+                                }
+                            } else if (tmpLcase == _thisGlobals.CrmFieldTypes.DateTimeType) {
+                                if (item.attributes[inneritemSchemaName]) {
+                                    fval = item.attributes[inneritemSchemaName].formattedValue;
+
+                                    callbackField.Value = fval;
                                 }
                             }
-                        } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.LookupType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.CustomerType) || (tmpLcase == _thisGlobals.CrmFieldTypes.OwnerType)) {
 
-                            if (item.attributes[inneritemSchemaName]) {
-                                fval = item.attributes[inneritemSchemaName].name || '';
+                            callbackField.FormattedValue = fval;
+                            // Add cell
+                            $td = $('<td></td>')
+                                .attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id)
+                                .attr(_thisGlobals.ToolTipAttrName, fval)
+                                .html('<span class="fieldcelltext" '
+                                    + _thisGlobals.ToolTipAttrName + '="' + fval + '">' + fval + '</span>')
+                                .appendTo($tr);
 
-                                self.ceditors[iinner].LookupData.LookupId = item.attributes[inneritemSchemaName].id || '';
-                                self.ceditors[iinner].LookupData.LookupLogicalName = item.attributes[inneritemSchemaName].logicalName;
-                                self.ceditors[iinner].LookupData.LookupName = fval;
+                            if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) && (self.ceditors[iinner].Format)) {
+                                $td.attr(_thisGlobals.DataAttr.Cell.Format, self.ceditors[iinner].Format.toLowerCase());
                             }
 
-                        } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) || (tmpLcase == _thisGlobals.CrmFieldTypes.MemoType)) {
-                            if (item.attributes[inneritemSchemaName]) {
-                                fval = item.attributes[inneritemSchemaName].value;
-                                if (((self.ceditors[iinner].Format == 'Text') || (self.ceditors[iinner].Format == 'Phone'))
-                                    && (_thisHelpers.IsvalidPhoneNumber(fval + ''))) {
+                            if (self.ceditors[iinner].LookupData) {
+                                $td.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, self.ceditors[iinner].LookupData.LookupId)
+                                    .attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, self.ceditors[iinner].LookupData.LookupLogicalName)
+                                    .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, self.ceditors[iinner].LookupData.LookupId)
+                                    .attr(_thisGlobals.DataAttr.Cell.Lookup.OriginalLogicalName, self.ceditors[iinner].LookupData.LookupLogicalName);
 
-                                    ceditors[iinner].Format = "Phone";
-                                }
+                            } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
+                                        (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
+                                        (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
+                                $td.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue, selectedOptionsetValue + '')
+                                    .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, selectedOptionsetValue + '');
                             }
-                        } else if (tmpLcase == _thisGlobals.CrmFieldTypes.DateTimeType) {
-                            if (item.attributes[inneritemSchemaName]) {
-                                fval = item.attributes[inneritemSchemaName].formattedValue;
-                            }
-                        }
 
-                        // Add cell
-                        $td = $('<td></td>')
-                            .attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id)
-                            .attr(_thisGlobals.ToolTipAttrName, fval)
-                            .html('<span class="fieldcelltext" '
-                                + _thisGlobals.ToolTipAttrName + '="' + fval + '">' + fval + '</span>')
-                            .appendTo($tr);
-
-                        if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) && (self.ceditors[iinner].Format)) {
-                            $td.attr(_thisGlobals.DataAttr.Cell.Format, self.ceditors[iinner].Format.toLowerCase());
-                        }
-
-                        if (self.ceditors[iinner].LookupData) {
-                            $td.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, self.ceditors[iinner].LookupData.LookupId)
-                                .attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, self.ceditors[iinner].LookupData.LookupLogicalName)
-                                .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, self.ceditors[iinner].LookupData.LookupId)
-                                .attr(_thisGlobals.DataAttr.Cell.Lookup.OriginalLogicalName, self.ceditors[iinner].LookupData.LookupLogicalName);
-
-                        } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
-                                    (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
-                                    (tmpLcase == _thisGlobals.CrmFieldTypes.Status)) {
-                            $td.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue, selectedOptionsetValue + '')
-                                .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, selectedOptionsetValue + '');
-                        }
-
-                        if((tmpLcase == _thisGlobals.CrmFieldTypes.MoneyType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.DecimalType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.DoubleType) ||
-                            (tmpLcase == _thisGlobals.CrmFieldTypes.IntegerType)) {
+                            if ((tmpLcase == _thisGlobals.CrmFieldTypes.MoneyType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.DecimalType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.DoubleType) ||
+                                (tmpLcase == _thisGlobals.CrmFieldTypes.IntegerType)) {
                                 $td.addClass("NumericTextbox");
-                        }
-                    }
-                }
+                            }
 
-                var psize = parseInt(self.data.RecordsPerPage);
-                if (self.TotalRecordCount <= psize) {
+                            callbackRowData.Fields.push(callbackField);
+                        }
+
+                        FireGridRowOnload($tr, callbackRowData,
+                            { ParentEntityName: self.data.Entity.Label, ParentEntitySchemaname: self.data.Entity.SchemaName });
+
+                    }
+
+                    var psize = parseInt(self.data.RecordsPerPage);
+                    if (self.TotalRecordCount <= psize) {
+                        $('#' + self.ContainerIds.Pager).hide();
+                    }
+
+                } else {
+                    $('#' + self.ContainerIds.TotalRecords).text(_thisGlobals.Translation_Labels.TotalRecords + ' 0');
                     $('#' + self.ContainerIds.Pager).hide();
                 }
 
-            } else {
-                $('#' + self.ContainerIds.TotalRecords).text(_thisGlobals.Translation_Labels.TotalRecords + ' 0');
-                $('#' + self.ContainerIds.Pager).hide();
+                var options = {
+                    HasChildGrids: (self.data.ChildConfigurations.length > 0) ? true : false,
+                    Country: _thisGlobals.DefaultCountry,
+
+                    GridContainerIds: self.ContainerIds,
+                    columneditors: self.ceditors,
+
+                    EntityCurrencyid: EntityCurrencyid,
+                    EntityCurrencySymbol: undefined,
+                    EntityCurrencyPrecision: undefined,
+
+                    ParentEntityInfo: {
+                        ParentEntityName: self.data.Entity.Label,
+                        ParentEntitySchemaname: self.data.Entity.SchemaName,
+                        PrimaryIdAttribute: self.PrimaryIdAttribute,
+                        PrimaryNameAttribute: self.PrimaryNameAttribute
+                    },
+                    ParentChildLookupInfo: self.parentChildLookupInfo,
+
+                    PagerSize: (parseInt(self.data.RecordsPerPage)),
+                    TotalRecordsCount: self.TotalRecordCount,
+                    Page: 1,
+                    HasMoreRecords: hasMoreRecords,
+                    PagingCookie: pagingCookie,
+                    PagingCookies: [pagingCookie],
+
+                    HasStatusField: ((self.data.HasStatusField) ? true : false),
+
+                    RequiredErrorContainer: "validationerror",
+                    InputFormatErrorContainer: 'inputformaterror',
+                    ParentFormIsReadOnly: _thisGlobals.FormIsReadOnly,
+
+                    UserCanDelete: self.data.AllowDelete,
+                    UserCanUpdate: !_thisGlobals.FormIsReadOnly,
+
+                    DisplayFieldsSum: self.data.DisplaySum,
+                    HaveNumericFields: self.NumericFields,
+                    AutoSaveChanges: self.data.AutoSaveChanges,
+                    AllowDelete: self.data.AllowDelete,
+                    RefreshAfterCreate: self.data.RefreshAfterCreate,
+                    RefreshAfterSave: self.data.RefreshAfterSave,
+                    NewBtnBehavoir: self.data.NewBtnBehavoir,
+                    BooleanEditorBehavoir: self.data.BooleanEditorBehavoir
+                };
+
+                self.Grid = new CrmEditableGrid($('#' + self.ContainerIds.Table), options);
+                var config = FindDCrmEGConfigurationBySchema(self.data.Entity.SchemaName);
+
+                config.ThisGrid = self.Grid;
+                config.ParentDivContainer = parentcontainer.attr('id');
+            } catch (e) {
+                DisplayCrmAlertDialog(self.DataLoadErrorMessage + e.message);
             }
 
-            var options = {
-                HasChildGrids: (self.data.ChildConfigurations.length > 0) ? true : false,
-                Country: _thisGlobals.DefaultCountry,
-
-                GridContainerIds: self.ContainerIds,
-                columneditors: self.ceditors,
-
-                EntityCurrencyid: EntityCurrencyid,
-                EntityCurrencySymbol: undefined,
-                EntityCurrencyPrecision: undefined,
-
-                ParentEntityInfo: {
-                    ParentEntityName: self.data.Entity.Label,
-                    ParentEntitySchemaname: self.data.Entity.SchemaName,
-                    PrimaryIdAttribute: self.PrimaryIdAttribute,
-                    PrimaryNameAttribute: self.PrimaryNameAttribute
-                },
-                ParentChildLookupInfo: self.parentChildLookupInfo,
-
-                PagerSize: (parseInt(self.data.RecordsPerPage)),
-                TotalRecordsCount: self.TotalRecordCount,
-                Page: 1,
-                HasMoreRecords: hasMoreRecords,
-                PagingCookie: pagingCookie,
-                PagingCookies: [pagingCookie],
-
-                HasStatusField: ((self.data.HasStatusField) ? true : false),
-
-                RequiredErrorContainer: "validationerror",
-                InputFormatErrorContainer: 'inputformaterror',
-                ParentFormIsReadOnly: _thisGlobals.FormIsReadOnly,
-
-                UserCanDelete: self.data.AllowDelete,
-                UserCanUpdate: !_thisGlobals.FormIsReadOnly,
-
-                DisplayFieldsSum: self.data.DisplaySum,
-                HaveNumericFields: self.NumericFields,
-                AutoSaveChanges: self.data.AutoSaveChanges,
-                AllowDelete: self.data.AllowDelete,
-                RefreshAfterCreate: self.data.RefreshAfterCreate,
-                RefreshAfterSave: self.data.RefreshAfterSave,
-                NewBtnBehavoir: self.data.NewBtnBehavoir,
-                BooleanEditorBehavoir: self.data.BooleanEditorBehavoir
-            };
-
-             self.Grid =  new CrmEditableGrid($('#' + self.ContainerIds.Table), options);
-             var config = FindDCrmEGConfigurationBySchema(self.data.Entity.SchemaName);
-
-             config.ThisGrid = self.Grid;
-             config.ParentDivContainer = parentcontainer.attr('id');
-             _thisHelpers.WaitDialog();
+            _thisHelpers.WaitDialog();
+            $('#' + self.ContainerIds.Table).show();
         };
         
         self.RecordCountCallback = function (result) {
@@ -9339,7 +9521,7 @@ var GridLoaderHelper = (function () {
                 $('#' + self.ContainerIds.TotalRecords).text(_thisGlobals.Translation_Labels.TotalRecords + ' ' + self.TotalRecordCount);
             }
 
-            XrmServiceToolkit.Soap.Fetch(self.data.GetFetchXml(), false, self.RecordCallback);
+            XrmServiceToolkit.Soap.Fetch(self.data.GetFetchXml(), false, self.RecordCallback, self.CallbackErrorHandler);
         };
 
         self.GetEntityCount = function () {
@@ -9354,7 +9536,7 @@ var GridLoaderHelper = (function () {
             fetchXml += "</entity>" +
                 "</fetch>";
             //console.log(fetchXml);
-            XrmServiceToolkit.Soap.Fetch(fetchXml, true, self.RecordCountCallback);
+            XrmServiceToolkit.Soap.Fetch(fetchXml, false, self.RecordCountCallback, self.CallbackErrorHandler);
         };
 
         self.GetPrimaryAttributesCallback = function (entityMetaData) {
@@ -9366,11 +9548,80 @@ var GridLoaderHelper = (function () {
             self.GetEntityCount();
         };
 
+        self.RetreiveEntityMetadateCallback = function (result) {
+            if ((result) && (result.length) && (result.length > 0)) {
+                var $headers = $('#' + self.ContainerIds.Table).find(_thisGlobals.DefaultGridOptions.selectorHeaders);
+
+                try {
+                    var fieldexclusion = ['createdonbehalfby', 'exchangerate', 'importsequencenumber', 'modifiedonbehalfby', 'overriddencreatedon', 'owningbusinessunit', 'owningteam', 'owninguser', 'timezoneruleversionnumber', 'utcconversiontimezonecode', 'versionnumber'];
+                    var attrTypeExclusion = ["lookup", "boolean", "picklist", "datetime", "string", "memo", "integer", "double", "decimal", "money", "customer", "owner", "state", "status"];
+
+                    var schName = '';
+                    var attrType = '';
+                    var lbl = '';
+                    var fe = fieldexclusion.join(" ");
+                    var ate = attrTypeExclusion.join(" ");
+                    var SelectedFields = self.data.SelectedFields;
+
+                    for (index = 0, j = result[0].Attributes.length; index < j; index++) {
+                        ent = result[0].Attributes[index];
+
+                        if (ent.AttributeOf == null) {
+                            schName = ent.SchemaName.toLowerCase();
+                            attrType = ent.AttributeType.toLowerCase();
+
+                            if ((fieldexclusion.ExactMatchExists(schName) == false) && (attrTypeExclusion.ExactMatchExists(attrType) == true)) {
+
+                                for (var iinner = 0; iinner < SelectedFields.length; iinner++) {
+                                    if (schName == SelectedFields[iinner].SchemaName.toLowerCase()) {
+                                        lbl = _thisHelpers.GetUserLocalizedLabel(ent.DisplayName);
+                                        _thisHelpers.SetHeaderCellText($($headers[iinner + 1]), lbl);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    LogEx("unable to retreive entity metadata\r\n" + e.message);
+                }
+            }
+
+            //_thisHelpers.WaitDialog();
+            //$('#' + self.ContainerIds.Table).show();
+        };
+
+        // Get UserLocalized labels for headers, just in case language has changed
         // Get this primary id and name attribute names, normally (schemaname + id) and (name)
         // There are exeptions. example: activitypointer -> activityid
+        XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'],
+            self.data.Entity.SchemaName, true, self.RetreiveEntityMetadateCallback);
+
         XrmServiceToolkit.Soap.RetrieveEntityMetadata("Entity",
             self.data.Entity.SchemaName, true, self.GetPrimaryAttributesCallback);
     }
 
     return GridLoaderHelper;
 })();
+
+function FireGridRowOnload(tr, data, info) {
+    if (window.parent.DCrmEgGridRowOnload) {
+        window.parent.DCrmEgGridRowOnload(data, info);
+
+        // disable any readonly fields
+        for (var fIndex = 0; fIndex < data.Fields.length; fIndex++) {
+            if (data.Fields[fIndex].ReadOnly) {
+                var ff = tr.find('td:eq(' + data.Fields[fIndex].FieldIndex + ')');
+                if (ff) {
+                    ff.attr('data-user-disabledfield', _thisGlobals.DataAttr.YES);
+
+                    if (data.Fields[fIndex].BackgroundColor) {
+                        ff.css('background-color', data.Fields[fIndex].BackgroundColor);
+                    }
+                    if (data.Fields[fIndex].ForgroundColor) {
+                        ff.css('color', data.Fields[fIndex].ForgroundColor);
+                    }
+                }
+            }
+        }
+    }
+}

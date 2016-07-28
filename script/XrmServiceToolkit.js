@@ -1939,7 +1939,7 @@ XrmServiceToolkit.Soap = function () {
             }
         }
         if (async) {
-            return new Error(errorMessage);
+            return errorMessage;
         } else {
             throw new Error(errorMessage);
         }
@@ -1974,10 +1974,11 @@ XrmServiceToolkit.Soap = function () {
                     if (req.status === 200) { // "OK"          
                         var doc = req.responseXML;
                         try { setSelectionNamespaces(doc); } catch (e) { }
-                        internalCallback(doc);
+                        internalCallback(doc, null);
                     }
                     else {
-                        getError(true, req);
+                        //getError(true, req);
+                        internalCallback(null, getError(true, req));
                     }
                 }
             };
@@ -1993,6 +1994,9 @@ XrmServiceToolkit.Soap = function () {
                 return !!internalCallback ? internalCallback(result) : result;
             } else {
                 getError(false, req);
+                // examine returjn value for instanceof Error
+                //var err = getError(true, req);
+                //return !!internalCallback ? internalCallback(err) : err;
             }
         }
         // ReSharper disable NotAllPathsReturnValue
@@ -2190,7 +2194,7 @@ XrmServiceToolkit.Soap = function () {
         });
     };
 
-    var fetch = function (fetchCore, fetchAll, callback) {
+    var fetch = function (fetchCore, fetchAll, callback, errorCallback) {
         ///<summary>
         /// Sends synchronous/asynchronous request to do a fetch request.
         ///</summary>
@@ -2269,7 +2273,17 @@ XrmServiceToolkit.Soap = function () {
 
         var async = !!callback;
 
-        return doRequest(request, "Execute", async, function (resultXml) {
+        return doRequest(request, "Execute", async, function (resultXml, errorMessage) {
+
+            if ((resultXml == null) && (errorMessage != null) && (async)) {
+                if (errorCallback) {
+                    errorCallback(errorMessage);
+                } else {
+                    throw new Error(errorMessage);
+                }
+                return null;
+            }
+
             var fetchResult = selectSingleNode(resultXml, "//a:Entities");
             var moreRecords = (selectSingleNodeText(resultXml, "//a:MoreRecords") === "true");
 
@@ -2286,10 +2300,11 @@ XrmServiceToolkit.Soap = function () {
                     pageCookie = selectSingleNodeText(resultXml, "//a:PagingCookie").replace(/\"/g, '\'').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&quot;');
                 }
 
-                if (!async)
+                if (!async) {
                     return fetchResults;
-                else
+                } else {
                     callback(fetchResults, moreRecords, pageCookie);
+                }
             }
         });
     };

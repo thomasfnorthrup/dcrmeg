@@ -1,4 +1,4 @@
-// version 4.5
+// version 4.7
 String.prototype.capitalizeFirstLetter = function () {
         return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
     };
@@ -2288,23 +2288,32 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
     }
 
     /*
-        LookupId: id, (576dfa60-6456-e511-80c0-080027c01cb9)
-        LookupLogicalName: logicalName, (incident, owner, customer, lead)
-        LookupName: name, (Average order shipment time (sample))
-        SchemaNames: EntityTargets[0] + 'id' (incidentid)
-        EntityTargets: {"account", "contact"]
+    LookupData
+        LookupId: "", (576dfa60-6456-e511-80c0-080027c01cb9)
+        LookupLogicalName: "", (incident, owner, customer, lead)
+        LookupName: "", (Average order shipment time (sample))
+
+        TargetEntities:
+        [
+            {
+                Target: '', account
+                PrimaryIdAttribute: '', accountid
+                PrimaryNameAttribute: '', name
+                ObjectTypeCode: '', 1
+                LocalizedLabel: '' Account
+            }
+        ]
 
     */
-
-    var listData = editorsArrayi.LookupData;
-    // How many menus we display
-    var dropdownMenuSize = (listData.EntityTargets.length == 1) ? 5 : 3;
 
     var $editor = $('<div class="LookupContainer"></div>').hide().appendTo(table.parent());
     $editor.EditorType = editorsArrayi.editor;
     $editor.theUpdater = undefined;
     $editor.RefreshOnSave = false;
     $editor.HasLookupInitialized = false;
+    $editor.LookupData = editorsArrayi.LookupData;
+    // How many menus we display
+    var dropdownMenuSize = ($editor.LookupData.TargetEntities.length == 1) ? 5 : 3;
 
     var Input_ID = _thisHelpers.GenerateUUID();
     var $input = $('<input class="LookupInput" type="text" />').attr('id', Input_ID).appendTo($editor);
@@ -2330,35 +2339,14 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
         .css({ 'left': 25, 'top': 0 })
         .appendTo(table.parent());
 
-    var entityObjectTypeCode = [];
-    var entityLocalizedLabels = [];
-    var entityPrimaryName = [];
-
     function GetMenuCoordinates() {
         return { left: $editor.offset().left, top: ($editor.offset().top + $editor.height()) };
     }
 
     function InitializaLookupData() {
         LookupDataInitialized = true;
-        for (var i = 0; i < listData.EntityTargets.length; i++) {
-        
-            // EntityTargets
-            entityObjectTypeCode[i] = XrmServiceToolkit.Common.GetObjectTypeCode(listData.EntityTargets[i]);
-            entityPrimaryName[i] = '';
-            listData.SchemaNames[i] = listData.EntityTargets[i] + 'id';
-
-            var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'], listData.EntityTargets[i], true);
-            if (result.length > 0) {
-                entityLocalizedLabels[i] = _thisHelpers.GetUserLocalizedLabel(result[0].DisplayName, result[0].LogicalName);
-                var ent = undefined;
-                for (var index = 0, j = result[0].Attributes.length; index < j; index++) {
-                    ent = result[0].Attributes[index];
-                    if ((ent) && (ent.IsPrimaryName)) {
-                        entityPrimaryName[i] = ent.SchemaName.toLowerCase();
-                        break;
-                    }
-                }
-            }
+        for (var i = 0; i < $editor.LookupData.TargetEntities.length; i++) {
+            var helper = new LookupDataHelper($editor.LookupData.TargetEntities[i]);
         }
     }
 
@@ -2369,20 +2357,20 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
             LogIt("Attribute " + attrname + " does not exist in " + entityname);
             return false;
         }
-        return true;
+        return ((attr) && (attr.length) && (attr.length > 0));
     }
 
     function FetchtargetEntity(i) {
-        if (listData.EntityTargets[i].length == 0) {
+        if ($editor.LookupData.TargetEntities.length == 0) {
             return [];
         }
 
-        if (DoesAttributeExists(listData.EntityTargets[i], listData.SchemaNames[i])) {
+        if (DoesAttributeExists($editor.LookupData.TargetEntities[i].Target, $editor.LookupData.TargetEntities[i].PrimaryIdAttribute)) {
             var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
-              '<entity name="' + listData.EntityTargets[i] + '">' +
-                '<attribute name="' + listData.SchemaNames[i] + '" />' +
-                '<attribute name="' + entityPrimaryName[i] + '" />' +
-                '<order attribute="' + entityPrimaryName[i] + '" descending="false" />' +
+              '<entity name="' + $editor.LookupData.TargetEntities[i].Target + '">' +
+                '<attribute name="' + $editor.LookupData.TargetEntities[i].PrimaryIdAttribute + '" />' +
+                '<attribute name="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" />' +
+                '<order attribute="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" descending="false" />' +
                 //'<filter type="and">' +
                 //  '<condition attribute="statecode" operator="eq" value="0" />' +
                 //'</filter>' +
@@ -2395,19 +2383,19 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
     }
 
     function FetchtargetEntityPartial(searchfor, i) {
-        if (listData.EntityTargets[i].length == 0) {
+        if ($editor.LookupData.TargetEntities.length == 0) {
             return [];
         }
         searchfor = searchfor.replace('&', '&amp;').replace('<', "&lt;").replace('>', "&gt;");
         LogIt("FetchtargetEntityPartial " + searchfor);
         var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
-          '<entity name="' + listData.EntityTargets[i] + '">' +
-            '<attribute name="' + listData.SchemaNames[i] + '" />' +
-            '<attribute name="' + entityPrimaryName[i] + '" />' +
-            '<order attribute="' + entityPrimaryName[i] + '" descending="false" />' +
+          '<entity name="' + $editor.LookupData.TargetEntities[i].Target + '">' +
+            '<attribute name="' + $editor.LookupData.TargetEntities[i].PrimaryIdAttribute + '" />' +
+            '<attribute name="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" />' +
+            '<order attribute="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" descending="false" />' +
             '<filter type="and">' +
               //'<condition attribute="statecode" operator="eq" value="0" />' +
-               '<condition attribute="' + entityPrimaryName[i] + '" operator="like" value="%' + searchfor + '%" />' +
+               '<condition attribute="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" operator="like" value="%' + searchfor + '%" />' +
             '</filter>' +
           '</entity>' +
         '</fetch>';
@@ -2415,19 +2403,19 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
     }
 
     function FetchtargetEntityExact(searchfor, i) {
-        if (listData.EntityTargets[i].length == 0) {
+        if ($editor.LookupData.TargetEntities.length == 0) {
             return [];
         }
         searchfor = searchfor.replace('&', '&amp;').replace('<', "&lt;").replace('>', "&gt;");
         LogIt("FetchtargetEntityExact " + searchfor);
         var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
-          '<entity name="' + listData.EntityTargets[i] + '">' +
-            '<attribute name="' + listData.SchemaNames[i] + '" />' +
-            '<attribute name="' + entityPrimaryName[i] + '" />' +
-            '<order attribute="' + entityPrimaryName[i] + '" descending="false" />' +
+          '<entity name="' + $editor.LookupData.TargetEntities[i].Target + '">' +
+            '<attribute name="' + $editor.LookupData.TargetEntities[i].PrimaryIdAttribute + '" />' +
+            '<attribute name="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" />' +
+            '<order attribute="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" descending="false" />' +
             '<filter type="and">' +
               //'<condition attribute="statecode" operator="eq" value="0" />' +
-               '<condition attribute="' + entityPrimaryName[i] + '" operator="eq" value="' + searchfor + '" />' +
+               '<condition attribute="' + $editor.LookupData.TargetEntities[i].PrimaryNameAttribute + '" operator="eq" value="' + searchfor + '" />' +
             '</filter>' +
           '</entity>' +
         '</fetch>';
@@ -2435,11 +2423,11 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
     }
 
     function FetchAndValidateExcat(text) {
-        for (var i = 0; i < listData.EntityTargets.length; i++) {
+        for (var i = 0; i < $editor.LookupData.TargetEntities.length; i++) {
             var result = FetchtargetEntityExact(text, i);
-            if(result.length == 1) {
-                $input.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, result[0].attributes[listData.SchemaNames[i]].value);
-                $input.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, listData.EntityTargets[i]);
+            if (result.length == 1) {
+                $input.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, result[0].attributes[$editor.LookupData.TargetEntities[i].PrimaryIdAttribute].value);
+                $input.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupData.TargetEntities[i].Target);
                 return true;
             }
         }
@@ -2449,8 +2437,8 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
     function FetchAndPopulatePartial(text) {
         $menu.find('li').remove();
         var haveAnyRec = 0;
-        for (var i = 0; i < listData.EntityTargets.length; i++) {
-            $('<li>' + listData.EntityTargets[i].capitalizeFirstLetter() + '</li>').addClass('header').appendTo($menu);
+        for (var i = 0; i < $editor.LookupData.TargetEntities.length; i++) {
+            $('<li>' + $editor.LookupData.TargetEntities[i].LocalizedLabel + '</li>').addClass('header').appendTo($menu);
             haveAnyRec += PopulateDropDown(FetchtargetEntityPartial(text, i), i);
         }
         AddMenuTail();
@@ -2461,10 +2449,8 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
         $menu.find('li').remove();
         var haveAnyRec = 0;
 
-        for (var i = 0; i < listData.EntityTargets.length; i++) {
-            // entityLocalizedLabels
-            $('<li>' + entityLocalizedLabels[i] + '</li>').addClass('header').appendTo($menu);
-            //$('<li>' + listData.EntityTargets[i].capitalizeFirstLetter() + '</li>').addClass('header').appendTo($menu);
+        for (var i = 0; i < $editor.LookupData.TargetEntities.length; i++) {
+            $('<li>' + $editor.LookupData.TargetEntities[i].LocalizedLabel + '</li>').addClass('header').appendTo($menu);
             haveAnyRec += PopulateDropDown(FetchtargetEntity(i), i);
         }
         AddMenuTail();
@@ -2480,7 +2466,15 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
             .click(function (e) {
                 //var url = "/_controls/lookup/lookupsingle.aspx?objecttypes=1,2";
                 // /_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=
-                var url = "/_controls/lookup/lookupsingle.aspx?objecttypes=" + entityObjectTypeCode.join(',');
+                var otc = '';
+                for (var i = 0; i < $editor.LookupData.TargetEntities.length; i++) {
+                    if (i > 0) {
+                        otc += ',' + $editor.LookupData.TargetEntities[i].ObjectTypeCode;
+                    } else {
+                        otc += $editor.LookupData.TargetEntities[i].ObjectTypeCode;
+                    }
+                }
+                var url = "/_controls/lookup/lookupsingle.aspx?objecttypes=" + otc;
 
                 /*
                 Query String Parameters for Customer (account, contact)
@@ -2524,14 +2518,14 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
     function CallbackFunction(returnValue) {
         if ((returnValue) && (returnValue.items) && (returnValue.items[0].id) && (returnValue.items[0].name)) {
             //LogIt("name " + returnValue.items[0].name + " GUID " + returnValue.items[0].id); // Includes {}
-            listData.LookupName = returnValue.items[0].name;
-            listData.LookupId = returnValue.items[0].id.replace('{','').replace('}','');
+            $editor.LookupData.LookupName = returnValue.items[0].name;
+            $editor.LookupData.LookupId = returnValue.items[0].id.replace('{', '').replace('}', '');
             // returnValue.items[0].type "112"
-            listData.LookupLogicalName = returnValue.items[0].typename // 'incident" LogicalName
+            $editor.LookupData.LookupLogicalName = returnValue.items[0].typename // 'incident" LogicalName
 
             active = table.activeCell;
             if ((active === undefined) || (active.length === 0)) {
-                $input.val(listData.LookupName).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, listData.LookupId);
+                $input.val($editor.LookupData.LookupName).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, $editor.LookupData.LookupId);
                 $menu.hide();
                 $input.focus();
                 return false;
@@ -2540,20 +2534,20 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
             var originalVal = _thisHelpers.GetActiveCellText(active);
 
             if (InvokeValidator(
-                listData.LookupName,
-                listData.LookupId,
-                listData.LookupLogicalName,
+                $editor.LookupData.LookupName,
+                $editor.LookupData.LookupId,
+                $editor.LookupData.LookupLogicalName,
                 originalVal,
                 active.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid),
                 active.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName))) {
-                _thisHelpers.SetActiveCellText(active, listData.LookupName);
-                    active.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, listData.LookupId);
-                    active.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, listData.LookupLogicalName);
-                    $editor.theUpdater(active, originalVal, 'lo');
-                    $editor.hide();
-                    $menu.hide();
-                    active.focus();
-                    return false;
+                _thisHelpers.SetActiveCellText(active, $editor.LookupData.LookupName);
+                active.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, $editor.LookupData.LookupId);
+                active.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupData.LookupLogicalName);
+                $editor.theUpdater(active, originalVal, 'lo');
+                $editor.hide();
+                $menu.hide();
+                active.focus();
+                return false;
             } else {
                 $menu.hide();
                 //$bg.hide();
@@ -2575,50 +2569,46 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
         var $row, $href, $span, icon;
 
         for (var i = 0; i < listlen; i++) {
-            if (!list[i].attributes[entityPrimaryName[dataIndex]]) {
+            if (!list[i].attributes[$editor.LookupData.TargetEntities[dataIndex].PrimaryNameAttribute]) {
                 continue;
             }
             var $row = $('<li></li>').appendTo($menu);
             var $href = $('<a href="#" class="LookupLink"></a>')
-                .attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, list[i].attributes[listData.SchemaNames[dataIndex]].value)
-                .attr(_thisGlobals.DataAttr.Cell.Lookup.EntityName, list[i].attributes[entityPrimaryName[dataIndex]].value)
-                .attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, listData.EntityTargets[dataIndex])
+                .attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, list[i].attributes[$editor.LookupData.TargetEntities[dataIndex].PrimaryIdAttribute].value)
+                .attr(_thisGlobals.DataAttr.Cell.Lookup.EntityName, list[i].attributes[$editor.LookupData.TargetEntities[dataIndex].PrimaryNameAttribute].value)
+                .attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupData.TargetEntities[dataIndex].Target)
                 .on('click', function (e) {
                     HideError();
-                    listData.LookupId = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid);
-                    listData.LookupName = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.EntityName);
-                    listData.LookupLogicalName = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName);
+                    $editor.LookupData.LookupId = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid);
+                    $editor.LookupData.LookupName = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.EntityName);
+                    $editor.LookupData.LookupLogicalName = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName);
 
                     active = table.activeCell;
                     if ((active === undefined) || (active.length === 0)) {
-                        $input.val(listData.LookupName).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, listData.LookupId).attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, listData.LookupLogicalName);
+                        $input.val($editor.LookupData.LookupName).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, $editor.LookupData.LookupId).attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupData.LookupLogicalName);
                         $menu.hide();
-                        //$bg.hide();
                         $input.focus();
                         return false;
                     }
 
                     var originalVal = _thisHelpers.GetActiveCellText(active);
                     if (InvokeValidator(
-                        listData.LookupName,
-                        listData.LookupId,
-                        listData.LookupLogicalName,
+                        $editor.LookupData.LookupName,
+                        $editor.LookupData.LookupId,
+                        $editor.LookupData.LookupLogicalName,
                         originalVal,
                         active.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid),
                         active.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName))) {
-                        //active.text(listData.LookupName);
-                        _thisHelpers.SetActiveCellText(active, listData.LookupName);
-                            active.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, listData.LookupId);
-                            active.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, listData.LookupLogicalName);
-                            $editor.theUpdater(active, originalVal, 'lo');
-                            $editor.hide();
-                            $menu.hide();
-                            //$bg.hide();
-                            active.focus();
-                            return false;
+                        _thisHelpers.SetActiveCellText(active, $editor.LookupData.LookupName);
+                        active.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, $editor.LookupData.LookupId);
+                        active.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupData.LookupLogicalName);
+                        $editor.theUpdater(active, originalVal, 'lo');
+                        $editor.hide();
+                        $menu.hide();
+                        active.focus();
+                        return false;
                     } else {
                         $menu.hide();
-                        //$bg.hide();
                         $input.focus();
                         return false;
                     }
@@ -2626,7 +2616,7 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
                 })
                 .appendTo($row);
             var $span = $('<span class="LookupLinkSpan"></span>')
-                .text(list[i].attributes[entityPrimaryName[dataIndex]].value)
+                .text(list[i].attributes[$editor.LookupData.TargetEntities[dataIndex].PrimaryNameAttribute].value)
                 .addClass('itemTitle')
                 .appendTo($href);
 
@@ -2664,10 +2654,8 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
             setTimeout(HideError, 10);
             active = table.activeCell;
             if ((active === undefined) || (active.length === 0)) {
-                //LogEx('Description: Unable to find active cell.');
                 $editor.hide();
                 $menu.hide();
-                //$bg.hide();
                 e.preventDefault();
                 e.stopPropagation();
                 return false;
@@ -2770,7 +2758,7 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
                 }
             }
         }, 5);
-    }).on('keyup', function(e) {
+    }).on('keyup', function (e) {
         var text = $input.val();
         //LogIt("Key up text " + text);
         if (text.trim().length > 0) {
@@ -2810,9 +2798,9 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
             .focus()
             .select();
 
-        listData.LookupName = curText;
-        listData.LookupId = Guid;
-        listData.LookupLogicalName = LogicalName;
+        $editor.LookupData.LookupName = curText;
+        $editor.LookupData.LookupId = Guid;
+        $editor.LookupData.LookupLogicalName = LogicalName;
 
         $(window.document).off('mousedown').on('mousedown', function (e) {
             if (e.target) {
@@ -2891,8 +2879,30 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
         $editor.remove();
     };
 
+    InitializaLookupData();
+
     return $editor;
 };
+
+var LookupDataHelper = (function () {
+    function LookupDataHelper(lookupDataToUpdate) {
+        var self = this;
+
+        self.lookupData = lookupDataToUpdate;
+        self.Callback = function (result) {
+            if ((result) && (result.length === 1)) {
+                self.lookupData.ObjectTypeCode = result[0].ObjectTypeCode;
+                self.lookupData.LocalizedLabel = _thisHelpers.GetUserLocalizedLabel(result[0].DisplayName, result[0].LogicalName);
+                self.lookupData.PrimaryNameAttribute = result[0].PrimaryNameAttribute;
+                self.lookupData.PrimaryIdAttribute = result[0].PrimaryIdAttribute;
+            }
+        }
+
+        XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Entity'], lookupDataToUpdate.Target, true, self.Callback);
+    }
+
+    return LookupDataHelper;
+})();
 
 $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
     'use strict';
@@ -2922,56 +2932,164 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             $menu.css({ 'left': parentdiv.offset().left, 'top': top }).show();
         })
         .appendTo($editor);
+    /*
+    var EntityFieldsContainer_ID = _thisHelpers.GenerateUUID();
+    var $EntityFieldsContainer = $('<div style="height:24px;border:0;margin:5px 0 0 0;padding:0;"></div>').attr('id', EntityFieldsContainer_ID).appendTo($editor);
 
+    var FieldsSelect_ID = _thisHelpers.GenerateUUID();
+    var $FieldsSelect = $('<select></select>')
+        .attr('id', FieldsSelect_ID)
+        .on('change', function (e) {
+            e.stopPropagation();
+            var selected = $(this).find(":selected");
+            var val = selected.val();
+            if (val == '-1') {
+                return false;
+            }
+
+            console.log("Value [" + val
+                + "] text [" + selected.text()
+                + "] type [" + selected.attr('data-etype')
+                + "] targets [" + selected.attr('data-entitytargets') + "]");
+
+            return false;
+        })
+        .appendTo($EntityFieldsContainer);
+*/
     var $menu = $('<ul class="lookupDropDown"><div class="gutterLine"></div></ul>')
         .hide()
         .css({ 'left': 25, 'top': 0 })
         .appendTo('body');
 
-    var entityObjectTypeCode = [];
-    var entityLocalizedLabels = [];
-    var entityPrimaryName = [];
-
     function InitializaLookupData() {
-        for (var i = 0; i < $editor.LookupCtrData.EntityTargets.length; i++) {
-
-            // EntityTargets
-            entityObjectTypeCode[i] = XrmServiceToolkit.Common.GetObjectTypeCode($editor.LookupCtrData.EntityTargets[i]);
-            entityPrimaryName[i] = '';
-            $editor.LookupCtrData.SchemaNames[i] = $editor.LookupCtrData.EntityTargets[i] + 'id';
-
-            var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'], $editor.LookupCtrData.EntityTargets[i], true);
-            if (result.length > 0) {
-                entityLocalizedLabels[i] = _thisHelpers.GetUserLocalizedLabel(result[0].DisplayName, result[0].LogicalName);
-                var ent = undefined;
-                for (var index = 0, j = result[0].Attributes.length; index < j; index++) {
-                    ent = result[0].Attributes[index];
-                    if ((ent) && (ent.IsPrimaryName)) {
-                        entityPrimaryName[i] = ent.SchemaName.toLowerCase();
-                        break;
-                    }
-                }
+        for (var i = 0; i < $editor.LookupCtrData.TargetEntities.length; i++) {
+            var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Entity'], $editor.LookupCtrData.TargetEntities[i].Target, true);
+            if ((result) && (result.length === 1)) {
+                $editor.LookupCtrData.ObjectTypeCodes[i] = result[0].ObjectTypeCode;
+                $editor.LookupCtrData.LocalizedLabels[i] = _thisHelpers.GetUserLocalizedLabel(result[0].DisplayName, result[0].LogicalName);
+                $editor.LookupCtrData.PrimaryNameAttributes[i] = result[0].PrimaryNameAttribute;
+                $editor.LookupCtrData.PrimaryIdAttributes[i] = result[0].PrimaryIdAttribute;
             }
         }
+        /*
+        if ($editor.LookupCtrData.TargetEntities.length == 1) {
+            var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'], $editor.LookupCtrData.TargetEntities[0].Target, true);
+            if ((result) && (result.length > 0)) {
+                try {
+
+                    var AllFieldsMetadata = [];
+                    var fieldexclusion = ['createdonbehalfby', 'exchangerate', 'importsequencenumber', 'modifiedonbehalfby', 'overriddencreatedon', 'owningbusinessunit', 'owningteam', 'owninguser', 'timezoneruleversionnumber', 'utcconversiontimezonecode', 'versionnumber'];
+                    var attrTypeExclusion = ["lookup", "boolean", "picklist", "datetime", "string", "memo", "integer", "double", "decimal", "money", "customer", "owner", "state", "status"];
+
+                    var schName = '';
+                    var attrType = '';
+                    var lbl = '';
+
+                    for (index = 0, j = result[0].Attributes.length; index < j; index++) {
+                        ent = result[0].Attributes[index];
+
+                        if (ent.AttributeOf == null) {
+                            schName = ent.SchemaName.toLowerCase();
+                            attrType = ent.AttributeType.toLowerCase();
+
+                            if ((fieldexclusion.ExactMatchExists(schName) == false) && (attrTypeExclusion.ExactMatchExists(attrType) == true)) {
+                                lbl = _thisHelpers.GetUserLocalizedLabel(ent.DisplayName, ent.SchemaName);
+
+                                AllFieldsMetadata.push({
+                                    SchemaName: schName,
+                                    Name: lbl,
+                                    AttrType: attrType,
+                                    LookupTargetEntity: ((ent.Targets) && (ent.Targets.length)) ? ent.Targets.join(',').toLowerCase() : null
+                                });
+                            }
+                        }
+                    }
+
+                    if (AllFieldsMetadata.length > 0) {
+                        AllFieldsMetadata.sort(function (a, b) {
+                            var alabel = (a.Name);
+                            var blabel = (b.Name);
+                            if (alabel < blabel)
+                            { return -1 }
+                            if (alabel > blabel)
+                            { return 1 }
+                            return 0;
+                        });
+
+                        $FieldsSelect.empty();
+                        $('<option value="-1">Select from ' + $editor.LookupCtrData.TargetEntities[0].Target.capitalizeFirstLetter() + ' fields</option>').appendTo($FieldsSelect);
+
+                        for (var i = 0; i < AllFieldsMetadata.length; i++) {
+                            lbl = (AllFieldsMetadata[i].LookupTargetEntity) ? ' data-entitytargets="' + AllFieldsMetadata[i].LookupTargetEntity + '"' : '';
+                            $('<option value="'
+                                + AllFieldsMetadata[i].SchemaName
+                                + '" data-etype="'
+                                + AllFieldsMetadata[i].AttrType + '"' + lbl + '>' + AllFieldsMetadata[i].Name + '</option>').appendTo($FieldsSelect);
+                        }
+
+                        $EntityFieldsContainer.show();
+                    }
+
+                } catch (e) {
+                    LogEx("unable to retreive entity metadata\r\n" + e.message);
+                }
+            }
+        } else {
+            $FieldsSelect.empty();
+            $EntityFieldsContainer.hide();
+        }
+*/
     };
 
     $editor.ResetFilterLookup = function (lookupTargetEntities, curText, Guid, LogicalName) {
-        entityObjectTypeCode = [];
-        entityLocalizedLabels = [];
-        entityPrimaryName = [];
-
         $editor.HasLookupInitialized = false;
+        /*
+        LookupData
+            LookupId: "", (576dfa60-6456-e511-80c0-080027c01cb9)
+            LookupLogicalName: "", (incident, owner, customer, lead)
+            LookupName: "", (Average order shipment time (sample))
+    
+            TargetEntities:
+            [
+                {
+                    Target: '', account
+                    PrimaryIdAttribute: '', accountid
+                    PrimaryNameAttribute: '', name
+                    ObjectTypeCode: '', 1
+                    LocalizedLabel: '' Account
+                }
+            ]
+    
+        */
 
+        var earr = lookupTargetEntities.split(',');
         $editor.LookupCtrData = {
             LookupId: Guid,
             LookupLogicalName: LogicalName,
             LookupName: curText,
-            SchemaNames: [],
-            EntityTargets: lookupTargetEntities.split(','),
-            EntityTargetsOriginal: lookupTargetEntities
-        };
+			
+            PrimaryIdAttributes: [],
+            PrimaryNameAttributes: [],
+            ObjectTypeCodes: [],
+            LocalizedLabels: [],
+			
+            EntityTargets: earr,
+            EntityTargetsOriginal: lookupTargetEntities,
 
-        if ($editor.LookupCtrData.EntityTargets.length > 1) {
+            TargetEntities: []
+        };
+        
+        for (var earrindex = 0; earrindex < earr.length; earrindex++) {
+            $editor.LookupCtrData.TargetEntities.push({
+                Target: earr[earrindex],
+                PrimaryIdAttribute: null,
+                PrimaryNameAttribute: null,
+                ObjectTypeCode: null,
+                LocalizedLabel: null
+            });
+        }
+
+        if ($editor.LookupCtrData.TargetEntities.length > 1) {
             dropdownMenuSize = 3;
         }
 
@@ -2992,7 +3110,8 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             if (e.target) {
                 var ctlid = $(e.target).attr('id');
 
-                if ((ctlid == Input_ID) || (ctlid == Img_ID) || ($(e.target).hasClass('LookupLinkSpan'))) {
+                if ((ctlid == Input_ID) || (ctlid == Img_ID)
+                    || ($(e.target).hasClass('LookupLinkSpan'))) {
                 } else {
                     $menu.hide();
                 }
@@ -3008,7 +3127,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             LogIt("Attribute " + attrname + " does not exist in " + entityname);
             return false;
         }
-        return true;
+        return ((attr) && (attr.length) && (attr.length > 0));
     };
 
     function FetchtargetEntity(i) {
@@ -3016,12 +3135,12 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             return [];
         }
 
-        if (DoesAttributeExists($editor.LookupCtrData.EntityTargets[i], $editor.LookupCtrData.SchemaNames[i])) {
+        if (DoesAttributeExists($editor.LookupCtrData.EntityTargets[i], $editor.LookupCtrData.PrimaryIdAttributes[i])) {
             var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
               '<entity name="' + $editor.LookupCtrData.EntityTargets[i] + '">' +
-                '<attribute name="' + $editor.LookupCtrData.SchemaNames[i] + '" />' +
-                '<attribute name="' + entityPrimaryName[i] + '" />' +
-                '<order attribute="' + entityPrimaryName[i] + '" descending="false" />' +
+                '<attribute name="' + $editor.LookupCtrData.PrimaryIdAttributes[i] + '" />' +
+                '<attribute name="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" />' +
+                '<order attribute="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" descending="false" />' +
                 //'<filter type="and">' +
                 //  '<condition attribute="statecode" operator="eq" value="0" />' +
                 //'</filter>' +
@@ -3041,11 +3160,11 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
         LogIt("FetchtargetEntityPartial " + searchfor);
         var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
           '<entity name="' + $editor.LookupCtrData.EntityTargets[i] + '">' +
-            '<attribute name="' + $editor.LookupCtrData.SchemaNames[i] + '" />' +
-            '<attribute name="' + entityPrimaryName[i] + '" />' +
-            '<order attribute="' + entityPrimaryName[i] + '" descending="false" />' +
+            '<attribute name="' + $editor.LookupCtrData.PrimaryIdAttributes[i] + '" />' +
+            '<attribute name="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" />' +
+            '<order attribute="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" descending="false" />' +
             '<filter type="and">' +
-               '<condition attribute="' + entityPrimaryName[i] + '" operator="like" value="%' + searchfor + '%" />' +
+               '<condition attribute="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" operator="like" value="%' + searchfor + '%" />' +
             '</filter>' +
           '</entity>' +
         '</fetch>';
@@ -3060,11 +3179,11 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
         LogIt("FetchtargetEntityExact " + searchfor);
         var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
           '<entity name="' + $editor.LookupCtrData.EntityTargets[i] + '">' +
-            '<attribute name="' + $editor.LookupCtrData.SchemaNames[i] + '" />' +
-            '<attribute name="' + entityPrimaryName[i] + '" />' +
-            '<order attribute="' + entityPrimaryName[i] + '" descending="false" />' +
+            '<attribute name="' + $editor.LookupCtrData.PrimaryIdAttributes[i] + '" />' +
+            '<attribute name="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" />' +
+            '<order attribute="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" descending="false" />' +
             '<filter type="and">' +
-               '<condition attribute="' + entityPrimaryName[i] + '" operator="eq" value="' + searchfor + '" />' +
+               '<condition attribute="' + $editor.LookupCtrData.PrimaryNameAttributes[i] + '" operator="eq" value="' + searchfor + '" />' +
             '</filter>' +
           '</entity>' +
         '</fetch>';
@@ -3076,7 +3195,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             var result = FetchtargetEntityExact(text, i);
             if (result.length == 1) {
                 $editor.$input
-                    .attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, result[0].attributes[$editor.LookupCtrData.SchemaNames[i]].value)
+                    .attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, result[0].attributes[$editor.LookupCtrData.PrimaryIdAttributes[i]].value)
                     .attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupCtrData.EntityTargets[i]);
                 return true;
             }
@@ -3100,8 +3219,8 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
         var haveAnyRec = 0;
 
         for (var i = 0; i < $editor.LookupCtrData.EntityTargets.length; i++) {
-            // entityLocalizedLabels
-            $('<li>' + entityLocalizedLabels[i] + '</li>').addClass('header').appendTo($menu);
+            // $editor.LookupCtrData.LocalizedLabels
+            $('<li>' + $editor.LookupCtrData.LocalizedLabels[i] + '</li>').addClass('header').appendTo($menu);
             //$('<li>' + $editor.LookupCtrData.EntityTargets[i].capitalizeFirstLetter() + '</li>').addClass('header').appendTo($menu);
             haveAnyRec += PopulateDropDown(FetchtargetEntity(i), i);
         }
@@ -3119,7 +3238,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
                 //var url = "/_controls/lookup/lookupsingle.aspx?objecttypes=1,2";
                 // /_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=
                 // /_controls/lookup/lookupsingle.aspx?objecttypes=
-                var url = "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=" + entityObjectTypeCode.join(',');
+                var url = "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=" + $editor.LookupCtrData.ObjectTypeCodes.join(',');
                 /*
                 Query String Parameters for Customer (account, contact)
 AllowFilterOff:0
@@ -3195,13 +3314,13 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
         var $row, $href, $span, icon;
 
         for (var i = 0; i < listlen; i++) {
-            if (!list[i].attributes[entityPrimaryName[dataIndex]]) {
+            if (!list[i].attributes[$editor.LookupCtrData.PrimaryNameAttributes[dataIndex]]) {
                 continue;
             }
             var $row = $('<li></li>').appendTo($menu);
             var $href = $('<a href="#" class="LookupLink"></a>')
-                .attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, list[i].attributes[$editor.LookupCtrData.SchemaNames[dataIndex]].value)
-                .attr(_thisGlobals.DataAttr.Cell.Lookup.EntityName, list[i].attributes[entityPrimaryName[dataIndex]].value)
+                .attr(_thisGlobals.DataAttr.Cell.Lookup.Guid, list[i].attributes[$editor.LookupCtrData.PrimaryIdAttributes[dataIndex]].value)
+                .attr(_thisGlobals.DataAttr.Cell.Lookup.EntityName, list[i].attributes[$editor.LookupCtrData.PrimaryNameAttributes[dataIndex]].value)
                 .attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName, $editor.LookupCtrData.EntityTargets[dataIndex])
                 .on('click', function (e) {
                     $editor.LookupCtrData.LookupId = $(this).attr(_thisGlobals.DataAttr.Cell.Lookup.Guid);
@@ -3218,7 +3337,7 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
                 .appendTo($row);
 
             var $span = $('<span class="LookupLinkSpan"></span>')
-                .text(list[i].attributes[entityPrimaryName[dataIndex]].value)
+                .text(list[i].attributes[$editor.LookupCtrData.PrimaryNameAttributes[dataIndex]].value)
                 .addClass('itemTitle')
                 .appendTo($href);
         }
@@ -3249,10 +3368,10 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
         if ((tkey === DCrmEditableGrid.Keys.ENTER) ||
             (tkey === DCrmEditableGrid.Keys.ESC) ||
             (tkey === DCrmEditableGrid.Keys.TAB)) {
-                $menu.hide();
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
+            $menu.hide();
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
 
     }).on('cut paste', function (e) {
@@ -4476,13 +4595,6 @@ var CrmEditableGrid = (function () {
             }
         };
 
-        self.ColumnResizer = new colResizable({
-            liveDrag: true,
-            firstColumnResizable: false,
-            ParentControlClass: self,
-            onDrag: self.HeaderOnDragHandler
-        });
-
         self.UpdateCellDone = function () {
             _thisHelpers.WaitDialog();
             if (self.activeOptions.AutoSaveChanges) {
@@ -4915,11 +5027,17 @@ var CrmEditableGrid = (function () {
             self.mainTable.find(_thisGlobals.DefaultGridOptions.selectorHeaders).off('click').off('mousedown').off('mouseover').off('mouseleave');
             self.mainTable.find(_thisGlobals.DefaultGridOptions.selectorBodyRows).off('mouseover').off('mouseleave');
 
-            self.ColumnResizer.destroy();
-            self.ColumnResizer = null;
+            if (self.ColumnResizer) {
+                self.ColumnResizer.destroy();
+                self.ColumnResizer = null;
+            }
         }
 
         SetupRowHighlighting(self);
+        self.ColumnResizer = new colResizable({
+            ParentControlClass: self,
+            onDrag: self.HeaderOnDragHandler
+        });
     }
 
     // Instance
@@ -5408,8 +5526,22 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
     function UpdateCrmField(toSave, who) {
         //Update Entity
+        var updateEntity = undefined;
         $.each(toSave, function (i, field) {
-            var updateEntity = new XrmServiceToolkit.Soap.BusinessEntity(who.activeOptions.ParentEntityInfo.ParentEntitySchemaname, field.RecGuid);
+
+            if (updateEntity) {
+                if (updateEntity.id != field.RecGuid) {
+                    try {
+                        var updateResponse = XrmServiceToolkit.Soap.Update(updateEntity);
+                    } catch (e) {
+                        LogEx("Exception: " + e.message);
+                    }
+                    updateEntity = new XrmServiceToolkit.Soap.BusinessEntity(who.activeOptions.ParentEntityInfo.ParentEntitySchemaname, field.RecGuid);
+                }
+            } else {
+                updateEntity = new XrmServiceToolkit.Soap.BusinessEntity(who.activeOptions.ParentEntityInfo.ParentEntitySchemaname, field.RecGuid);
+            }
+ 
             // If value to save is empty, we need to pass null to empty the contents of the crm field
             var val = null;
             var tmp = null;
@@ -5488,15 +5620,18 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 val = { value: tmp, type: "dateTime" };
             }
 
-            //LogIt("Saving val [" + val + "] val.value [" + val.value + "]");
-
             updateEntity.attributes[field.FieldSchemaName] = val;
+        });
+
+        if (updateEntity) {
             try {
+                //console.log("Full Update ....", updateEntity);
                 var updateResponse = XrmServiceToolkit.Soap.Update(updateEntity);
             } catch (e) {
                 LogEx("Exception: " + e.message);
             }
-        });
+        }
+
     }
 
     function HideError(who) {
@@ -5614,7 +5749,6 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                             who.SelectedRecordGuid = $parentrow.attr(_thisGlobals.DataAttr.Cell.RecordGuid);
                             _thisHelpers.WaitDialog(true);
                             ParentGridSelectedRecord(who, $gridParentDiv);
-                            who.ResetColResizerHeight();
 
                         } else {
                             $this.attr(_thisGlobals.DataAttr.Row.SubGrid.ChildGridOpen, _thisGlobals.DataAttr.NO);
@@ -5633,7 +5767,6 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                                 $('#' + rowid).empty().remove();
                                 $parentrow.removeAttr(_thisGlobals.DataAttr.Row.SubGrid.Row.Id);
-                                who.ResetColResizerHeight();
                             }
                         }
 
@@ -5672,7 +5805,7 @@ var colResizable = (function () {
             //attributes:
             draggingClass: 'JCLRgripDrag',	//css-class used when a grip is being dragged (for visual feedback purposes)
             gripInnerHtml: '',				//if it is required to use a custom grip it can be done using some custom HTML				
-            liveDrag: false,				//enables table-layout updating while dragging	
+            liveDrag: true,				//enables table-layout updating while dragging	
             fixed: true,                    //table width does not change if columns are resized
             minWidth: 15, 					//minimum width value in pixels allowed for a column 
             headerOnly: false,				//specifies that the size of the the column resizing anchors will be bounded to the size of the first row 
@@ -5684,7 +5817,7 @@ var colResizable = (function () {
             marginRight: null, 				//in case the table contains any margins, colResizable needs to know the values used, e.g. "10%", "15em", "5px" ...
             disable: false,					//disables all the enhancements performed in a previously colResized table	
             partialRefresh: false,			//can be used in combination with postbackSafe when the table is inside of an updatePanel
-            firstColumnResizable: true,
+            firstColumnResizable: false,
 
             //events:
             onDrag: null, 					//callback function to be fired during the column resizing process if liveDrag is enabled
@@ -5751,15 +5884,14 @@ var colResizable = (function () {
          * Function to create all the grips associated with the table given by parameters 
          * @param {jQuery ref} t - table object
          */
-        self.createGrips = function (t, firstGripResizable) {
-
+        self.createGrips = function (t) {
             var th = t.find(">thead>tr>th,>thead>tr>td");	//if table headers are specified in its semantically correct tag, are obtained
             if (!th.length) th = t.find(">tbody>tr:first>th,>tr:first>th,>tbody>tr:first>td, >tr:first>td");	 //but headers can also be included in different ways
-            th = th.filter(":visible");					//filter invisible columns
+            //th = th.filter(":visible");					//filter invisible columns
             t.cg = t.find("col"); 						//a table can also contain a colgroup with col elements		
             t.ln = th.length;							//table length is stored	
             if (t.p && self.SessionStrage && self.SessionStrage[t.id]) self.memento(t, th);		//if 'postbackSafe' is enabled and there is data for the current table, its coloumn layout is restored
-            th.each(function (i) {						//iterate through the table column headers			
+            th.each(function (i) {						//iterate through the table column headers	
                 var c = $(this); 						//jquery wrap for the current column			
                 var g = $(t.gc.append('<div class="JCLRgrip"></div>')[0].lastChild); //add the visual node to be used as grip
                 g.append(self.options.gripInnerHtml).append('<div class="' + self.SIGNATURE + '"></div>');
@@ -5770,15 +5902,18 @@ var colResizable = (function () {
 
                 if (i > 0) {
                     g.bind('touchstart mousedown', self.onGripMouseDown); //bind the mousedown event to start dragging 
-                } else if ((i == 0) && (self.options.firstGripResizable)) {
+                } else if ((i == 0) && (self.options.firstColumnResizable)) {
                     g.bind('touchstart mousedown', self.onGripMouseDown);
                 } else {
                     g.html("");
                 }
 
-                g.t = t; g.i = i; g.c = c; c.w = c.width();		//some values are stored in the grip's node data
+                g.t = t; g.i = i; g.c = c; 		//some values are stored in the grip's node data
+                c.w = c.width();
+
+                //console.log("Setting width [" + c.w + "]");
                 t.g.push(g); t.c.push(c);						//the current grip and column are added to its table object
-c.width(c.w).removeAttr("width");				//the width of the column is converted into pixel-based measurements
+                c.width(c.w).removeAttr("width");				//the width of the column is converted into pixel-based measurements
                 g.data(self.SIGNATURE, { i: i, t: t.attr(self.ID), last: i == t.ln - 1 });	 //grip index and its table name are stored in the HTML 												
             });
             t.cg.removeAttr("width");	//remove the width attribute from elements in the colgroup 
@@ -5791,8 +5926,6 @@ c.width(c.w).removeAttr("width");				//the width of the column is converted into
             if (!self.FLEX) {
                 t.removeAttr('width').addClass(self.FLEX); //if not fixed, let the table grow as needed
             }
-
-
         };
 
 
@@ -5844,7 +5977,6 @@ c.width(c.w).removeAttr("width");				//the width of the column is converted into
                 });
             }
         };
-
 
 
         /**
@@ -6000,7 +6132,7 @@ c.width(c.w).removeAttr("width");				//the width of the column is converted into
         //bind resize event, to update grips position 
         $(window).bind('resize.' + self.SIGNATURE, self.onResize);
 
-        self.createGrips(tmpTable, self.options.firstColumnResizable);		//grips are created
+        self.createGrips(tmpTable);		//grips are created
 
     }
 
@@ -6454,8 +6586,8 @@ function CreateInlineRecord(self) {
                         .attr(_thisGlobals.DataAttr.Cell.Lookup.OriginalLogicalName, recNew.attributes[schema].logicalName);
 
 
-                    self.activeOptions.columneditors[tmpLookupStruc.Index - 1].LookupName = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;
-                    $cell = $($cloneRow[0].cells[tmpLookupStruc.Index]);
+                    self.activeOptions.columneditors[i - 1].LookupData.LookupName = self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue;
+                    $cell = $($cloneRow[0].cells[i]);
                     _thisHelpers.SetActiveCellText($cell, self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue);
 
                     callbackField.LookupGuid = recNew.attributes[schema].id;
@@ -6491,8 +6623,8 @@ function CreateInlineRecord(self) {
                         .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, recNew.attributes[schema].id)
                         .attr(_thisGlobals.DataAttr.Cell.Lookup.OriginalLogicalName, recNew.attributes[schema].logicalName);
 
-                    self.activeOptions.columneditors[tmpLookupStruc.Index - 1].LookupName = parts[0];
-                    $cell = $($cloneRow[0].cells[tmpLookupStruc.Index]);
+                    self.activeOptions.columneditors[i - 1].LookupData.LookupName = parts[0];
+                    $cell = $($cloneRow[0].cells[i]);
                     _thisHelpers.SetActiveCellText($cell, parts[0]);
 
                     callbackField.LookupGuid = recNew.attributes[schema].id;
@@ -7033,7 +7165,7 @@ function GetTranslationsForCallback(translation) {
     }
 }
 
-function CreateGridContainers(entityname,
+function CreateGridContainers(entityname, entityLabel,
     userPrivilages, parentcontainer,
     allowautosave, allowcreate, allowdelete, Schema,
     hideautosavebutton) {
@@ -7056,7 +7188,7 @@ function CreateGridContainers(entityname,
 
     containerIds.TableCaption = _thisHelpers.GenerateUUID();
     $('<span></span>')
-        .text(entityname + ' -')
+        .text(entityLabel + ' -')
         .attr('id', containerIds.TableCaption)
         .addClass('TableCaption')
         .appendTo($captioncontainer);
@@ -7214,13 +7346,13 @@ function CreateGridContainers(entityname,
     $('<button></button>').attr('id', containerIds.PagerButtonNext).attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.GoToNext).addClass('PagerButton ToolbarGoToNext')
         .appendTo($pager);
 
-    // Table
+    // Table, initially hidden
     containerIds.Table = _thisHelpers.GenerateUUID();
     var $Grid = $('<table class="pure-table tablesorter"><thead><tr></tr></thead><tbody></tbody><tfoot><tr></tr></tfoot></table>')
         .attr('id', containerIds.Table)
         .attr('data-item-schema', Schema)
         .attr('data-item-entityname', entityname)
-        .appendTo($parentContainer).hide();
+        .appendTo($parentContainer);
 
     return containerIds;
 }
@@ -7518,7 +7650,7 @@ uiTypes [account] lookupGuid [50bd5541-3133-e611-80e5-08002738aa19]
 
         condition += ' />';
 
-        config.GetFetchXmlFiltered(schema, condition, filter, inputVal,
+        config.SetFetchXmlFiltered(schema, condition, filter, inputVal,
             ((fetchOP) ? fetchOP : null), ((fetchValue) ? fetchValue : null), lookupGuid, uiTypes);
 
         parentdiv.hide();
@@ -8150,6 +8282,7 @@ var DCrmEGConfigurationManager = (function () {
             RelatedToParentLILookupSchemaName: (data.RelatedToParentLILookupSchemaName) ? data.RelatedToParentLILookupSchemaName : undefined
         };
 
+        self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : data.label;
         self.HasStatusField = (data.HasStatusField) ? data.HasStatusField : undefined;
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
         self.RecordsPerPage = (data.RecordsPerPage) ? data.RecordsPerPage : '5';
@@ -8180,7 +8313,15 @@ var DCrmEGConfigurationManager = (function () {
         Filters: [],
         InlineFilters:[{Schema: null, Filter: null, Operator: null, Value: null, FecthOp: null, FetchValue: null, LookupGuid: null, LookupUiType}],
         FilterTail: '</filter>',
-        Tail: '</entity></fetch>'
+        Tail: '</entity></fetch>',
+        LinkEntities: [],
+        //{
+        //LinkEntityHeadData: {Schema: null, From: null, To: null, Alias: null},
+        //LinkEntityFields:[] ,
+        //LinkEntityFilters: [{Schema: null, Filter: null, Operator: null, Value: null, FecthOp: null, FetchValue: null, LookupGuid: null, LookupUiType}]
+        // }
+        LinkEntityHead: '<link-entity name="%n%" from="%f%" to="%t%" alias="%a%">',
+        LinkEntityTail: '</link-entity>'
     };
 
 Hasmore records [true] cookie [<cookie page="1"><name last="AccountName-100" first="A. Datum Corporation (sample)" /><accountid last="{ED216E2F-3133-E611-80E5-08002738AA19}" first="{0EE339A4-1528-E611-80DD-08002738AA19}" /></cookie>]
@@ -8244,12 +8385,40 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                     }
 
                     fetch += self.GridFetchXml.FilterTail;
+
                 } else if (self.GridFetchXml.InlineFilters.length > 0) {
                     fetch += self.GridFetchXml.FilterHead;
                     fetch += self.GridFetchXml.InlineFilters.map(function (elem) {
                         return elem.Filter;
                     }).join('');
                     fetch += self.GridFetchXml.FilterTail;
+                }
+
+                if (self.GridFetchXml.LinkEntities.length > 0) {
+                    for (var i = 0; i < self.GridFetchXml.LinkEntities.length; i++) {
+                        var le = self.GridFetchXml.LinkEntities[i];
+
+                        //[{Schema: null, Filter: null, Operator: null, Value: null, FecthOp: null, FetchValue: null, LookupGuid: null, LookupUiType}]
+                        fetch += self.GridFetchXml.LinkEntityHead
+                            .replace('%n%', le.LinkEntityHeadData.Schema)
+                            .replace('%f%', le.LinkEntityHeadData.From)
+                            .replace('%t%', le.LinkEntityHeadData.To)
+                            .replace('%a%', le.LinkEntityHeadData.Alias);
+
+                        if (le.LinkEntityFields.length > 0) {
+                            for (var ii = 0; ii < le.LinkEntityFields.length; ii++) {
+                                fetch += '<attribute name="' + le.LinkEntityFields[ii]  + '" />';
+                            }
+                        }
+                        if (le.LinkEntityFilters.length > 0) {
+                            fetch += self.GridFetchXml.FilterHead;
+                            fetch += le.LinkEntityFilters.map(function (elem) {
+                                return elem.Filter;
+                            }).join('');
+                            fetch += self.GridFetchXml.FilterTail;
+                        }
+                    }
+                    fetch += self.GridFetchXml.LinkEntityTail;
                 }
 
                 fetch += self.GridFetchXml.Tail;
@@ -8264,7 +8433,7 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
             self.GridFetchXml.Sort.push('<order attribute="' + attr + '" descending="' + ((order == 0) ? 'false' : 'true') + '" />');
         };
 
-        self.GetFetchXmlFiltered = function (schemaname, condition, operator, value, fetchop, fetchvalue, lookupguid, lookupuitype) {
+        self.SetFetchXmlFiltered = function (schemaname, condition, operator, value, fetchop, fetchvalue, lookupguid, lookupuitype) {
 
             if (self.GridFetchXml.InlineFilters.length > 0) {
                 for (var i = 0; i < self.GridFetchXml.InlineFilters.length; i++) {
@@ -8291,6 +8460,75 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                 LookupGuid: lookupguid,
                 LookupUiType: lookupuitype
             });
+        };
+
+        self.SetLinkEntityFiltered = function (linkentityschema, linkentityfrom, linkentityto,
+            fields, // array of fields schema names or null
+            schemaname, condition, operator, value, fetchop, fetchvalue, lookupguid, lookupuitype) {
+
+            var found = -1;
+            if (self.GridFetchXml.LinkEntities.length > 0) {
+                for (var i = 0; i < self.GridFetchXml.LinkEntities.length; i++) {
+                    if (self.GridFetchXml.LinkEntities[i].LinkEntityHeadData.Schema == linkentityschema) {
+
+                        if (self.GridFetchXml.LinkEntities[i].LinkEntityFilters.length > 0) {
+                            for (var ii = 0; ii < self.GridFetchXml.LinkEntities[i].LinkEntityFilters.length; ii++) {
+                                if (self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].Schema == schemaname) {
+                                    found = ii;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].Filter = condition;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].Operator = operator;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].Value = value;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].FecthOp = fetchop;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].FetchValue = fetchvalue;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].LookupGuid = lookupguid;
+                                    self.GridFetchXml.LinkEntities[i].LinkEntityFilters[ii].LookupUiType = lookupuitype;
+                                    return;
+                                }
+                            }
+                        }
+
+                        self.GridFetchXml.LinkEntities[i].LinkEntityFilters.push({
+                            Schema: schemaname,
+                            Filter: condition,
+                            Operator: operator,
+                            Value: value,
+                            FecthOp: fetchop,
+                            FetchValue: fetchvalue,
+                            LookupGuid: lookupguid,
+                            LookupUiType: lookupuitype
+                        });
+                        return;
+                    }
+                }
+            }
+
+            if(fields == null) {
+                fields = [];
+            }
+            var tmpLink = {
+                LinkEntityHeadData: {
+                    Schema: linkentityschema,
+                    From: linkentityfrom,
+                    To: linkentityto,
+                    Alias: _thisHelpers.GenerateUUID()
+                },
+                // Array of fields schema names
+                LinkEntityFields: fields,
+                LinkEntityFilters: []
+            };
+
+            tmpLink.LinkEntityFilters.push({
+                Schema: schemaname,
+                Filter: condition,
+                Operator: operator,
+                Value: value,
+                FecthOp: fetchop,
+                FetchValue: fetchvalue,
+                LookupGuid: lookupguid,
+                LookupUiType: lookupuitype
+            });
+
+            self.GridFetchXml.LinkEntities.push(tmpLink);
         };
 
         self.GetFetchXmlFilters = function () {
@@ -8329,16 +8567,26 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                 }
                 if (found != -1) {
                     self.GridFetchXml.InlineFilters.splice(found, 1);
+                    return;
+                }
+
+                found = -1;
+                for (var i = 0; i < self.GridFetchXml.LinkEntities.length; i++) {
+                    if (self.GridFetchXml.LinkEntities[i].LinkEntityHeadData.Schema == schemaname) {
+                        found = i;
+                        break;
+                    }
+                }
+                if (found != -1) {
+                    self.GridFetchXml.LinkEntities.splice(found, 1);
                 }
             } else {
                 self.GridFetchXml.InlineFilters = [];
+                self.GridFetchXml.LinkEntities = [];
             }
         };
 
         self.GetInlineFilterBySchemaName = function (schemaname) {
-            if (self.GridFetchXml.InlineFilters.length == 0) {
-                return null;
-            }
 
             for (var i = 0; i < self.GridFetchXml.InlineFilters.length; i++) {
                 if (self.GridFetchXml.InlineFilters[i].Schema == schemaname) {
@@ -8346,8 +8594,15 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                 }
             }
 
+            for (var i = 0; i < self.GridFetchXml.LinkEntities.length; i++) {
+                if (self.GridFetchXml.LinkEntities[i].LinkEntityHeadData.Schema == schemaname) {
+                    return self.GridFetchXml.LinkEntities[i];
+                }
+            }
+
             return null;
         };
+
     }
     
     return DCrmEGConfigurationManager;
@@ -8446,6 +8701,7 @@ Related [false] RelatedEntityLookup [undefined]
             data.NewBtnBehavoir = ((tmp.length > 17) ? tmp[17] : undefined);
             data.BooleanEditorBehavoir = ((tmp.length > 18) ? tmp[18] : undefined);
             data.HideAutosaveButton = ((tmp.length > 19) ? tmp[19] : undefined);
+            data.GridTitle = ((tmp.length > 20) ? tmp[20] : undefined);
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -8491,7 +8747,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
 
     // Create grid components
     var ContainerIds = CreateGridContainers(
-        data.Entity.Label, userPrivilages, parentcontainer,
+        data.Entity.Label, data.GridTitle, userPrivilages, parentcontainer,
         data.AutoSaveChanges, data.AllowCreateNew, data.AllowDelete, data.Entity.SchemaName, data.HideAutosaveButton);
 
     var EntitiesAreRelated = data.Entity.RelatedToDisplayOnEntity;
@@ -8517,7 +8773,14 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         Filters: [],
         InlineFilters: [],
         FilterTail: '</filter>',
-        Tail: '</entity></fetch>'
+        Tail: '</entity></fetch>',
+        LinkEntities: [],
+        //{ LinkEntityHeadData: {Schema: null, From: null, To: null, Alias: null},
+        //LinkEntityFields: [],
+        //LinkEntityFilters: []
+        //}
+        LinkEntityHead: '<link-entity name="%n%" from="%f%" to="%t%" alias="%a%">',
+        LinkEntityTail: '</link-entity>'
     };
 
     var hasCurrencyId = false;
@@ -8620,6 +8883,8 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
 
     var table = $('#' + ContainerIds.Table)[0];
 
+    //console.log("Table width [" + $('#' + ContainerIds.Table).width() + "]");
+
     if ((userPrivilages.CanDelete) && (data.AllowDelete)) {
         var $chk = $("<input type='checkbox' />")
             .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.SelectAllRecords)
@@ -8651,9 +8916,9 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             .appendTo($tr);
 
         if (item.RealWidth != '0') {
-            $theader.css('width', item.RealWidth + '%');
+            $theader.width(item.RealWidth + '%');
         } else {
-            $theader.css('width', autoCellWidth + '%');
+            $theader.width(autoCellWidth + '%');
         }
 
         var opSetData = [];
@@ -8733,9 +8998,19 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
                 LookupId: '',
                 LookupLogicalName: '',
                 LookupName: '',
-                SchemaNames: [], //targete[0] + 'id',
-                EntityTargets: item.LookupTargetEntity.split(',')
+                TargetEntities: []
             };
+
+            var earr = item.LookupTargetEntity.split(',');
+            for(var earrindex = 0; earrindex < earr.length; earrindex++) {
+                lookupSetData.TargetEntities.push({
+                    Target: earr[earrindex],
+                    PrimaryIdAttribute: null,
+                    PrimaryNameAttribute: null,
+                    ObjectTypeCode: null,
+                    LocalizedLabel: null
+                });
+            }
 
             $theader.attr("data-lookuptarget-entities", item.LookupTargetEntity);
 
@@ -9511,7 +9786,7 @@ var GridLoaderHelper = (function () {
             }
 
             _thisHelpers.WaitDialog();
-            $('#' + self.ContainerIds.Table).show();
+            //$('#' + self.ContainerIds.Table).show();
         };
         
         self.RecordCountCallback = function (result) {
@@ -9544,7 +9819,6 @@ var GridLoaderHelper = (function () {
                 self.PrimaryIdAttribute = entityMetaData[0].PrimaryIdAttribute;
                 self.PrimaryNameAttribute = entityMetaData[0].PrimaryNameAttribute;
             }
-            //console.log("self.PrimaryIdAttribute [" + self.PrimaryIdAttribute + "] self.PrimaryNameAttribute [" + self.PrimaryNameAttribute + "]");
             self.GetEntityCount();
         };
 
@@ -9559,8 +9833,6 @@ var GridLoaderHelper = (function () {
                     var schName = '';
                     var attrType = '';
                     var lbl = '';
-                    var fe = fieldexclusion.join(" ");
-                    var ate = attrTypeExclusion.join(" ");
                     var SelectedFields = self.data.SelectedFields;
 
                     for (index = 0, j = result[0].Attributes.length; index < j; index++) {
@@ -9585,13 +9857,10 @@ var GridLoaderHelper = (function () {
                     LogEx("unable to retreive entity metadata\r\n" + e.message);
                 }
             }
-
-            //_thisHelpers.WaitDialog();
-            //$('#' + self.ContainerIds.Table).show();
         };
 
         // Get UserLocalized labels for headers, just in case language has changed
-        // Get this primary id and name attribute names, normally (schemaname + id) and (name)
+        // Get this primary id and name attribute names, normally (schemaname + id) and (name/subject/fullname)
         // There are exeptions. example: activitypointer -> activityid
         XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'],
             self.data.Entity.SchemaName, true, self.RetreiveEntityMetadateCallback);

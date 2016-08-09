@@ -946,6 +946,7 @@ function FillEntityMetadata(data) {
 
     DisplaySectionGroup(4, true);
     DisplaySectionGroup(5, true);
+    DisplaySectionGroup(51, true);
 
     if (_thisGlobals.ReloadedSavedFields.length > 0) {
 
@@ -2362,6 +2363,13 @@ function InitializeSetupRoutines() {
     $("#booleaneditorbehaviour_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#booleaneditorbehaviour_label").text());
     $("#gridtitlelabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#gridtitlelabel").text());
 
+    $("#displayclearfilterbuttonlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayclearfilterbuttonlabel").text());
+    $("#displayheaderfilterlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayheaderfilterlabel").text());
+    $("#displayexportbuttonlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayexportbuttonlabel").text());
+    $("#displaysetrecordstatelabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displaysetrecordstatelabel").text());
+    $("#displayclonerecordlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayclonerecordlabel").text());
+    $("#displayclonerecordbuttonlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayclonerecordbuttonlabel").text());
+
     if ((window.parent.OnFormSaveFunctionCallback != 'undefined') && (window.parent.OnFormSaveFunctionCallback != undefined) &&
         (typeof window.parent.OnFormSaveFunctionCallback === 'function')) {
         window.parent.OnFormSaveFunctionCallback(ParentFormSaving);
@@ -2403,6 +2411,37 @@ function InitializeSetupRoutines() {
 
     $('#gridtitle').on('blur', function (e) {
         _thisGlobals._CurConfiguration.GridTitle = $(this).val();
+
+        SetParentFormDirty();
+    });
+
+    $('#displayclearfilterbutton').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DisplayClearFilterButton = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+    $('#displayheaderfilter').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DisplayHeaderFilter = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+    $('#displayexportbutton').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DisplayExportButton = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+    $('#displaysetrecordstate').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DisplaySetRecordState = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+    $('#displayclonerecord').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DisplayCloneRecord = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+    $('#displayclonerecordbutton').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DisplayCloneRecordButton = $(this).prop('checked');
 
         SetParentFormDirty();
     });
@@ -2829,6 +2868,14 @@ function InitializeSetupRoutines() {
         $('#entitiesAreRelated').attr('disabled', 'disabled');
         $('#displaySum').attr('disabled', 'disabled');
         $('#gridtitle').attr('disabled', 'disabled');
+
+        $('#displayclearfilterbutton').attr('disabled', 'disabled');
+        $('#displayheaderfilter').attr('disabled', 'disabled');
+        $('#displayexportbutton').attr('disabled', 'disabled');
+        $('#displaysetrecordstate').attr('disabled', 'disabled');
+        $('#displayclonerecord').attr('disabled', 'disabled');
+        $('#displayclonerecordbutton').attr('disabled', 'disabled');
+        
         $('#deleteallfieldconditionsbtn').attr('disabled', 'disabled');
 
         LoadDCrmEGConfiguration();
@@ -3025,6 +3072,7 @@ function ResetAllUI() {
     DisplaySectionGroup(2, false);
     DisplaySectionGroup(4, false);
     DisplaySectionGroup(5, false);
+    DisplaySectionGroup(51, false);
 }
 
 function ResetLiData(a, b, c) {
@@ -3209,6 +3257,14 @@ var DCrmEGConfigurationManager = (function () {
         };
 
         self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : data.Label;
+
+        self.DisplayClearFilterButton = ((data.DisplayClearFilterButton) && (data.DisplayClearFilterButton == 'false')) ? false : true;
+        self.DisplayHeaderFilter = ((data.DisplayHeaderFilter) && (data.DisplayHeaderFilter == 'false')) ? false : true;
+        self.DisplayExportButton = ((data.DisplayExportButton) && (data.DisplayExportButton == 'false')) ? false : true;
+        self.DisplaySetRecordState = ((data.DisplaySetRecordState) && (data.DisplaySetRecordState == 'false')) ? false : true;
+        self.DisplayCloneRecord = ((data.DisplayCloneRecord) && (data.DisplayCloneRecord == 'false')) ? false : true;
+        self.DisplayCloneRecordButton = ((data.DisplayCloneRecordButton) && (data.DisplayCloneRecordButton == 'false')) ? false : true;
+        
         self.HasStatusField = (data.HasStatusField) ? data.HasStatusField : undefined;
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
         self.FieldDisplayOption = (data.FieldDisplayOption) ? data.FieldDisplayOption : 100000003; // All fields
@@ -3378,6 +3434,14 @@ function DisplaySelectedEntityInfo(li, schema) {
     }
 
     $('#gridtitle').val(_thisGlobals._CurConfiguration.GridTitle);
+
+    $('#displayclearfilterbutton').prop('checked', _thisGlobals._CurConfiguration.DisplayClearFilterButton);
+    $('#displayheaderfilter').prop('checked', _thisGlobals._CurConfiguration.DisplayHeaderFilter);
+    $('#displayexportbutton').prop('checked', _thisGlobals._CurConfiguration.DisplayExportButton);
+    $('#displaysetrecordstate').prop('checked', _thisGlobals._CurConfiguration.DisplaySetRecordState);
+    $('#displayclonerecord').prop('checked', _thisGlobals._CurConfiguration.DisplayCloneRecord);
+    $('#displayclonerecordbutton').prop('checked', _thisGlobals._CurConfiguration.DisplayCloneRecordButton);
+    
     $('#displaySum').prop('checked', _thisGlobals._CurConfiguration.DisplaySum);
     $('#autosavechanges_check').prop('checked', _thisGlobals._CurConfiguration.AutoSaveChanges);
     $('#hideautosave_check').prop('checked', _thisGlobals._CurConfiguration.HideAutosaveButton);
@@ -3487,6 +3551,13 @@ function LoadDCrmEGConfiguration() {
             data.BooleanEditorBehavoir = ((tmp.length > 18) ? tmp[18] : undefined);
             data.HideAutosaveButton = ((tmp.length > 19) ? tmp[19] : undefined);
             data.GridTitle = ((tmp.length > 20) ? tmp[20] : undefined);
+            data.DisplayClearFilterButton = ((tmp.length > 21) ? tmp[21] : true);
+            data.DisplayHeaderFilter = ((tmp.length > 22) ? tmp[22] : true);
+            data.DisplayExportButton = ((tmp.length > 23) ? tmp[23] : true);
+            data.DisplaySetRecordState = ((tmp.length > 24) ? tmp[24] : true);
+            data.DisplayCloneRecord = ((tmp.length > 25) ? tmp[25] : true);
+            data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
+            
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -3644,9 +3715,14 @@ function SaveDCrmEGConfiguration() {
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].NewBtnBehavoir
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].BooleanEditorBehavoir
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].HideAutosaveButton
-        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].GridTitle;
-
-
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].GridTitle
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayClearFilterButton
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayHeaderFilter
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayExportButton
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplaySetRecordState
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecord
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecordButton;
+        
         if (_thisGlobals.DCrmEGConfiguration[i].Fields) {
             if (i > 0) {
                 _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator;
@@ -3708,9 +3784,14 @@ function SaveDCrmEGConfigurationInternal(config) {
     + _thisGlobals._SEPERATOR + config.NewBtnBehavoir
     + _thisGlobals._SEPERATOR + config.BooleanEditorBehavoir
     + _thisGlobals._SEPERATOR + config.HideAutosaveButton
-    + _thisGlobals._SEPERATOR + config.GridTitle;
-
-
+    + _thisGlobals._SEPERATOR + config.GridTitle
+    + _thisGlobals._SEPERATOR + config.DisplayClearFilterButton
+    + _thisGlobals._SEPERATOR + config.DisplayHeaderFilter
+    + _thisGlobals._SEPERATOR + config.DisplayExportButton
+    + _thisGlobals._SEPERATOR + config.DisplaySetRecordState
+    + _thisGlobals._SEPERATOR + config.DisplayCloneRecord
+    + _thisGlobals._SEPERATOR + config.DisplayCloneRecordButton;
+    
     if (config.Fields) {
         _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.SchemaName;
     }

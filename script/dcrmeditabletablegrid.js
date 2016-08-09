@@ -648,15 +648,15 @@ function DisplayCrmAlertDialog(msg) {
     window.parent.Xrm.Utility.alertDialog(msg);
 }
 
-function LogIt(s) {
+function LogIt(s, o) {
     if ( (_thisGlobals.Debug) && (typeof console != "undefined") && (typeof console.debug != "undefined")) {
-        console.log(s);
+        console.log(s, o);
     }
 }
 
-function LogEx(s) {
+function LogEx(s,o) {
     if (typeof console != "undefined" && typeof console.debug != "undefined") {
-        console.error(s);
+        console.error(s, o);
     }
 }
 
@@ -1337,6 +1337,7 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
     $editor.UncheckedLabel = editorsArrayi.UncheckedText;
     $editor.PossibleMove = undefined;
     $editor.optionsData = [{ text: $editor.CheckedLabel, value: '1' }, { text: $editor.UncheckedLabel, value: '0' }];
+    //<option value="0" title="Allow">Allow</option><option value="1" title="Do Not Allow">Do Not Allow</option>
 
     var $input = $('<input type="checkbox" />')
         .attr('id', Input_ID)
@@ -3717,7 +3718,8 @@ var CrmEditableGrid = (function () {
                         haveanymenu = true;
                         $('<li><a href="#" class="contextMenuLink" id="OpenRecordCtxMenuItem"><span class="itemTitle">' + _thisGlobals.Translation_Labels.OpenRecordInNewWindow + '</span></a></li>').appendTo(menu);
                         // If we have status field, display a menu to set record status
-                        if (self.activeOptions.HasStatusField) {
+                        if ((self.activeOptions.HasStatusField) &&
+                            (self.activeOptions.DisplaySetRecordState)){
                             $('<li class="divider"></li>').appendTo(menu);
                             $('<li><a href="#" class="contextMenuLink" id="SetRecordStatus"><span class="itemTitle">Set record status</span></a></li>').appendTo(menu);
                         }
@@ -3757,6 +3759,16 @@ var CrmEditableGrid = (function () {
                         }
                         haveanymenu = true;
                         $('<li><a href="#" class="contextMenuLink" id="OpenUrlInNewWindowCtxMenuItem"><span class="itemTitle">' + _thisGlobals.Translation_Labels.OpenUrlInNewWindow + '</span></a></li>').appendTo(menu);
+                    }
+
+                    if ((!self.activeOptions.ParentFormIsReadOnly) && (self.activeOptions.DisplayCloneRecord) &&
+                        (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.FooterCell) != _thisGlobals.DataAttr.NO)) {
+                        if (haveanymenu) {
+                            $('<li class="divider"></li>').appendTo(menu);
+                        }
+                        haveanymenu = true;
+                        $('<li><a href="#" class="contextMenuLink" id="CloneRecordCtxMenuItem"><span class="itemTitle">Clone record</span></a></li>').appendTo(menu);
+
                     }
 
                     if (!haveanymenu) {
@@ -3829,6 +3841,10 @@ var CrmEditableGrid = (function () {
                                 self.contextMenuTarget = undefined;
                             }
                             return false;
+                        } else if (id == 'CloneRecordCtxMenuItem') {
+                            if (self.contextMenuTarget) {
+                                CloneRecord(self);
+                            }
                         }
 
                         $bg.remove();
@@ -5118,6 +5134,15 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
         $('#' + self.activeOptions.GridContainerIds.AutoSave).click(function (e) {
             e.stopPropagation();
             self.activeOptions.AutoSaveChanges = $(this).is(':checked');
+            if (self.activeOptions.AutoSaveChanges) {
+                $('#' + self.activeOptions.GridContainerIds.UndoChanges).hide();
+                $('#' + self.activeOptions.GridContainerIds.CancelAllChanges).hide();
+                $('#' + self.activeOptions.GridContainerIds.SaveChanges).hide();
+            } else {
+                $('#' + self.activeOptions.GridContainerIds.UndoChanges).show();
+                $('#' + self.activeOptions.GridContainerIds.CancelAllChanges).show();
+                $('#' + self.activeOptions.GridContainerIds.SaveChanges).show();
+            }
         });
 
         $('#' + self.activeOptions.GridContainerIds.UndoChanges).click(function (e) {
@@ -5313,7 +5338,14 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             var msg = undefined;
 
             // 10 inline, 20 new window, 30 show menu
-            if (self.activeOptions.NewBtnBehavoir == "30") {
+            if (self.GridConfiguration.MSProductGrid) {
+                // Dispaly a different menu
+                if (self.GridConfiguration.MSProductGridHelperc && self.GridConfiguration.MSProductGridHelperc.GetPriceList()) {
+
+                } else {
+                    self.GridConfiguration.MSProductGridHelperc.DisplayNativePricelistSelect();
+                }
+            } else if (self.activeOptions.NewBtnBehavoir == "30") {
                 DisplayNewButtonMenu(who, $(this));
             } else if (self.activeOptions.NewBtnBehavoir == "20") {
                 try {
@@ -5491,6 +5523,19 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                         self.activeOptions.PagingCookies[self.activeOptions.Page - 1]), false, self.RepopulateGridCallback);
             }
 
+        });
+
+        $('#' + self.activeOptions.GridContainerIds.CloneRecord).click(function (e) {
+            e.stopPropagation();
+
+            var selRows = self.activeOptions.selectedRows;
+            if (selRows.length == 0) {
+                return false;
+            }
+            var lastone = selRows.length - 1;
+            for (var i = 0; i < selRows.length; i++) {
+                CloneRecord(self, $(selRows[i]).clone(), ((lastone == i) ? true : false));
+            }
         });
     }
 
@@ -5684,9 +5729,8 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             var c = $(table.tBodies[0].rows[i]);
 
             $tmpCell = $('<td style="text-align:center"></td>');
-            if ((!gridOptions.TableIsReadOnly) &&
-                (gridOptions.UserCanDelete) &&
-                (gridOptions.AllowDelete)) {
+            if ((!gridOptions.ParentFormIsReadOnly) &&
+                ((gridOptions.UserCanDelete) || (gridOptions.DisplayCloneRecordButton))) {
                 // Select row checkbox
                 $chk = $("<input type='checkbox' />")
                     .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.SelectRecord)
@@ -6232,6 +6276,188 @@ You can’t set the values for partylist or regarding lookups.
         });
 }
 
+function CloneRecord(self, rowToBeCloned, lastone) {
+    var msg = undefined;
+    try {
+        var $cloneRow = (rowToBeCloned) ? rowToBeCloned : self.contextMenuTarget.parent().clone();
+        var lastcloneRefresh = false;
+        if ((lastone == undefined) || (lastone == true)) {
+            lastcloneRefresh = true;
+        }
+        self.contextMenuTarget = undefined;
+        var $theadcells = self.mainTable.find('thead th');
+        var cells = $cloneRow[0].cells;
+        var $cell = undefined;
+        var val = undefined;
+        var formattedVal = '';
+
+        $cloneRow.removeAttr(_thisGlobals.DataAttr.Cell.RecordGuid).removeClass(_thisGlobals.DefaultGridOptions.rowSelectedCss);
+        $cloneRow.find('td').each(function () {
+            $(this).removeAttr('id');
+        });
+
+        var recSchema = self.activeOptions.ParentEntityInfo.ParentEntitySchemaname;
+        var recNew = new XrmServiceToolkit.Soap.BusinessEntity(recSchema);
+        var exclude = ['transactioncurrencyid', 'createdby', 'createdon', , 'modifiedby', 'modifiedon', 'ownerid'];
+
+        if (self.activeOptions.ParentChildLookupInfo.Related) {
+            recNew.attributes[self.activeOptions.ParentChildLookupInfo.LookupSchemaName] = {
+                id: self.activeOptions.ParentChildLookupInfo.Guid,
+                logicalName: self.activeOptions.ParentChildLookupInfo.ParentSchemaName,
+                type: self.activeOptions.ParentChildLookupInfo.Type
+            };
+        }
+
+        for (var i = 1; i < $theadcells.length; i++) {
+            $cell = $(cells[i]);
+
+            var $thcell = $($theadcells[i]);
+            var ed = parseInt($thcell.attr(_thisGlobals.DataAttr.Header.EditorType));
+            var schema = $thcell.attr(_thisGlobals.DataAttr.Header.SchemaName);
+            formattedVal = '';
+            val = undefined;
+
+            if (ed == DCrmEditableGrid.Editors.None) {
+                ed = parseInt($thcell.attr(_thisGlobals.DataAttr.Header.ReadOnlyEditorType));
+            }
+
+            if (!exclude.ExactMatchExists(schema)) {
+                if ((ed == DCrmEditableGrid.Editors.Text) || (ed == DCrmEditableGrid.Editors.Description)) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        recNew.attributes[schema] = formattedVal;
+                        val = formattedVal;
+                    }
+
+                } else if (ed == DCrmEditableGrid.Editors.Numeric) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        val = parseInt(_thisHelpers.RemoveNumericFormat(formattedVal));
+                        recNew.attributes[schema] = { value: val, type: "int" };
+                    }
+
+                } else if (ed == DCrmEditableGrid.Editors.Decimal) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        val = parseFloat(_thisHelpers.RemoveNumericFormat(formattedVal).replace(_thisGlobals.userCurrencySettings.DecimalSymbol, '.'));
+                        recNew.attributes[schema] = { value: val, type: "decimal" };
+                    }
+
+                } else if (ed == DCrmEditableGrid.Editors.Currency) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        val = parseFloat(_thisHelpers.RemoveNumericFormat(formattedVal).replace(_thisGlobals.userCurrencySettings.DecimalSymbol, '.'));
+                        recNew.attributes[schema] = { value: val, type: "Money" };
+                    }
+                } else if (ed == DCrmEditableGrid.Editors.DatePicker) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        val = Date.parseDate(formattedVal);
+                        recNew.attributes[schema] = val;
+                    }
+
+                } else if (ed == DCrmEditableGrid.Editors.DateTimePicker) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        val = Date.parseDate(formattedVal);
+                        recNew.attributes[schema] = { value: val, type: "dateTime" };
+                    }
+
+                } else if (ed == DCrmEditableGrid.Editors.Checkbox) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        val = (formattedVal == self.GridEditors[i].CheckedLabel) ? true : false;
+                        recNew.attributes[schema] = { value: val, type: "boolean" };
+                    }
+
+                } else if (ed == DCrmEditableGrid.Editors.OptionSet) {
+
+                    formattedVal = _thisHelpers.GetActiveCellText($cell);
+                    if ((formattedVal) && (formattedVal.length > 0)) {
+                        var optionsetVal = $cell.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue);
+                        if (optionsetVal) {
+                            val = parseInt(optionsetVal);
+                        }
+                        recNew.attributes[schema] = { value: val, type: "OptionSetValue" };
+                    }
+
+                } else if ((ed == DCrmEditableGrid.Editors.Lookup) || (ed == DCrmEditableGrid.Editors.CustomerType)) {
+                    if (self.activeOptions.ParentChildLookupInfo.LookupSchemaName != schema) {
+                        formattedVal = _thisHelpers.GetActiveCellText($cell);
+                        if ((formattedVal) && (formattedVal.length > 0)) {
+                            recNew.attributes[schema] = {
+                                id: _thisHelpers.AddCurlyBrace($cell.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid)),
+                                logicalName: $cell.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName),
+                                type: "EntityReference"
+                            };
+                        }
+                    }
+                }
+            }
+
+        }
+
+        // JS callback
+        if (window.parent.DCrmEgGridBeforeCreateNewRecord) {
+            var allow = window.parent.DCrmEgGridBeforeCreateNewRecord(recNew, self.activeOptions.ParentEntityInfo);
+            if (!allow) {
+                _thisHelpers.WaitDialog();
+                return;
+            }
+        }
+
+        var newRecGuid = XrmServiceToolkit.Soap.Create(recNew);
+        $cloneRow.attr(_thisGlobals.DataAttr.Cell.RecordGuid, newRecGuid)
+            .attr(_thisGlobals.DataAttr.Row.SubGrid.ChildGridOpen, _thisGlobals.DataAttr.NO);
+
+        for (var i = 0; i < $theadcells.length; i++) {
+            if (i > 0) {
+                $(cells[i]).attr(_thisGlobals.DataAttr.Cell.RecordGuid, newRecGuid);
+            }
+        }
+
+        self.mainTable.find('tbody:first').append($cloneRow);
+
+        var tableRows = self.GetBodyRows();
+        for (var i = 0; i < tableRows.length; i++) {
+            $(tableRows[i]).attr(_thisGlobals.DataAttr.Row.InternalIndex, i);
+        }
+
+        self.activeOptions.TotalRecordsCount++;
+        $('#' + self.activeOptions.GridContainerIds.TotalRecords).text(_thisGlobals.Translation_Labels.TotalRecords + ' ' + self.activeOptions.TotalRecordsCount);
+
+        if (self.activeOptions.TotalRecordsCount > self.activeOptions.PagerSize) {
+            $('#' + self.activeOptions.GridContainerIds.Pager).show();
+        }
+
+        // JS callback
+        if (window.parent.DCrmEgGridCreateNewRecord) {
+            var callbackData = { NewRecordGuid: newRecGuid };
+            window.parent.DCrmEgGridCreateNewRecord(callbackData, self.activeOptions.ParentEntityInfo);
+        }
+        if (lastcloneRefresh) {
+            if (self.activeOptions.RefreshAfterCreate) {
+                self.RefreshGridRows();
+            } else {
+                self.ResetRowHighlighting();
+            }
+        }
+    } catch (e) {
+        msg = e.message;
+    }
+
+    if (msg) {
+        DisplayCrmAlertDialog("Unable to clone record due to exception:\r" + msg);
+    }
+}
+
 function CreateInlineRecord(self) {
     var msg = undefined;
 
@@ -6447,12 +6673,12 @@ function CreateInlineRecord(self) {
                     if (defaultVal) {
                         val = parseFloat(defaultVal);
                         recNew.attributes[schema] = { value: val, type: "decimal" };
-                        formattedVal = _thisHelpers.AddDecimalFormat(val, self.activeOptions.columneditors[i - 1].Precision);
+                        formattedVal = _thisHelpers.AddDecimalFormat(val, self.GridEditors[i].Precision);
                         _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
                         val = 1.0;
                         recNew.attributes[schema] = { value: val, type: "decimal" };
-                        formattedVal = _thisHelpers.AddDecimalFormat(val, self.activeOptions.columneditors[i - 1].Precision);
+                        formattedVal = _thisHelpers.AddDecimalFormat(val, self.GridEditors[i].Precision);
                         _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
                     callbackField.Value = val;
@@ -6463,14 +6689,14 @@ function CreateInlineRecord(self) {
                         val = parseFloat(defaultVal);
                         recNew.attributes[schema] = { value: val, type: "Money" };
                         formattedVal = _thisHelpers.AddCurrencyFormat(val,
-                            self.activeOptions.columneditors[i - 1].Precision,
+                            self.GridEditors[i].Precision,
                             self.activeOptions.EntityCurrencySymbol);
                         _thisHelpers.SetActiveCellText($cell, formattedVal);
                     } else if (requier) {
                         val = 1.0;
                         recNew.attributes[schema] = { value: val, type: "Money" };
                         formattedVal = _thisHelpers.AddCurrencyFormat(val,
-                            self.activeOptions.columneditors[i - 1].Precision,
+                            self.GridEditors[i].Precision,
                             self.activeOptions.EntityCurrencySymbol);
                         _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
@@ -6523,7 +6749,8 @@ function CreateInlineRecord(self) {
                             value: val,
                             type: "boolean"
                         };
-                        formattedVal = self.activeOptions.columneditors[i - 1].CheckText;
+
+                        formattedVal = self.GridEditors[i].CheckedLabel;
                         _thisHelpers.SetActiveCellText($cell, formattedVal);
                     }
                     callbackField.Value = val;
@@ -6541,9 +6768,9 @@ function CreateInlineRecord(self) {
                             .attr(_thisGlobals.DataAttr.Cell.OriginalAttrValue, val);
                     } else if (requier) {
 
-                        val = parseInt(self.activeOptions.columneditors[i - 1].OptionSetData[0].value);
+                        val = parseInt(self.GridEditors[i].optionsData[0].value);
                         recNew.attributes[schema] = { value: val, type: "OptionSetValue" };
-                        formattedVal = self.activeOptions.columneditors[i - 1].OptionSetData[0].text;
+                        formattedVal = self.GridEditors[i].optionsData[0].text;
                         _thisHelpers.SetActiveCellText($cell, formattedVal);
 
                         $cell.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue, val)
@@ -6572,9 +6799,9 @@ function CreateInlineRecord(self) {
             if ((ed == DCrmEditableGrid.Editors.Lookup) || (ed == DCrmEditableGrid.Editors.CustomerType)) {
                 if (self.activeOptions.ParentChildLookupInfo.LookupSchemaName == schema) {
 
-                    tmpLookupStruc.Index = i;
-                    tmpLookupStruc.Schema = schema;
-                    tmpLookupStruc.UiType = recNew.attributes[schema].logicalName;
+                    //tmpLookupStruc.Index = i;
+                    //tmpLookupStruc.Schema = schema;
+                    //tmpLookupStruc.UiType = recNew.attributes[schema].logicalName;
 
                     self.activeOptions.columneditors[i - 1].LookupData.LookupId = recNew.attributes[schema].id || '';
                     self.activeOptions.columneditors[i - 1].LookupData.LookupLogicalName = recNew.attributes[schema].logicalName;
@@ -6610,9 +6837,9 @@ function CreateInlineRecord(self) {
                         type: "EntityReference"
                     };
 
-                    tmpLookupStruc.Index = i;
-                    tmpLookupStruc.Schema = schema;
-                    tmpLookupStruc.UiType = recNew.attributes[schema].logicalName;
+                    //tmpLookupStruc.Index = i;
+                    //tmpLookupStruc.Schema = schema;
+                    //tmpLookupStruc.UiType = recNew.attributes[schema].logicalName;
 
                     self.activeOptions.columneditors[i - 1].LookupData.LookupId = recNew.attributes[schema].id || '';
                     self.activeOptions.columneditors[i - 1].LookupData.LookupLogicalName = recNew.attributes[schema].logicalName;
@@ -7165,14 +7392,9 @@ function GetTranslationsForCallback(translation) {
     }
 }
 
-function CreateGridContainers(entityname, entityLabel,
-    userPrivilages, parentcontainer,
-    allowautosave, allowcreate, allowdelete, Schema,
-    hideautosavebutton) {
+function CreateGridContainers(data, parentcontainer) {
 
-    var $parentContainer = parentcontainer;
     var containerIds = {};
-
     containerIds.ParentGridDivContainer = parentcontainer.attr('id');
 
     // Section
@@ -7180,7 +7402,7 @@ function CreateGridContainers(entityname, entityLabel,
     var $section = $('<div></div>')
         .addClass("section group")
         .attr('id', containerIds.TableCaptionContainer)
-        .appendTo($parentContainer);
+        .appendTo(parentcontainer);
 
     var $captioncontainer = $('<div class="col"></div').appendTo($section);
     var $toolbarbuttonscontainer = $('<div class="col"></div').appendTo($section);
@@ -7188,7 +7410,7 @@ function CreateGridContainers(entityname, entityLabel,
 
     containerIds.TableCaption = _thisHelpers.GenerateUUID();
     $('<span></span>')
-        .text(entityLabel + ' -')
+        .text(data.GridTitle + ' -')
         .attr('id', containerIds.TableCaption)
         .addClass('TableCaption')
         .appendTo($captioncontainer);
@@ -7209,11 +7431,11 @@ function CreateGridContainers(entityname, entityLabel,
     containerIds.AddNewRec = _thisHelpers.GenerateUUID();
     $tmpBtn = $('<button></button>')
         .attr('id', containerIds.AddNewRec)
-        .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.NewRecord + ' ' + entityname)
+        .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.NewRecord + ' ' + data.Entity.Label)
         .addClass('ToolarButton ToolbarAdd')
         .appendTo($gridToolbar);
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanCreate) || (!allowcreate)) {
+    if ((_thisGlobals.FormIsReadOnly) || (!data.AllowCreateNew)) {
         $tmpBtn.hide();
     }
 
@@ -7224,7 +7446,7 @@ function CreateGridContainers(entityname, entityLabel,
         .addClass('ToolarButton ToolbarDel')
         .appendTo($gridToolbar);
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanDelete) || (!allowdelete)) {
+    if ((_thisGlobals.FormIsReadOnly) || (!data.AllowDelete)) {
         $tmpBtn.hide();
     }
 
@@ -7235,7 +7457,7 @@ function CreateGridContainers(entityname, entityLabel,
         .addClass('ToolarButton ToolbarSave')
         .appendTo($gridToolbar);
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanUpdate)) {
+    if ((_thisGlobals.FormIsReadOnly) || (data.AutoSaveChanges)) {
         $tmpBtn.hide();
     }
 
@@ -7246,7 +7468,7 @@ function CreateGridContainers(entityname, entityLabel,
         .addClass('ToolarButton ToolbarUndo')
         .appendTo($gridToolbar);
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanUpdate)) {
+    if ((_thisGlobals.FormIsReadOnly) || (data.AutoSaveChanges)) {
         $tmpBtn.hide();
     }
 
@@ -7257,24 +7479,32 @@ function CreateGridContainers(entityname, entityLabel,
         .addClass('ToolarButton ToolbarUndoAll')
         .appendTo($gridToolbar);
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanUpdate)) {
+    if ((_thisGlobals.FormIsReadOnly) || (data.AutoSaveChanges)) {
         $tmpBtn.hide();
     }
 
     containerIds.ExportToExcel = _thisHelpers.GenerateUUID();
-    $('<button></button>')
+    $tmpBtn = $('<button></button>')
         .attr('id', containerIds.ExportToExcel)
         .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.Export)
         .addClass('ToolarButton ToolbarToExcel')
         .appendTo($gridToolbar);
 
+    if (!data.DisplayExportButton) {
+        $tmpBtn.hide();
+    }
+
     // Clear filters
     containerIds.ClearAllFilters = _thisHelpers.GenerateUUID();
-    $('<button></button>')
+    $tmpBtn = $('<button></button>')
         .attr('id', containerIds.ClearAllFilters)
         .attr(_thisGlobals.ToolTipAttrName, 'Clear all filters')
         .addClass('ToolarButton ToolbarClearAllFilters')
         .appendTo($gridToolbar);
+
+    if (!data.DisplayClearFilterButton) {
+        $tmpBtn.hide();
+    }
 
     // Refresh 
     containerIds.RefreshGrid = _thisHelpers.GenerateUUID();
@@ -7284,11 +7514,23 @@ function CreateGridContainers(entityname, entityLabel,
         .addClass('ToolarButton ToolbarRefresh')
         .appendTo($gridToolbar);
 
+    // Clone record
+    containerIds.CloneRecord = _thisHelpers.GenerateUUID();
+    $tmpBtn = $('<button></button>')
+        .attr('id', containerIds.CloneRecord)
+        .attr(_thisGlobals.ToolTipAttrName, 'Clone selected record')
+        .addClass('ToolarButton ToolbarCloneRecord')
+        .appendTo($gridToolbar);
+
+    if (!data.DisplayCloneRecordButton) {
+        $tmpBtn.hide();
+    }
+
     // Auto Save
     var $onoffdiv = $('<div class="switch"></div>').appendTo($gridToolbar);
 
     containerIds.AutoSave = _thisHelpers.GenerateUUID();
-    if (allowautosave) {
+    if (data.AutoSaveChanges) {
         $tmpBtn = $('<input type="checkbox" checked="checked" />')
             .attr('id', containerIds.AutoSave)
             .addClass('cmn-toggle cmn-toggle-yes-no')
@@ -7300,7 +7542,7 @@ function CreateGridContainers(entityname, entityLabel,
             .appendTo($onoffdiv);
     }
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanUpdate) || (hideautosavebutton)) {
+    if ((_thisGlobals.FormIsReadOnly) || (data.HideAutosaveButton)) {
         $tmpBtn.hide();
     }
     $tmpBtn = $('<label></label>')
@@ -7309,10 +7551,9 @@ function CreateGridContainers(entityname, entityLabel,
         .attr('data-off', _thisGlobals.Translation_Labels.AutoSaveOff)
         .appendTo($onoffdiv);
 
-    if ((_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanUpdate) || (hideautosavebutton)) {
+    if ((_thisGlobals.FormIsReadOnly) || (data.HideAutosaveButton)) {
         $tmpBtn.hide();
     }
-
 
     // Searchbox
     containerIds.SearchGridBox = _thisHelpers.GenerateUUID();
@@ -7346,13 +7587,13 @@ function CreateGridContainers(entityname, entityLabel,
     $('<button></button>').attr('id', containerIds.PagerButtonNext).attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.GoToNext).addClass('PagerButton ToolbarGoToNext')
         .appendTo($pager);
 
-    // Table, initially hidden
+    // Table
     containerIds.Table = _thisHelpers.GenerateUUID();
     var $Grid = $('<table class="pure-table tablesorter"><thead><tr></tr></thead><tbody></tbody><tfoot><tr></tr></tfoot></table>')
         .attr('id', containerIds.Table)
-        .attr('data-item-schema', Schema)
-        .attr('data-item-entityname', entityname)
-        .appendTo($parentContainer);
+        .attr('data-item-schema', data.Entity.SchemaName)
+        .attr('data-item-entityname', data.Entity.Label)
+        .appendTo(parentcontainer);
 
     return containerIds;
 }
@@ -8265,6 +8506,170 @@ function SaveGridAsPdf(who) {
 
 /* Grid Configuration class, loading, ... */
 
+var MSProductGridHelper = (function () {
+    function MSProductGridHelper(schemaname, config) {
+        var self = this;
+
+        // TODO
+        // account for self.GridConfiguration.MSProductGrid
+        // check for parent default price list   pricelevelid
+        // _thisGlobals.xrmPage.data.entity.attributes.get('pricelevelid').getValue();
+        // if has no value, display msg, asking the user to specify one else
+        // self.GridConfiguration.MSProductGridPriceList = {Name: '', Id: ''}
+        // Query for products matching this pricelist
+
+        // If a product bundle is selected then get the assoiated products
+        /*
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+<entity name="productassociation">
+<attribute name="productid" />
+<attribute name="associatedproduct" />
+<attribute name="quantity" />
+<attribute name="productisrequired" />
+<attribute name="uomid" />
+<attribute name="productassociationid" />
+<order attribute="productid" descending="false" />
+<filter type="and">
+  <condition attribute="productid" operator="eq" uiname="My Products Bundle" uitype="product" value="{796A0847-FC5A-E611-80CE-08002738AA19}" />
+</filter>
+</entity>
+</fetch>
+         */
+        // Need to ad grouping if we have a product bundle
+
+        self.PriceList = { name: null, id: null, entityType: null };
+        self.SchemaName = schemaname;
+        self.GridConfig = config;
+
+        self.CallbackErrorHandler = function (errorMsg) {
+            //DisplayCrmAlertDialog(self.DataLoadErrorMessage + errorMsg);
+            console.error("Exception " + errorMsg);
+        };
+
+        self.GetProductsForPriceListCallback = function (result) {
+            if ((result) && (result.length) && (result.length > 0)) {
+                // display a table of product bundles and products, use icons
+            } else {
+                DisplayCrmAlertDialog("No existing products found matching pricelist [" + self.PriceList.name + "]");
+            }
+        };
+
+        self.GetPriceList = function () {
+            var t = _thisGlobals.xrmPage.data.entity.attributes.get('pricelevelid').getValue();
+            if (t) {
+                self.PriceList.name = t[0].name;
+                self.PriceList.id = t[0].id;
+                console.log("Pricelist [" + t[0].id + "] name [" + t[0].name + "]");
+                return true;
+            }
+            return false;
+        };
+
+        //self.DisplayNativeProductSelectCallback = function () {
+        //    if ((result) && (result.items) && (result.items[0].id) && (result.items[0].name)) {
+        //        // go through each product and product family selected
+        //    }
+        //};
+
+        //self.DisplayNativeProductSelect = function () {
+        //    var url = "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=1024";
+        //    DisplayNativeDialog(url, self.DisplayNativeProductSelectCallback);
+        //};
+
+        self.DisplayNativePricelistSelectCallback = function (result) {
+            // Get a selected value and create a new record
+            if ((result) && (result.items) && (result.items[0].id) && (result.items[0].name)) {
+                try {
+                    var object = new Array();
+                    object[0] = self.PriceList;
+                    object[0].id = result.items[0].id;
+                    object[0].name = result.items[0].name;
+                    object[0].entityType = result.items[0].typename;
+                    _thisGlobals.xrmPage.getAttribute('pricelevelid').setValue(object);
+
+                    _thisGlobals.xrmPage.data.setFormDirty(true);
+                    console.log("Pricelist id [" + self.PriceList.id + "] name [" + self.PriceList.name + "] type [" + self.PriceList.typename + "]");
+                    // Display a menu 'Existing Products' - 'Write-in Product'
+                    // 'Write-in Product' is a Opportunity Product record and not a product
+                    // if existing is selected use GetProductsForPriceList(self.PriceList.id, self.GetProductsForPriceListCallback, self.CallbackErrorHandler);
+
+                } catch (e) {
+                    LogEx('Unable to set the price list.\r\n' + e.message, pl);
+                    return false;
+                }
+            }
+        };
+
+        self.DisplayNativePricelistSelect = function () {
+            var url = "/_controls/lookup/lookupsingle.aspx?objecttypes=1022";
+            DisplayNativeDialog(url, self.DisplayNativePricelistSelectCallback);
+        };
+
+    }
+
+    function DisplayNativeDialog(url, callback) {
+        var DialogOptions = new window.parent.Xrm.DialogOptions();
+        DialogOptions.width = 500;
+        DialogOptions.height = 700;
+        window.parent.Xrm.Internal.openDialog(
+            window.parent.Mscrm.CrmUri.create(url).toString(),
+            DialogOptions, null, null, callback);
+    }
+
+    function GetObjectTypeCode(schemaname) {
+        var otc = -1;
+        switch (schemaname) {
+            case "opportunityproduct":
+                otc = '1083';
+                break;
+            case "invoicedetail":
+                otc = '1091';
+                break;
+            case "quotedetail":
+                otc = '1085';
+                break;
+            case "salesorderdetail":
+                otc = '1089';
+                break;
+            default:
+        }
+        return otc;
+    }
+
+    function GetProductsForPriceList(id, callback, errorCallback) {
+        var fetchXml = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
+          '<entity name="product">' +
+            '<attribute name="name" />' + // Name and Product ID are identical
+            '<attribute name="productid" />' +
+            '<attribute name="productnumber" />' + // Product ID 
+            '<attribute name="description" />' +
+            '<attribute name="productstructure" />' + // Option set 1 product, 3 product bundle
+            '<attribute name="defaultuomscheduleid" />' + //default unit
+            '<attribute name="standardcost" />' +
+            '<attribute name="quantityonhand" />' +
+            '<attribute name="defaultuomid" />' + // default unit group
+            '<attribute name="currentcost" />' +
+            '<order attribute="productnumber" descending="false" />' +
+            '<filter type="and">' +
+              '<condition attribute="statecode" operator="eq" value="0" />' +
+              '<condition attribute="productstructure" operator="in">' +
+                '<value>1</value>' +
+                '<value>3</value>' +
+              '</condition>' +
+              '<condition attribute="pricelevelid" operator="eq" uitype="pricelevel" value="' + _thisHelpers.AddCurlyBrace(id) + '" />' +
+            '</filter>' +
+          '</entity>' +
+          '</fetch>';
+        XrmServiceToolkit.Soap.Fetch(fetchXml, false, callback, errorCallback);
+    }
+
+    function GetProductsFromProductBundle() {
+
+    }
+
+    return MSProductGridHelper;
+})();
+
 var DCrmEGConfigurationManager = (function () {
 
     function DCrmEGConfigurationManager(data) {
@@ -8282,7 +8687,25 @@ var DCrmEGConfigurationManager = (function () {
             RelatedToParentLILookupSchemaName: (data.RelatedToParentLILookupSchemaName) ? data.RelatedToParentLILookupSchemaName : undefined
         };
 
+        // Query the following given current page recordid
+        self.MSProductGrid = false;
+        // 1083, 1091, 1085. 1089
+        // ['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail']
+
+        //if ((['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail'].MatchExists(data.schemaName) != -1) &&
+        //    (['opportunity', 'quote', 'salesorder', 'invoice'].MatchExists(_thisGlobals.ParentFormEntityName) != -1)) {
+        //    self.MSProductGrid = true;
+        //    self.MSProductGridHelperc = new MSProductGridHelper('product', self);
+        //}
+
         self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : data.label;
+        self.DisplayClearFilterButton = ((data.DisplayClearFilterButton) && (data.DisplayClearFilterButton == 'false')) ? false : true;
+        self.DisplayHeaderFilter = ((data.DisplayHeaderFilter) && (data.DisplayHeaderFilter == 'false')) ? false : true;
+        self.DisplayExportButton = ((data.DisplayExportButton) && (data.DisplayExportButton == 'false')) ? false : true;
+        self.DisplaySetRecordState = ((data.DisplaySetRecordState) && (data.DisplaySetRecordState == 'false')) ? false : true;
+        self.DisplayCloneRecord = ((data.DisplayCloneRecord) && (data.DisplayCloneRecord == 'false')) ? false : true;
+        self.DisplayCloneRecordButton = ((data.DisplayCloneRecordButton) && (data.DisplayCloneRecordButton == 'false')) ? false : true;
+
         self.HasStatusField = (data.HasStatusField) ? data.HasStatusField : undefined;
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
         self.RecordsPerPage = (data.RecordsPerPage) ? data.RecordsPerPage : '5';
@@ -8702,6 +9125,12 @@ Related [false] RelatedEntityLookup [undefined]
             data.BooleanEditorBehavoir = ((tmp.length > 18) ? tmp[18] : undefined);
             data.HideAutosaveButton = ((tmp.length > 19) ? tmp[19] : undefined);
             data.GridTitle = ((tmp.length > 20) ? tmp[20] : undefined);
+            data.DisplayClearFilterButton = ((tmp.length > 21) ? tmp[21] : true);
+            data.DisplayHeaderFilter = ((tmp.length > 22) ? tmp[22] : true);
+            data.DisplayExportButton = ((tmp.length > 23) ? tmp[23] : true);
+            data.DisplaySetRecordState = ((tmp.length > 24) ? tmp[24] : true);
+            data.DisplayCloneRecord = ((tmp.length > 25) ? tmp[25] : true);
+            data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -8743,12 +9172,10 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         return null;
     }
 
-    var userPrivilages = { CanCreate: true, CanUpdate: true, CanDelete: true };
+    //var userPrivilages = { CanCreate: true, CanUpdate: true, CanDelete: true };
 
-    // Create grid components
-    var ContainerIds = CreateGridContainers(
-        data.Entity.Label, data.GridTitle, userPrivilages, parentcontainer,
-        data.AutoSaveChanges, data.AllowCreateNew, data.AllowDelete, data.Entity.SchemaName, data.HideAutosaveButton);
+    // Create grid toolbar caption, buttons, and paging controls
+    var ContainerIds = CreateGridContainers(data, parentcontainer);
 
     var EntitiesAreRelated = data.Entity.RelatedToDisplayOnEntity;
 
@@ -8885,7 +9312,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
 
     //console.log("Table width [" + $('#' + ContainerIds.Table).width() + "]");
 
-    if ((userPrivilages.CanDelete) && (data.AllowDelete)) {
+    if ((!_thisGlobals.FormIsReadOnly) && ((data.AllowDelete) || (data.DisplayCloneRecordButton))) {
         var $chk = $("<input type='checkbox' />")
             .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.SelectAllRecords)
             .on('click', function (e) {
@@ -9020,7 +9447,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             ed = DCrmEditableGrid.Editors.Status;
         }
 
-        if ((fieldIsReadOnly) || (_thisGlobals.FormIsReadOnly) || (!userPrivilages.CanUpdate)) {
+        if ((fieldIsReadOnly) || (_thisGlobals.FormIsReadOnly)) {
             $theader.attr(_thisGlobals.DataAttr.Header.ReadOnlyEditorType, ed);
             ed = DCrmEditableGrid.Editors.None;
             $theader.attr(_thisGlobals.DataAttr.Header.ReadOnly, _thisGlobals.DataAttr.YES);
@@ -9094,18 +9521,20 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         $theader[0].count = $theader[0].order;
         $theader.addClass(_thisGlobals.DefaultGridOptions.cssHeader);
 
-        var filterclass = 'recfilter';
-        if (filterIndexes.ExactMatchExists(headerIndex)) {
-            filterclass += ' recfilterset';
-        } else {
-            filterclass += ' recfilternotset';
-        }
+        if (data.DisplayHeaderFilter) {
+            var filterclass = 'recfilter';
+            if (filterIndexes.ExactMatchExists(headerIndex)) {
+                filterclass += ' recfilterset';
+            } else {
+                filterclass += ' recfilternotset';
+            }
 
-        var $recFilter = $('<span></span>')
-            .attr(_thisGlobals.ToolTipAttrName, "Filter")
-            .attr('id', _thisHelpers.GenerateUUID())
-            .addClass(filterclass)
-            .appendTo($theader);
+            var $recFilter = $('<span></span>')
+                .attr(_thisGlobals.ToolTipAttrName, "Filter")
+                .attr('id', _thisHelpers.GenerateUUID())
+                .addClass(filterclass)
+                .appendTo($theader);
+        }
 
         var PrecisionData = undefined;
         if ((attrtype == _thisGlobals.CrmFieldTypes.DecimalType) ||
@@ -9766,6 +10195,9 @@ var GridLoaderHelper = (function () {
                     UserCanDelete: self.data.AllowDelete,
                     UserCanUpdate: !_thisGlobals.FormIsReadOnly,
 
+                    DisplayCloneRecordButton: self.data.DisplayCloneRecordButton,
+                    DisplayCloneRecord: self.data.DisplayCloneRecord,
+                    DisplaySetRecordState: self.data.DisplaySetRecordState,
                     DisplayFieldsSum: self.data.DisplaySum,
                     HaveNumericFields: self.NumericFields,
                     AutoSaveChanges: self.data.AutoSaveChanges,
@@ -9810,7 +10242,7 @@ var GridLoaderHelper = (function () {
             }
             fetchXml += "</entity>" +
                 "</fetch>";
-            //console.log(fetchXml);
+            console.log(fetchXml);
             XrmServiceToolkit.Soap.Fetch(fetchXml, false, self.RecordCountCallback, self.CallbackErrorHandler);
         };
 

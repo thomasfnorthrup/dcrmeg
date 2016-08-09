@@ -425,6 +425,12 @@ input[type="checkbox"]:focus{
             background-position:  center; 
         }
 
+        .ToolbarCloneRecord { 
+            background-image: url(dcrmeg_clone);  
+            background-repeat: no-repeat; 
+            background-position:  center; 
+        }
+
 /*
 Pager Buttons
     */

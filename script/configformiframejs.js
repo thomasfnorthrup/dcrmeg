@@ -425,12 +425,23 @@ Array.prototype.ExactMatchExists = function (str) {
                     });
 
                     return $thecontainer;
+                },
+                "GetUserLocalizedLabel": function (lbl, defaultVal) {
+                    if (lbl.UserLocalizedLabel) {
+                        return lbl.UserLocalizedLabel.Label;
+                    } else {
+                        if (lbl.LocalizedLabels.length > 0) {
+                            return lbl.LocalizedLabels[0].Label;
+                        } else {
+                            return (defaultVal) ? defaultVal : '';
+                        }
+                    }
                 }
             }
         }
     });
 })(jQuery);
-
+// DCrmEditableGrid.Helper.GetUserLocalizedLabel
 var _thisGlobals = DCrmEditableGrid.Globals;
 _thisGlobals.xrmPage = window.parent.Xrm.Page;
 _thisGlobals.LoggedInUserID = _thisGlobals.xrmPage.context.getUserId();
@@ -733,18 +744,16 @@ function RetreiveEntityListCallback(result) {
         return;
     }
 
-    // LogicalName
-    // IsCustomEntity
-    // DisplayName.LocalizedLabels[0].Label
-    // DisplayName.LocalizedLabels[0].LanguageCode
     var index = 0;
     var ent = null;
     var options = []; //'<option value="0">--Select Entity--</option>';
+    var lbl = '';
 
     for (index = 0, j = result.length; index < j; index++) {
         ent = result[index];
-        if (ent.DisplayName.LocalizedLabels.length > 0) {
-            options.push({ SchemaName: ent.SchemaName, Name: ((ent.DisplayName.LocalizedLabels.length == 0) ? ent.LogicalName : ent.DisplayName.LocalizedLabels[0].Label) });
+        lbl = DCrmEditableGrid.Helper.GetUserLocalizedLabel(ent.DisplayName, ent.LogicalName);
+        if (lbl.length > 0) {
+            options.push({ SchemaName: ent.SchemaName, Name: lbl });
         }
     }
 
@@ -836,7 +845,7 @@ function RetreiveEntityMetadateCallback(result) {
                 //    "] MaxValue [" + ent.MaxValue + "] MinValue [" + ent.MinValue + "] Presicion [" + ent.Precision + "]");
                 _thisGlobals.AllFieldsMetadata.push({
                     SchemaName: schName,
-                    Name: ((ent.DisplayName.LocalizedLabels.length == 0) ? ent.LogicalName : ent.DisplayName.LocalizedLabels[0].Label),
+                    Name: DCrmEditableGrid.Helper.GetUserLocalizedLabel(ent.DisplayName, ent.LogicalName),
                     AttrType: attrType,
                     ReadOnly: false,
                     RequieredLevel: (((ent.RequiredLevel) && (ent.RequiredLevel.Value)) ? ent.RequiredLevel.Value : undefined) || 'None',
@@ -1052,7 +1061,7 @@ function SetupSelectedFieldRow(tbody, item) {
     $numInput = new NumericTextbox(id, _thisGlobals.Translation_Labels.widthAutoCalculate, _thisGlobals.ToolTipClassSelector, item.RealWidth, 20, $td, SaveFields, true);
 
 
-    // Setup create default values
+    // Setup create default values 
     var dValue = item.DefaultValue;
 
     $td = $('<td></td>').appendTo(row);
@@ -1076,12 +1085,12 @@ function SetupSelectedFieldRow(tbody, item) {
         if (optionset.length > 0) {
             data.push(
             {
-                Label: optionset[0].OptionSet.TrueOption.Label.LocalizedLabels[0].Label,
+                Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.TrueOption.Label),
                 value: optionset[0].OptionSet.TrueOption.Value
             });
             data.push(
             {
-                Label: optionset[0].OptionSet.FalseOption.Label.LocalizedLabels[0].Label,
+                Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.FalseOption.Label),
                 value: optionset[0].OptionSet.FalseOption.Value
             });
         }
@@ -1193,7 +1202,7 @@ function SetupSelectedFieldRow(tbody, item) {
             for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
                 data.push(
                 {
-                    Label: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
+                    Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
                     value: optionset[0].OptionSet.Options[i].Value
                 });
             }
@@ -2369,6 +2378,7 @@ function InitializeSetupRoutines() {
     $("#displaysetrecordstatelabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displaysetrecordstatelabel").text());
     $("#displayclonerecordlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayclonerecordlabel").text());
     $("#displayclonerecordbuttonlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#displayclonerecordbuttonlabel").text());
+    $("#openrecordbehavoirlabel").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#openrecordbehavoirlabel").text());
 
     if ((window.parent.OnFormSaveFunctionCallback != 'undefined') && (window.parent.OnFormSaveFunctionCallback != undefined) &&
         (typeof window.parent.OnFormSaveFunctionCallback === 'function')) {
@@ -2442,6 +2452,12 @@ function InitializeSetupRoutines() {
     });
     $('#displayclonerecordbutton').on('click', function (e) {
         _thisGlobals._CurConfiguration.DisplayCloneRecordButton = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+    $('#openrecordbehavoir').on('change', function (e) {
+        var val = $(this).val();
+        _thisGlobals._CurConfiguration.OpenRecordBehavoir = val;
 
         SetParentFormDirty();
     });
@@ -2526,19 +2542,19 @@ function InitializeSetupRoutines() {
             if (_thisGlobals.CurFieldCondition.CrmFieldType == _thisGlobals.CrmFieldTypes.BooleanType) {
                 data.push(
                 {
-                    Label: optionset[0].OptionSet.TrueOption.Label.LocalizedLabels[0].Label,
+                    Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.TrueOption.Label),
                     value: optionset[0].OptionSet.TrueOption.Value
                 });
                 data.push(
                 {
-                    Label: optionset[0].OptionSet.FalseOption.Label.LocalizedLabels[0].Label,
+                    Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.FalseOption.Label),
                     value: optionset[0].OptionSet.FalseOption.Value
                 });
             } else {
                 for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
                     data.push(
                     {
-                        Label: optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label,
+                        Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
                         value: optionset[0].OptionSet.Options[i].Value
                     });
                 }
@@ -2875,6 +2891,7 @@ function InitializeSetupRoutines() {
         $('#displaysetrecordstate').attr('disabled', 'disabled');
         $('#displayclonerecord').attr('disabled', 'disabled');
         $('#displayclonerecordbutton').attr('disabled', 'disabled');
+        $('#openrecordbehavoir').prop('disabled', 'disabled');
         
         $('#deleteallfieldconditionsbtn').attr('disabled', 'disabled');
 
@@ -3264,6 +3281,7 @@ var DCrmEGConfigurationManager = (function () {
         self.DisplaySetRecordState = ((data.DisplaySetRecordState) && (data.DisplaySetRecordState == 'false')) ? false : true;
         self.DisplayCloneRecord = ((data.DisplayCloneRecord) && (data.DisplayCloneRecord == 'false')) ? false : true;
         self.DisplayCloneRecordButton = ((data.DisplayCloneRecordButton) && (data.DisplayCloneRecordButton == 'false')) ? false : true;
+        self.OpenRecordBehavoir = ((data.OpenRecordBehavoir) && (data.OpenRecordBehavoir != 'undefined')) ? data.OpenRecordBehavoir : "10";
         
         self.HasStatusField = (data.HasStatusField) ? data.HasStatusField : undefined;
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
@@ -3452,7 +3470,7 @@ function DisplaySelectedEntityInfo(li, schema) {
     $('#maxrecordperpage').val(_thisGlobals._CurConfiguration.RecordsPerPage);
     $('#createnewbtnclick').val(_thisGlobals._CurConfiguration.NewBtnBehavoir);
     $('#booleaneditorbehaviour').val(_thisGlobals._CurConfiguration.BooleanEditorBehavoir);
-
+    $('#openrecordbehavoir').val(_thisGlobals._CurConfiguration.OpenRecordBehavoir);
     RetreiveEntityMetadata(schema);
 }
 
@@ -3557,6 +3575,7 @@ function LoadDCrmEGConfiguration() {
             data.DisplaySetRecordState = ((tmp.length > 24) ? tmp[24] : true);
             data.DisplayCloneRecord = ((tmp.length > 25) ? tmp[25] : true);
             data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
+            data.OpenRecordBehavoir = ((tmp.length > 27) ? tmp[27] : undefined);
             
         }
 
@@ -3721,7 +3740,8 @@ function SaveDCrmEGConfiguration() {
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayExportButton
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplaySetRecordState
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecord
-        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecordButton;
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecordButton
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].OpenRecordBehavoir;
         
         if (_thisGlobals.DCrmEGConfiguration[i].Fields) {
             if (i > 0) {
@@ -3790,7 +3810,8 @@ function SaveDCrmEGConfigurationInternal(config) {
     + _thisGlobals._SEPERATOR + config.DisplayExportButton
     + _thisGlobals._SEPERATOR + config.DisplaySetRecordState
     + _thisGlobals._SEPERATOR + config.DisplayCloneRecord
-    + _thisGlobals._SEPERATOR + config.DisplayCloneRecordButton;
+    + _thisGlobals._SEPERATOR + config.DisplayCloneRecordButton
+    + _thisGlobals._SEPERATOR + config.OpenRecordBehavoir;
     
     if (config.Fields) {
         _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.SchemaName;

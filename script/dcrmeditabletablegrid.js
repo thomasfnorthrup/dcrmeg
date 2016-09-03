@@ -1,4 +1,4 @@
-// version 4.7
+// version 4.9
 String.prototype.capitalizeFirstLetter = function () {
         return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
     };
@@ -834,15 +834,14 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
     var setActiveText = function () {
         active = table.activeCell;
         if ((active === undefined) || (active.length === 0)) {
-            //LogEx('TextBox: Unable to find active cell.');
             return true;
         }
 
         var text = $editor.val();
-        
-
         var activetext = _thisHelpers.GetActiveCellText(active);
         var originalVal = activetext;
+        var ValidationResult = true;
+        var textUpdated = true;
 
         if ((required) && ((text === undefined) || (text === null) || (text.trim().length == 0))) {
             var etop = active.offset().top - ($errorcontainer.height() + 8);
@@ -907,9 +906,6 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
                 }
             }
 
-
-            var ValidationResult = true;
-            var textUpdated = true;
             if (validator != undefined) {
 
                 var orgNoFormat = _thisHelpers.GetActiveCellText(active);
@@ -973,13 +969,32 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
                     //}
 
                 }
-                // active.text(text);
                 _thisHelpers.SetActiveCellText(active, text);
             }
         } else {
-            // active.text(text);
-            _thisHelpers.SetActiveCellText(active, text);
-            textUpdated = true;
+
+            if (validator != undefined) {
+                var orgNoFormat = _thisHelpers.GetActiveCellText(active);
+                if ($editor.EditorType != DCrmEditableGrid.Editors.Text) {
+                    orgNoFormat = _thisHelpers.RemoveNumericFormat(orgNoFormat);
+                    orgNoFormat = parseFloat(orgNoFormat.replace(_thisGlobals.userCurrencySettings.DecimalSymbol, '.'));
+                }
+
+                var guid = active.attr(_thisGlobals.DataAttr.Cell.RecordGuid);
+                var param = { RecordGuid: guid, EditorType: $editor.EditorType, OriginalValue: orgNoFormat, NewValue: "" };
+
+                ValidationResult = validator(param, CrmFieldInfo);
+
+                if (ValidationResult === true) {
+                    _thisHelpers.SetActiveCellText(active, text);
+                    textUpdated = true;
+                } else {
+                    textUpdated = false;
+                }
+            } else {
+                _thisHelpers.SetActiveCellText(active, text);
+                textUpdated = true;
+            }
         }
 
         if (textUpdated) {
@@ -1050,6 +1065,7 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
                 if ((curPos != 0) || (dot.contains('-'))) {
                     prevente = true;
                 }
+            } else if (tkey >= DCrmEditableGrid.Keys.KEY0 && tkey <= DCrmEditableGrid.Keys.KEY9) {
 
             } else if (e.shiftKey || (tkey < DCrmEditableGrid.Keys.KEY0 || tkey > DCrmEditableGrid.Keys.KEY9)) {
                 if ((tkey != DCrmEditableGrid.Keys.BACKSPACE) && (tkey != DCrmEditableGrid.Keys.DEL)) {
@@ -2909,7 +2925,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
     'use strict';
     parentdiv = parentdiv || $('#fieldfilter_lookupinput');
 
-    var $editor = $('<div style="display:inline-block;height:24px;border:none;"></div>').appendTo(parentdiv);
+    var $editor = $('<div style="display:inline-block;border:none;"></div>').appendTo(parentdiv);
     $editor.HasLookupInitialized = false;
 
     $editor.LookupCtrData = {};
@@ -2933,30 +2949,18 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             $menu.css({ 'left': parentdiv.offset().left, 'top': top }).show();
         })
         .appendTo($editor);
-    /*
-    var EntityFieldsContainer_ID = _thisHelpers.GenerateUUID();
-    var $EntityFieldsContainer = $('<div style="height:24px;border:0;margin:5px 0 0 0;padding:0;"></div>').attr('id', EntityFieldsContainer_ID).appendTo($editor);
 
-    var FieldsSelect_ID = _thisHelpers.GenerateUUID();
-    var $FieldsSelect = $('<select></select>')
-        .attr('id', FieldsSelect_ID)
-        .on('change', function (e) {
-            e.stopPropagation();
-            var selected = $(this).find(":selected");
-            var val = selected.val();
-            if (val == '-1') {
-                return false;
-            }
+    //var EntityFieldsContainer_ID = _thisHelpers.GenerateUUID();
+    //var $EntityFieldsContainer = $('<div style="border:0;margin:5px 0 0 0;padding:0 0 5px 0;font-weight:bold;">Click to filter using link entity fields</div>')
+    //    .attr('id', EntityFieldsContainer_ID).appendTo($editor)
+    //    .on('click', function (e) {
+    //        e.stopPropagation();
+    //        $FieldsSelect.toggle();
+    //    });
+    //var FieldsSelect_ID = _thisHelpers.GenerateUUID();
+    //var $FieldsSelect = $('<table class="fixed_headers"><thead><tr><th></th><th>Name</th><th>Schema</th><th>Type</th></tr></thead><tbody></tbody></table>')
+    //    .appendTo($EntityFieldsContainer).hide();
 
-            console.log("Value [" + val
-                + "] text [" + selected.text()
-                + "] type [" + selected.attr('data-etype')
-                + "] targets [" + selected.attr('data-entitytargets') + "]");
-
-            return false;
-        })
-        .appendTo($EntityFieldsContainer);
-*/
     var $menu = $('<ul class="lookupDropDown"><div class="gutterLine"></div></ul>')
         .hide()
         .css({ 'left': 25, 'top': 0 })
@@ -2980,7 +2984,8 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
 
                     var AllFieldsMetadata = [];
                     var fieldexclusion = ['createdonbehalfby', 'exchangerate', 'importsequencenumber', 'modifiedonbehalfby', 'overriddencreatedon', 'owningbusinessunit', 'owningteam', 'owninguser', 'timezoneruleversionnumber', 'utcconversiontimezonecode', 'versionnumber'];
-                    var attrTypeExclusion = ["lookup", "boolean", "picklist", "datetime", "string", "memo", "integer", "double", "decimal", "money", "customer", "owner", "state", "status"];
+                    // 
+                    var attrTypeExclusion = ["lookup", "customer", "owner", "state", "status", "boolean", "picklist", "datetime", "string", "memo", "integer", "double", "decimal", "money"];
 
                     var schName = '';
                     var attrType = '';
@@ -3017,18 +3022,81 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
                             return 0;
                         });
 
-                        $FieldsSelect.empty();
-                        $('<option value="-1">Select from ' + $editor.LookupCtrData.TargetEntities[0].Target.capitalizeFirstLetter() + ' fields</option>').appendTo($FieldsSelect);
-
+                        var fbody = $FieldsSelect.find('tbody');
+                        fbody.empty();
+                        //btnclass += ' checklistbuttoncondition';
                         for (var i = 0; i < AllFieldsMetadata.length; i++) {
-                            lbl = (AllFieldsMetadata[i].LookupTargetEntity) ? ' data-entitytargets="' + AllFieldsMetadata[i].LookupTargetEntity + '"' : '';
-                            $('<option value="'
-                                + AllFieldsMetadata[i].SchemaName
-                                + '" data-etype="'
-                                + AllFieldsMetadata[i].AttrType + '"' + lbl + '>' + AllFieldsMetadata[i].Name + '</option>').appendTo($FieldsSelect);
-                        }
+                            var trbody = $('<tr></tr>');
+                            var $ftd = $('<td></td>');
+                            var fdata = "{'Name':'" + AllFieldsMetadata[i].Name +
+                                "','Schema':'" + AllFieldsMetadata[i].SchemaName +
+                                "','AttrType':'" + AllFieldsMetadata[i].AttrType + "'}";
 
-                        $EntityFieldsContainer.show();
+                            var $fbtn = $('<button data-fieldinfo="' + fdata + '" class="fieldoptionsettingbutton"></button>')
+                                .attr(_thisGlobals.ToolTipAttrName, 'Filter')
+                                .on('click', function (e) {
+                                    e.stopPropagation();
+                                    var _thisbtn = $(this);
+
+                                    var d = _thisbtn.attr('data-fieldinfo');
+                                    var o = JSON.parse(d.replace(/'/g, '"'));
+                                    o.TargetEntities = $(this).attr('data-lookuptarget-entities');
+                                    console.log("object", o);
+
+                                    var cont = GetFilterContainer(o.AttrType);
+                                    // clone div
+                                    var cloneddiv = $(cont.div).clone();
+                                    var clonedivid = _thisHelpers.GenerateUUID()
+                                    cloneddiv.attr('id', clonedivid).removeClass('hidefilters').addClass('linkedentityfilters');
+                                    var select = cloneddiv.find('select:first')
+                                    select.attr('id', _thisHelpers.GenerateUUID());
+                                    var lbl = cloneddiv.find('label:first');
+                                    lbl.attr('id', _thisHelpers.GenerateUUID()).attr('for', select.attr('id'));
+
+                                    var filterinput = $(cont.input).clone().attr('id', _thisHelpers.GenerateUUID())
+                                        .appendTo(cloneddiv).removeClass('hidefilters');
+
+                                    // For dates, need to add a datepicker
+                                    // for optionsets and booleans, need to add a select2 style
+                                    // wire events to store the information as usual
+                                    // read this info in the fieldfilter_btnok event
+
+                                    // Buttons
+                                    var btncontainer = $('<div class="linkedentityfiltersbtncontainer"></div>').appendTo(cloneddiv);
+                                    $('<button>OK</button>').appendTo(btncontainer).on('click', function (e) {
+                                        e.stopPropagation();
+                                        $(this).parent().parent().remove();
+                                    });
+                                    $('<button>Cancel</button>').appendTo(btncontainer).on('click', function (e) {
+                                        e.stopPropagation();
+                                        $(this).parent().parent().remove();
+                                    });
+                                    $('<button>Del</button>').appendTo(btncontainer).on('click', function (e) {
+                                        e.stopPropagation();
+                                        $(this).parent().parent().remove();
+                                    });
+
+                                    $('#fieldfilter_btncancel').attr('data-linkentity-filterid', clonedivid);
+                                    $('#fieldfilter_btnok').attr('data-linkentity-filterid', clonedivid);
+
+                                    cloneddiv
+                                        .appendTo('body')
+                                        .css({ 'z-index': 10009, 'left': _thisbtn.offset().left, 'top': _thisbtn.offset().top })
+                                        .width(200).height(80)
+                                        .show();
+                                })
+                                .appendTo($ftd);
+                            if (AllFieldsMetadata[i].LookupTargetEntity) {
+                                $fbtn.attr('data-lookuptarget-entities', AllFieldsMetadata[i].LookupTargetEntity);
+                            }
+                            $ftd.appendTo(trbody);
+                            $('<td>' + AllFieldsMetadata[i].Name + '</td>').attr(_thisGlobals.ToolTipAttrName, AllFieldsMetadata[i].Name).appendTo(trbody);
+                            $('<td>' + AllFieldsMetadata[i].SchemaName + '</td>').attr(_thisGlobals.ToolTipAttrName, AllFieldsMetadata[i].SchemaName).appendTo(trbody);
+                            $('<td>' + AllFieldsMetadata[i].AttrType + '</td>').attr(_thisGlobals.ToolTipAttrName, AllFieldsMetadata[i].AttrType).appendTo(trbody);
+
+                            trbody.appendTo(fbody);
+                       }
+                       $EntityFieldsContainer.show();
                     }
 
                 } catch (e) {
@@ -3036,7 +3104,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
                 }
             }
         } else {
-            $FieldsSelect.empty();
+            $FieldsSelect.find('tbody').empty();
             $EntityFieldsContainer.hide();
         }
 */
@@ -3136,7 +3204,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
             return [];
         }
 
-        if (DoesAttributeExists($editor.LookupCtrData.EntityTargets[i], $editor.LookupCtrData.PrimaryIdAttributes[i])) {
+        //if (DoesAttributeExists($editor.LookupCtrData.EntityTargets[i], $editor.LookupCtrData.PrimaryIdAttributes[i])) {
             var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false" page="1" count="' + dropdownMenuSize + '">' +
               '<entity name="' + $editor.LookupCtrData.EntityTargets[i] + '">' +
                 '<attribute name="' + $editor.LookupCtrData.PrimaryIdAttributes[i] + '" />' +
@@ -3148,7 +3216,7 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
               '</entity>' +
             '</fetch>';
             return XrmServiceToolkit.Soap.Fetch(fetch);
-        }
+        //}
 
         return '';
     };
@@ -3694,16 +3762,35 @@ var CrmEditableGrid = (function () {
                           return false;
                       }).show();
 
-                    var haveanymenu = false;
-
                     var menu = $('<ul class="contextMenuPlugin"><div class="gutterLine"></div></ul>').appendTo('body');
                     var contextMenuTargetText = _thisHelpers.GetActiveCellText(self.contextMenuTarget).trim();
+                    var $theadcells = self.mainTable.find('thead:first').find('tr:first').find('th');
+                    var index = self.contextMenuTarget[0].cellIndex;
+                    var isrequiered = $($theadcells[index]).attr(_thisGlobals.DataAttr.Header.Required);
+                    var haveanymenu = false;
 
                     if (self.contextMenuTarget.hasClass('tfooterdummy')) {
                         contextMenuTargetText = _thisHelpers.GetFooterCellText(self.contextMenuTarget).trim();
                     } else {
                         contextMenuTargetText = _thisHelpers.GetActiveCellText(self.contextMenuTarget).trim();
                     }
+
+                    //var ctxCallback = {
+                    //    DisplayContextMenu: true,
+                    //    RecordGuid: self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.RecordGuid),
+                    //    RecordSchemaName: self.activeOptions.ParentEntityInfo.ParentEntitySchemaname,
+                    //    FieldSchemanName: '',
+                    //    FieldIsRequiered: ((isrequiered == _thisGlobals.DataAttr.NO) ? false : true),
+                    //    FieldIsDisabled: ((self.contextMenuTarget.attr('data-user-disabledfield') != _thisGlobals.DataAttr.YES) ? false : true),
+                    //    FieldType: '',
+                    //    FieldValue: '',
+                    //    FieldFormattedValue: contextMenuTargetText,
+                    //    FieldFormat: self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Format),
+                    //    IsFooterCellToDisplayAggregates: self.contextMenuTarget.hasClass('tfooterdummy'),
+                    //    LookupLogicalName: self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName),
+                    //    LookupGuid: self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid),
+                    //    AdditionalMenuItems: [] // {CtxLabel: '', CtxCallback: null, CtxCallbackData: null}
+                    //};
 
                     if (contextMenuTargetText.length > 0) {
                         haveanymenu = true;
@@ -3734,10 +3821,6 @@ var CrmEditableGrid = (function () {
                         haveanymenu = true;
                         $('<li><a href="#" class="contextMenuLink" id="OpenLookupRecordCtxMenuItem"><span class="itemTitle">' + _thisGlobals.Translation_Labels.OpenLookupInNewWindow + '</span></a></li>').appendTo(menu);
                     }
-
-                    var $theadcells = self.mainTable.find('thead:first').find('tr:first').find('th');
-                    var index = self.contextMenuTarget[0].cellIndex;
-                    var isrequiered = $($theadcells[index]).attr(_thisGlobals.DataAttr.Header.Required);
 
                     if ((!self.activeOptions.ParentFormIsReadOnly) &&
                         (isrequiered == _thisGlobals.DataAttr.NO) &&
@@ -3778,6 +3861,15 @@ var CrmEditableGrid = (function () {
                         e.stopPropagation();
                         return false;
                     }
+                    // TODO
+                    // Add callback to extend the context menu
+                    // opportunity,... products
+                    /*
+                    Make this an option in the configuration
+For Lookups it would be nice if there was a configuration to show the editor as a dropdown directly, 
+similar to the optionset/picklist editor. This would make editing a lot faster for small and relatively static lookups - e.g. 
+list of translated languages
+                     */
 
                     menu.find('a').click(function (e) {
                         var id = $(this).attr('id');
@@ -4345,6 +4437,9 @@ var CrmEditableGrid = (function () {
                     savedLookupGuid = savedFilter.LookupGuid;
                     savedLookupUiType = savedFilter.LookupUiType;
                 }
+
+                console.log("Saved value[" + savedValue + "]");
+
 
                 var realOperator = ((savedOperator != null) ? savedOperator : filterUi.SelectedOptionValue);
 
@@ -5341,6 +5436,45 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             if (self.GridConfiguration.MSProductGrid) {
                 // Dispaly a different menu
                 if (self.GridConfiguration.MSProductGridHelperc && self.GridConfiguration.MSProductGridHelperc.GetPriceList()) {
+                    var $bg = $('<div></div>')
+                      .addClass('InvisibleFrame')
+                      .appendTo('body')
+                      .on('contextmenu click', function () {
+                          $bg.remove();
+                          menu.remove();
+                          return false;
+                      }).show();
+
+                    var menu = $('<ul class="contextMenuPlugin"><div class="gutterLine"></div></ul>').appendTo('body');
+                    $('<li><a href="#" class="contextMenuLink" id="getexistingproducts"><span class="itemTitle">Existing Products</span></a></li>').appendTo(menu);
+                    $('<li><a href="#" class="contextMenuLink" id="newinlineproduct"><span class="itemTitle">Write-in Product</span></a></li>').appendTo(menu);
+                    menu.find('a').click(function (e) {
+                        var id = $(this).attr('id');
+                        var msg = undefined;
+
+                        if (id == 'getexistingproducts') {
+                            self.GridConfiguration.MSProductGridHelperc.DisplayExistingProducts();
+                        } else if (id == 'newinlineproduct') {
+
+                        }
+
+                        $bg.remove();
+                        menu.remove();
+                        e.stopPropagation();
+                        if (msg) {
+                            DisplayCrmAlertDialog("Unable to proceed due to exception:\r" + msg);
+                        }
+                        return false;
+                    });
+
+                    menu.show();
+
+                    $this = $(this);
+                    menu.css({ zIndex: 100006, left: $this.offset().left, top: ($this.offset().top + $this.outerHeight() + 2) })
+                        .on('contextmenu', function () {
+                            e.stopPropagation();
+                            return false;
+                        });
 
                 } else {
                     self.GridConfiguration.MSProductGridHelperc.DisplayNativePricelistSelect();
@@ -5716,7 +5850,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             return;
         }
 
-        // First td for selction is added after
+        // First td for selection is added after
         totalCells++;
 
         var $tmpCell = null;
@@ -5825,8 +5959,13 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                         var $parentrow = $(this).parent().parent();
                         if (($parentrow) && ($parentrow.length > 0)) {
-                            window.parent.Xrm.Utility.openEntityForm(gridOptions.ParentEntityInfo.ParentEntitySchemaname,
-                                $($parentrow).attr(_thisGlobals.DataAttr.Cell.RecordGuid));
+                            if (gridOptions.OpenRecordBehavoir == '10') {
+                                window.parent.Xrm.Utility.openEntityForm(gridOptions.ParentEntityInfo.ParentEntitySchemaname,
+                                    $($parentrow).attr(_thisGlobals.DataAttr.Cell.RecordGuid));
+                            } else {
+                                openEntityRecord(gridOptions.ParentEntityInfo.ParentEntitySchemaname,
+                                    $($parentrow).attr(_thisGlobals.DataAttr.Cell.RecordGuid));
+                            }
                         }
                     }).appendTo($tmpCell);
             }
@@ -7037,7 +7176,7 @@ function getWebresourceParameter() {
 function GetInitialFetch() {
 
     // Do we have a specific grid configuration
-    var configGuid = getWebresourceParameter();
+    _thisGlobals.DCrmConfigurationGuid = getWebresourceParameter();
 
     var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
     '<entity name="dcrmeg_dcrmegconfiguration">' +
@@ -7051,8 +7190,8 @@ function GetInitialFetch() {
         if (_thisGlobals.ParentFormEntityName) {
             fetch += '<condition attribute="dcrmeg_displayonentityhidden" operator="like" value="' + _thisGlobals.ParentFormEntityName.toLowerCase() + '|%" />';
         }
-        if (configGuid) {
-            fetch += '<condition attribute="dcrmeg_dcrmegconfigurationid" operator="eq" uitype="dcrmeg_dcrmegconfiguration" value="' + configGuid + '" />'
+        if (_thisGlobals.DCrmConfigurationGuid) {
+            fetch += '<condition attribute="dcrmeg_dcrmegconfigurationid" operator="eq" uitype="dcrmeg_dcrmegconfiguration" value="' + _thisGlobals.DCrmConfigurationGuid + '" />'
         }
 
       fetch += '</filter>' +
@@ -7375,7 +7514,7 @@ function GetTranslationsForCallback(translation) {
         _thisGlobals.Translation_Labels.PageSize = "Page size";
         _thisGlobals.Translation_Labels.LockedField = "Requiered field";
         _thisGlobals.Translation_Labels.ReadOnly = "Read-only";
-        _thisGlobals.Translation_Labels.OpenRecord = "Open record in current window";
+        _thisGlobals.Translation_Labels.OpenRecord = "Open record";
         _thisGlobals.Translation_Labels.IncorrectFormat = "Incorrect format";
         _thisGlobals.Translation_Labels.MaxValue = "Max value";
         _thisGlobals.Translation_Labels.MinValue = "Min value";
@@ -7700,10 +7839,16 @@ function InitializeSetupRoutines() {
     if ((_thisGlobals.xrmPage.data) && (_thisGlobals.xrmPage.data.entity)) {
         _thisGlobals.ParentFormEntityName = _thisGlobals.xrmPage.data.entity.getEntityName();
         _thisGlobals.ParentFormEntityId = _thisGlobals.xrmPage.data.entity.getId(); // Includes {}
+        _thisGlobals.ParentPrimaryAttributeValue = _thisGlobals.xrmPage.data.entity.getPrimaryAttributeValue();
     }
 
     $('#fieldfilter_btncancel').on("click", function (e) {
         e.stopPropagation();
+        var linkentityfilter = $(this).attr('data-linkentity-filterid');
+        if (linkentityfilter) {
+            $('#' + linkentityfilter).remove();
+            $(this).removeAttr('data-linkentity-filterid');
+        }
         $('#fieldfilter_content').hide();
         return false;
     });
@@ -7732,6 +7877,13 @@ function InitializeSetupRoutines() {
 
     $('#fieldfilter_btnok').on("click", function (e) {
         e.stopPropagation();
+
+        var linkentityfilter = $(this).attr('data-linkentity-filterid');
+        if (linkentityfilter) {
+            $('#' + linkentityfilter).remove();
+            $(this).removeAttr('data-linkentity-filterid');
+        }
+
         var parentdiv = $('#fieldfilter_content');
         var parentSchema = parentdiv.attr(_thisGlobals.DataAttr.Header.SchemaName);
         var schema = parentdiv.attr('data-field-schemaname');
@@ -8510,34 +8662,9 @@ var MSProductGridHelper = (function () {
     function MSProductGridHelper(schemaname, config) {
         var self = this;
 
-        // TODO
-        // account for self.GridConfiguration.MSProductGrid
-        // check for parent default price list   pricelevelid
-        // _thisGlobals.xrmPage.data.entity.attributes.get('pricelevelid').getValue();
-        // if has no value, display msg, asking the user to specify one else
-        // self.GridConfiguration.MSProductGridPriceList = {Name: '', Id: ''}
-        // Query for products matching this pricelist
-
-        // If a product bundle is selected then get the assoiated products
-        /*
-<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
-<entity name="productassociation">
-<attribute name="productid" />
-<attribute name="associatedproduct" />
-<attribute name="quantity" />
-<attribute name="productisrequired" />
-<attribute name="uomid" />
-<attribute name="productassociationid" />
-<order attribute="productid" descending="false" />
-<filter type="and">
-  <condition attribute="productid" operator="eq" uiname="My Products Bundle" uitype="product" value="{796A0847-FC5A-E611-80CE-08002738AA19}" />
-</filter>
-</entity>
-</fetch>
-         */
-        // Need to ad grouping if we have a product bundle
-
         self.PriceList = { name: null, id: null, entityType: null };
+        // 1083, 1091, 1085. 1089
+        // ['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail']
         self.SchemaName = schemaname;
         self.GridConfig = config;
 
@@ -8548,10 +8675,41 @@ var MSProductGridHelper = (function () {
 
         self.GetProductsForPriceListCallback = function (result) {
             if ((result) && (result.length) && (result.length > 0)) {
-                // display a table of product bundles and products, use icons
+
+                var prodtable = $('#products_table');
+                var tablebody = prodtable.find('tbody:first');
+                tablebody.empty();
+
+                var tr, td, prodStruct, itemIcon = undefined;
+
+                // Name productnumber defaultuomscheduleid defaultuomid     productid
+                for (var i = 0; i < result.length; i++) {
+                    prodStruct = result[i].attributes['productstructure'].value + '';
+                    itemIcon = 'dcrmeg_product';
+                    if (prodStruct == '3') {
+                        itemIcon = 'dcrmeg_productbundle';
+                    }
+                    tr = $('<tr></tr>').appendTo(tablebody);
+                    $('<td><input type="checkbox" data-product-id="' + result[i].attributes['productid'].value
+                        + '" data-product-structure="' + prodStruct + '" /></td>').appendTo(tr);
+                    $('<td><img src="' + itemIcon + '" /><span>' + result[i].attributes['name'].value + '</span></td>')
+                        .attr(_thisGlobals.ToolTipAttrName, result[i].attributes['name'].value)
+                        .appendTo(tr);
+                    $('<td>' + result[i].attributes['defaultuomid'].name + '</td>')
+                        .attr(_thisGlobals.ToolTipAttrName, result[i].attributes['defaultuomid'].name)
+                        .appendTo(tr);
+                    $('<td>' + result[i].attributes['defaultuomscheduleid'].name + '</td>')
+                        .attr(_thisGlobals.ToolTipAttrName, result[i].attributes['defaultuomscheduleid'].name)
+                        .appendTo(tr);
+                }
+                $('#products_flyoutOverlay').show('slow');
             } else {
                 DisplayCrmAlertDialog("No existing products found matching pricelist [" + self.PriceList.name + "]");
             }
+        };
+
+        self.DisplayExistingProducts = function () {
+            GetProductsForPriceList(self.PriceList.id, self.GetProductsForPriceListCallback, self.CallbackErrorHandler);
         };
 
         self.GetPriceList = function () {
@@ -8564,17 +8722,6 @@ var MSProductGridHelper = (function () {
             }
             return false;
         };
-
-        //self.DisplayNativeProductSelectCallback = function () {
-        //    if ((result) && (result.items) && (result.items[0].id) && (result.items[0].name)) {
-        //        // go through each product and product family selected
-        //    }
-        //};
-
-        //self.DisplayNativeProductSelect = function () {
-        //    var url = "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=1024";
-        //    DisplayNativeDialog(url, self.DisplayNativeProductSelectCallback);
-        //};
 
         self.DisplayNativePricelistSelectCallback = function (result) {
             // Get a selected value and create a new record
@@ -8589,10 +8736,6 @@ var MSProductGridHelper = (function () {
 
                     _thisGlobals.xrmPage.data.setFormDirty(true);
                     console.log("Pricelist id [" + self.PriceList.id + "] name [" + self.PriceList.name + "] type [" + self.PriceList.typename + "]");
-                    // Display a menu 'Existing Products' - 'Write-in Product'
-                    // 'Write-in Product' is a Opportunity Product record and not a product
-                    // if existing is selected use GetProductsForPriceList(self.PriceList.id, self.GetProductsForPriceListCallback, self.CallbackErrorHandler);
-
                 } catch (e) {
                     LogEx('Unable to set the price list.\r\n' + e.message, pl);
                     return false;
@@ -8605,6 +8748,35 @@ var MSProductGridHelper = (function () {
             DisplayNativeDialog(url, self.DisplayNativePricelistSelectCallback);
         };
 
+        self.Initialize = function () {
+
+            $('#products_selectall').on('click', function (e) {
+                e.stopPropagation();
+                $('#products_table').find('input').prop("checked", $(this).is(':checked'));
+            });
+
+            $('#products_btnok').on('click', function (e) {
+                e.stopPropagation();
+
+                var selected = $('#products_table').find('input[type="checkbox"]:checked');
+                if ((selected) && (selected.length)) {
+                    for (var i = 0; i < selected.length; i++) {
+                        console.log($(selected[i]).attr('data-product-id'));
+                        // add product
+                        // if bundle (family) 3, get the associated products and add them as well
+                        // ensure that there are no duplicate products that exists in the bundle gets added twice
+                    }
+                }
+
+                $('#products_flyoutOverlay').hide();
+            });
+
+            $('#products_btncancel').on('click', function (e) {
+                e.stopPropagation();
+                $('#products_flyoutOverlay').hide();
+            });
+        };
+        self.Initialize();
     }
 
     function DisplayNativeDialog(url, callback) {
@@ -8635,7 +8807,7 @@ var MSProductGridHelper = (function () {
         }
         return otc;
     }
-
+    // Product ID, Product, Unit, PriceList
     function GetProductsForPriceList(id, callback, errorCallback) {
         var fetchXml = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
           '<entity name="product">' +
@@ -8663,9 +8835,43 @@ var MSProductGridHelper = (function () {
         XrmServiceToolkit.Soap.Fetch(fetchXml, false, callback, errorCallback);
     }
 
-    function GetProductsFromProductBundle() {
-
+    function GetProductsFromProductBundle(id) {
+        // If a product bundle is selected then get the assoiated products
+        /*
+<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">
+<entity name="productassociation">
+<attribute name="productid" />
+<attribute name="associatedproduct" />
+<attribute name="quantity" />
+<attribute name="productisrequired" />
+<attribute name="uomid" />
+<attribute name="productassociationid" />
+<order attribute="productid" descending="false" />
+<filter type="and">
+  <condition attribute="productid" operator="eq" uitype="product" value="' + _thisHelpers.AddCurlyBrace(id) + '" />
+</filter>
+</entity>
+</fetch>
+         */
     }
+
+    // dcrmeg_product
+    // dcrmeg_productfamily
+    // dcrmeg_productbundle
+    // dcrmeg_writeinproduct
+    // dcrmeg_tabsectionright
+    // dcrmeg_tabsectiondown
+
+    //self.DisplayNativeProductSelectCallback = function () {
+    //    if ((result) && (result.items) && (result.items[0].id) && (result.items[0].name)) {
+    //        // go through each product and product family selected
+    //    }
+    //};
+
+    //self.DisplayNativeProductSelect = function () {
+    //    var url = "/_controls/lookup/lookupinfo.aspx?LookupStyle=multi&objecttypes=1024";
+    //    DisplayNativeDialog(url, self.DisplayNativeProductSelectCallback);
+    //};
 
     return MSProductGridHelper;
 })();
@@ -8695,7 +8901,7 @@ var DCrmEGConfigurationManager = (function () {
         //if ((['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail'].MatchExists(data.schemaName) != -1) &&
         //    (['opportunity', 'quote', 'salesorder', 'invoice'].MatchExists(_thisGlobals.ParentFormEntityName) != -1)) {
         //    self.MSProductGrid = true;
-        //    self.MSProductGridHelperc = new MSProductGridHelper('product', self);
+        //    self.MSProductGridHelperc = new MSProductGridHelper(data.schemaName, self);
         //}
 
         self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : data.label;
@@ -8705,6 +8911,7 @@ var DCrmEGConfigurationManager = (function () {
         self.DisplaySetRecordState = ((data.DisplaySetRecordState) && (data.DisplaySetRecordState == 'false')) ? false : true;
         self.DisplayCloneRecord = ((data.DisplayCloneRecord) && (data.DisplayCloneRecord == 'false')) ? false : true;
         self.DisplayCloneRecordButton = ((data.DisplayCloneRecordButton) && (data.DisplayCloneRecordButton == 'false')) ? false : true;
+        self.OpenRecordBehavoir = ((data.OpenRecordBehavoir) && (data.OpenRecordBehavoir != 'undefined')) ? data.OpenRecordBehavoir : "10";
 
         self.HasStatusField = (data.HasStatusField) ? data.HasStatusField : undefined;
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
@@ -9056,9 +9263,9 @@ function LoadDCrmEGConfigurationCallback(fetchResults) {
     val = (fetchResults[0].attributes['dcrmeg_fieldcondition']) ? fetchResults[0].attributes['dcrmeg_fieldcondition'].value : undefined;
     var consitions = (val) ? RetrieveEntityOutput(val, true).split(_thisGlobals._pSeperator) : '';
 
-    //LogIt("Entities " + entities);
-    //LogIt("Entity Info " + entitesInfo);
-    //LogIt("fields " + fields);
+    //console.log("Entities " + entities);
+    //console.log("Entity Info " + entitesInfo);
+    //console.log("fields " + fields);
 
     var parentconfig = undefined;
     var config = undefined;
@@ -9131,6 +9338,7 @@ Related [false] RelatedEntityLookup [undefined]
             data.DisplaySetRecordState = ((tmp.length > 24) ? tmp[24] : true);
             data.DisplayCloneRecord = ((tmp.length > 25) ? tmp[25] : true);
             data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
+            data.OpenRecordBehavoir = ((tmp.length > 27) ? tmp[27] : undefined);
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -9157,8 +9365,7 @@ Related [false] RelatedEntityLookup [undefined]
                     .addClass('gridSpacerDiv')
                     .appendTo($parentContainer);
             }
-            CreateAndPopulateGrid(_thisGlobals.DCrmEGConfiguration[i], $parentContainer, null,
-                window.parent.Xrm.Page.data.entity.getPrimaryAttributeValue());
+            CreateAndPopulateGrid(_thisGlobals.DCrmEGConfiguration[i], $parentContainer, null, _thisGlobals.ParentPrimaryAttributeValue);
         }
     } catch (e) {
         LogEx("Unable to create grid due to exception:\r\n" + e.message);
@@ -9278,7 +9485,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
 
         if (relationshipparentEntityGuid) {
             relCondition = '<condition attribute="' + RelatedEntityLookup + '" operator="eq" uitype="' + data.Entity.ParentSchemaName + '" value="' + _thisHelpers.AddCurlyBrace(relationshipparentEntityGuid) + '" />';
-            if (pushToInlineIndex > -1) {
+            if ((pushToInlineIndex > -1) && (relationShipLookupLabel)) {
                 EntityFetchParts.InlineFilters.push(InlineFilterDataToStruct(RelatedEntityLookup, pushToInlineIndex, relCondition, 'eq', relationShipLookupLabel, null, null, relationshipparentEntityGuid, data.Entity.ParentSchemaName));
             } else {
                 EntityFetchParts.Filters.push(relCondition);
@@ -9287,7 +9494,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             parentChildLookupInfo.ParentSchemaName = _thisGlobals.ParentFormEntityName.toLowerCase();
             parentChildLookupInfo.Guid = _thisGlobals.ParentFormEntityId;
             relCondition = '<condition attribute="' + RelatedEntityLookup + '" operator="eq" uitype="' + _thisGlobals.ParentFormEntityName.toLowerCase() + '" value="' + _thisHelpers.AddCurlyBrace(_thisGlobals.ParentFormEntityId) + '" />';
-            if (pushToInlineIndex > -1) {
+            if ((pushToInlineIndex > -1) && (relationShipLookupLabel)) {
                 EntityFetchParts.InlineFilters.push(InlineFilterDataToStruct(RelatedEntityLookup, pushToInlineIndex, relCondition, 'eq', relationShipLookupLabel, null, null, _thisGlobals.ParentFormEntityId, _thisGlobals.ParentFormEntityName.toLowerCase()));
             } else {
                 EntityFetchParts.Filters.push(relCondition);
@@ -9954,9 +10161,9 @@ function GetFilterUIStruc(fieldtype) {
         case DCrmEditableGrid.Editors.Lookup:
             id = { div: '#fieldfilter_lookupcontainer', id: "#fieldfilter_lookupconditions", input: '#fieldfilter_lookupinput', SelectedOptionValue: 'eq', FetchOp: 'eq', ShowInput: true, ShowLookupBtn: true };
             break;
-        //case DCrmEditableGrid.Editors.OwnerType:
-        //    id = { id: "#fieldfilter_systemuserlookup", input: '#fieldfilter_lookupinput', SelectedOptionValue: 'eq-userid' };
-        //    break;
+        case DCrmEditableGrid.Editors.OwnerType:
+            id = { id: "#fieldfilter_systemuserlookup", input: '#fieldfilter_lookupinput', SelectedOptionValue: 'eq-userid' };
+            break;
         //case DCrmEditableGrid.Editors.CustomerType:
         //    id = { id: "#fieldfilter_customerlookup", input: '#fieldfilter_lookupinput', SelectedOptionValue: 'eq', ShowInput: true, ShowLookupBtn: true };
         //    break;
@@ -9968,6 +10175,41 @@ function GetFilterUIStruc(fieldtype) {
         case DCrmEditableGrid.Editors.Decimal:
         case DCrmEditableGrid.Editors.Currency:
         case DCrmEditableGrid.Editors.Numeric:
+            id = { div: '#fieldfilter_numericcontainer', id: "#fieldfilter_numericconditions", input: '#fieldfilter_stringinput', SelectedOptionValue: 'eq', FetchOp: 'eq', ShowInput: true };
+            break;
+        default:
+            LogEx("Exception: No field type retrieved: " + fieldtype);
+            break;
+    }
+    return id;
+}
+
+function GetFilterContainer(fieldtype) {
+    var id = null;
+    switch (fieldtype) {
+        case _thisGlobals.CrmFieldTypes.TextType:
+        case _thisGlobals.CrmFieldTypes.MemoType:
+            id = { div: '#fieldfilter_stringcontainer', id: "#fieldfilter_stringconditions", input: '#fieldfilter_stringinput', SelectedOptionValue: 'eq', FetchOp: 'eq', ShowInput: true };
+            break;
+        case _thisGlobals.CrmFieldTypes.DateTimeType:
+            id = { div: '#fieldfilter_datetimecontainer', id: "#fieldfilter_datetimeconditions", input: '#fieldfilter_calendarinput', SelectedOptionValue: 'on', FetchOp: 'on', ShowDate: true };
+            break;
+        case _thisGlobals.CrmFieldTypes.LookupType:
+            id = { div: '#fieldfilter_lookupcontainer', id: "#fieldfilter_lookupconditions", input: '#fieldfilter_lookupinput', SelectedOptionValue: 'eq', FetchOp: 'eq', ShowInput: true, ShowLookupBtn: true };
+            break;
+        case _thisGlobals.CrmFieldTypes.OwnerType:
+            id = { id: "#fieldfilter_systemuserlookup", input: '#fieldfilter_lookupinput', SelectedOptionValue: 'eq-userid' };
+            break;
+        case _thisGlobals.CrmFieldTypes.BooleanType:
+        case _thisGlobals.CrmFieldTypes.OptionSetType:
+        case _thisGlobals.CrmFieldTypes.State:
+        case _thisGlobals.CrmFieldTypes.Status:
+            id = { div: '#fieldfilter_optionsetcontainer', id: "#fieldfilter_optionsetconditions", input: '#fieldfilter_optionsetselect', SelectedOptionValue: 'eq', FetchOp: 'eq', ShowInput: true, ShowSelectBtn: true };
+            break;
+        case _thisGlobals.CrmFieldTypes.DecimalType:
+        case _thisGlobals.CrmFieldTypes.MoneyType:
+        case _thisGlobals.CrmFieldTypes.IntegerType:
+        case _thisGlobals.CrmFieldTypes.DoubleType:
             id = { div: '#fieldfilter_numericcontainer', id: "#fieldfilter_numericconditions", input: '#fieldfilter_stringinput', SelectedOptionValue: 'eq', FetchOp: 'eq', ShowInput: true };
             break;
         default:
@@ -10205,7 +10447,8 @@ var GridLoaderHelper = (function () {
                     RefreshAfterCreate: self.data.RefreshAfterCreate,
                     RefreshAfterSave: self.data.RefreshAfterSave,
                     NewBtnBehavoir: self.data.NewBtnBehavoir,
-                    BooleanEditorBehavoir: self.data.BooleanEditorBehavoir
+                    BooleanEditorBehavoir: self.data.BooleanEditorBehavoir,
+                    OpenRecordBehavoir: self.data.OpenRecordBehavoir
                 };
 
                 self.Grid = new CrmEditableGrid($('#' + self.ContainerIds.Table), options);
@@ -10242,7 +10485,7 @@ var GridLoaderHelper = (function () {
             }
             fetchXml += "</entity>" +
                 "</fetch>";
-            console.log(fetchXml);
+            //console.log(fetchXml);
             XrmServiceToolkit.Soap.Fetch(fetchXml, false, self.RecordCountCallback, self.CallbackErrorHandler);
         };
 

@@ -3420,7 +3420,7 @@ XrmServiceToolkit.Soap = function () {
         // ReSharper restore NotAllPathsReturnValue
     };
 
-    var retrieveEntityMetadata = function (entityFilters, logicalName, retrieveIfPublished, callback) {
+    var retrieveEntityMetadata = function (entityFilters, logicalName, retrieveIfPublished, callback, errorCallback) {
         ///<summary>
         /// Sends an synchronous/asynchronous RetreiveEntityMetadata Request to retrieve a particular entity metadata in the system
         ///</summary>
@@ -3439,7 +3439,7 @@ XrmServiceToolkit.Soap = function () {
         /// The function that will be passed through and be called by a successful response.
         /// This function also used as an indicator if the function is synchronous/asynchronous
         ///</param>
-
+        retrieveIfPublished = false;
         entityFilters = isArray(entityFilters) ? entityFilters : [entityFilters];
         var entityFiltersString = "";
         for (var iii = 0, templength = entityFilters.length; iii < templength; iii++) {
@@ -3472,7 +3472,16 @@ XrmServiceToolkit.Soap = function () {
 
         var async = !!callback;
 
-        return doRequest(request, "Execute", async, function (resultXml) {
+        return doRequest(request, "Execute", async, function (resultXml, errorMessage) {
+            if ((resultXml == null) && (errorMessage != null) && (async)) {
+                if (errorCallback) {
+                    errorCallback(errorMessage);
+                } else {
+                    throw new Error(errorMessage);
+                }
+                return null;
+            }
+
             var response = selectNodes(resultXml, "//b:value");
 
             var results = [];

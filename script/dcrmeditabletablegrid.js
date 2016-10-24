@@ -1,4 +1,4 @@
-// version 4.9
+// version 5.0
 String.prototype.capitalizeFirstLetter = function () {
         return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
     };
@@ -184,7 +184,9 @@ Array.prototype.insert = function (index, item) {
                     selectorHeaders: 'thead th',
                     selectorBodyRows: 'tbody tr'
                 },
-                "UnsavedChangesMsg": "There are unsaved changes.\n\nClick Cancel to save changes\n\nClick Ok to continue without saving?"
+                "UnsavedChangesMsg": "There are unsaved changes.\n\nClick Cancel to save changes\n\nClick Ok to continue without saving?",
+                "DefaultBackgroundColor": '#FFF',
+                "DefaultTextColor": '#000'
             }
         }
     });
@@ -623,10 +625,10 @@ Array.prototype.insert = function (index, item) {
                     return str.replace('{', '').replace('}', '');
                 },
                 "GetUserLocalizedLabel": function (lbl, defaultVal) {
-                    if (lbl.UserLocalizedLabel) {
+                    if ((lbl.UserLocalizedLabel) && (lbl.UserLocalizedLabel.Label)) {
                         return lbl.UserLocalizedLabel.Label;
                     } else {
-                        if (lbl.LocalizedLabels.length > 0) {
+                        if ((lbl.LocalizedLabels) && (lbl.LocalizedLabels.length > 0)) {
                             return lbl.LocalizedLabels[0].Label;
                         } else {
                             return (defaultVal) ? defaultVal : '';
@@ -2309,6 +2311,9 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
         LookupId: "", (576dfa60-6456-e511-80c0-080027c01cb9)
         LookupLogicalName: "", (incident, owner, customer, lead)
         LookupName: "", (Average order shipment time (sample))
+        LookupTargetEntity: "account,contact"
+        DefaultView: 576dfa60-6456-e511-80c0-080027c01cb9
+        DefaultViewObjectTypeCode: "112"
 
         TargetEntities:
         [
@@ -2329,6 +2334,7 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
     $editor.RefreshOnSave = false;
     $editor.HasLookupInitialized = false;
     $editor.LookupData = editorsArrayi.LookupData;
+
     // How many menus we display
     var dropdownMenuSize = ($editor.LookupData.TargetEntities.length == 1) ? 5 : 3;
 
@@ -2491,7 +2497,7 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
                         otc += $editor.LookupData.TargetEntities[i].ObjectTypeCode;
                     }
                 }
-                var url = "/_controls/lookup/lookupsingle.aspx?objecttypes=" + otc;
+                var url = "/_controls/lookup/lookupinfo.aspx?LookupStyle=single" + "&objecttypes=" + otc + ($editor.LookupData.DefaultView ? '&DefaultViewId=' + $editor.LookupData.DefaultView + '&DefaultType=' + $editor.LookupData.DefaultViewObjectTypeCode : '');
 
                 /*
                 Query String Parameters for Customer (account, contact)
@@ -2516,8 +2522,8 @@ Request URL:http://localhost/Demo/_controls/lookup/lookupinfo.aspx?AllowFilterOf
 
                 //Dialog Options would be set here
                 var DialogOptions = new window.parent.Xrm.DialogOptions();
-                DialogOptions.width = 500;
-                DialogOptions.height = 500;
+                DialogOptions.width = 700;
+                DialogOptions.height = 700;
                 window.parent.Xrm.Internal.openDialog(
                     window.parent.Mscrm.CrmUri.create(url).toString(),
                     DialogOptions, null, null, CallbackFunction);
@@ -4287,12 +4293,12 @@ list of translated languages
                         OptionSetValue: $cell.attr(_thisGlobals.DataAttr.Cell.Optionset.SelectedValue),
                         CheckAttribute: (self.GridEditors[cellindex].CheckedLabel == activecelltext) ? true : false,
                         LookupLogicalName: $cell.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName),
-                        LookupId: $cell.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid)
+                        LookupId: $cell.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid),
+                        TargetCell: $cell
                     });
 
                     $cell.removeClass('IsDirty fieldvaluechanged').addClass('fieldvaluesaved');
                 });
-
 
                 if (window.parent.DCrmEgGridSaving) {
                     if (!window.parent.DCrmEgGridSaving(toSave, self.activeOptions.ParentEntityInfo)) {
@@ -4309,6 +4315,58 @@ list of translated languages
 
                 try {
                     UpdateCrmField(toSave, self);
+
+                    var formatOptions = self.GridConfiguration.GetFormattingOptions();
+                    for (var i = 0; i < toSave.length; i++) {
+                        toSave[i].TargetCell.css("background-color", "").css("color", "");
+
+                        var headerformatOptions = formatOptions.GetHeader(toSave[i].FieldSchemaName);
+                        var cellformatOptions = formatOptions.GetField(toSave[i].FieldSchemaName);
+
+                        if ((headerformatOptions) && (headerformatOptions.ApplyToColumn)) {
+                            if ((headerformatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != headerformatOptions.BackgroundColor)) {
+                                toSave[i].TargetCell.css("background-color", headerformatOptions.BackgroundColor);
+                            }
+                            if ((headerformatOptions.TextColor) && (_thisGlobals.DefaultBackgroundColor != headerformatOptions.TextColor)) {
+                                toSave[i].TargetCell.css("color", headerformatOptions.TextColor);
+                            }
+                            if (headerformatOptions.FontCss) {
+                                DeccoupleCss(headerformatOptions.FontCss, toSave[i].TargetCell);
+                            }
+                        }
+                        if (cellformatOptions) {
+                            // TODO
+                            var valToExamin = { Value: toSave[i].ValueToSave };
+                            if (toSave[i].InternalEditorType == DCrmEditableGrid.Editors.Numeric) {
+                                if (valToExamin.Value.length > 0) {
+                                    valToExamin.Value = parseInt(_thisHelpers.RemoveNumericFormat(valToExamin.Value));
+                                }
+                            }
+                            if (toSave[i].InternalEditorType == DCrmEditableGrid.Editors.OptionSet) {
+                                valToExamin.Value = parseInt(toSave[i].OptionSetValue);
+                            }
+                            if (toSave[i].InternalEditorType == DCrmEditableGrid.Editors.Checkbox) {
+                                valToExamin.Value = toSave[i].CheckAttribute;
+                            }
+                            if (toSave[i].InternalEditorType == DCrmEditableGrid.Editors.Lookup) {
+                                valToExamin.LookupGuid = toSave[i].LookupId;
+                            }
+
+                            if ((cellformatOptions.Condition) && (ConditionIsTrue(cellformatOptions.Condition, null, valToExamin))) {
+                                if ((cellformatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != cellformatOptions.BackgroundColor)) {
+                                    toSave[i].TargetCell.css("background-color", cellformatOptions.BackgroundColor);
+                                }
+                                if ((cellformatOptions.TextColor) && (_thisGlobals.DefaultBackgroundColor != cellformatOptions.TextColor)) {
+                                    toSave[i].TargetCell.css("color", cellformatOptions.TextColor);
+                                }
+                                if (cellformatOptions.FontCss) {
+                                    DeccoupleCss(cellformatOptions.FontCss, toSave[i].TargetCell);
+                                }
+                            } else if (cellformatOptions.FontCss) {
+                                DeccoupleCss(cellformatOptions.FontCss, toSave[i].TargetCell, true);
+                            }
+                        }
+                    }
                 } catch (ex) {
                     LogEx("Exception saving " + ex.message);
                 }
@@ -4438,7 +4496,7 @@ list of translated languages
                     savedLookupUiType = savedFilter.LookupUiType;
                 }
 
-                console.log("Saved value[" + savedValue + "]");
+                //console.log("Saved value[" + savedValue + "]");
 
 
                 var realOperator = ((savedOperator != null) ? savedOperator : filterUi.SelectedOptionValue);
@@ -4808,10 +4866,21 @@ list of translated languages
 
                 }
 
+                var formatOptions = self.GridConfiguration.GetFormattingOptions();
+                var even = true;
+
                 for (var i = 0; i < fieldsresult.length; i++) {
                     var item = fieldsresult[i];
 
                     $tr = $('<tr' + extraRowHeight + '></tr>').attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id).appendTo($tbody);
+
+                    even = (i % 2 == 0);
+                    if ((!even) && (formatOptions.EvenRows)) {
+                        $tr.css('background-color', formatOptions.EvenRows);
+                    } else if ((even) && (formatOptions.OddRows)) {
+                        $tr.css('background-color', formatOptions.OddRows);
+                    }
+
                     var callbackRowData = { RecordGuid: item.id, Fields: [], RowIndex: i };
 
                     for (var iinner = 0; iinner < SelectedFields.length; iinner++) {
@@ -4886,13 +4955,44 @@ list of translated languages
                                 callbackField.Value = fval;
                             }
                         }
-
-                        callbackField.FormattedValue = fval;
+                        if (fval.length > 0) {
+                            callbackField.FormattedValue = fval;
+                        }
                         var $thistr = $('<td tabindex="1"></td>')
                             .attr(_thisGlobals.ToolTipAttrName, fval)
                             .attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id)
                             .html('<span class="fieldcelltext" ' + _thisGlobals.ToolTipAttrName + '="' + fval + '">' + fval + '</span>')
                             .appendTo($tr);
+
+                        var headerformatOptions = formatOptions.GetHeader(inneritemSchemaName);
+                        var cellformatOptions = formatOptions.GetField(inneritemSchemaName);
+                        if ((headerformatOptions) && (headerformatOptions.ApplyToColumn)) {
+                            // BackgroundColor: null, TextColor: null, FontCss: null, ApplyToColumn: false };
+                            if ((headerformatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != headerformatOptions.BackgroundColor)) {
+                                $thistr.css("background-color", headerformatOptions.BackgroundColor);
+                            }
+                            if ((headerformatOptions.TextColor) && (_thisGlobals.DefaultBackgroundColor != headerformatOptions.TextColor)) {
+                                $thistr.css("color", headerformatOptions.TextColor);
+                            }
+                            if (headerformatOptions.FontCss) {
+                                DeccoupleCss(headerformatOptions.FontCss, $thistr);
+                            }
+                        }
+                        if (cellformatOptions) {
+                            // BackgroundColor: null, TextColor: null, FontCss: null, Condition: {Operator: null, Value: null, Guid: null} };
+                            if ((cellformatOptions.Condition) && (ConditionIsTrue(cellformatOptions.Condition, tmpLcase, callbackField))) {
+                                if ((cellformatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != cellformatOptions.BackgroundColor)) {
+                                    $thistr.css("background-color", cellformatOptions.BackgroundColor);
+                                }
+                                if ((cellformatOptions.TextColor) && (_thisGlobals.DefaultBackgroundColor != cellformatOptions.TextColor)) {
+                                    $thistr.css("color", cellformatOptions.TextColor);
+                                }
+                                if (cellformatOptions.FontCss) {
+                                    DeccoupleCss(cellformatOptions.FontCss, $thistr);
+                                }
+                            }
+                        }
+
 
                         if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) && (ceditors.Format)) {
                             $thistr.attr(_thisGlobals.DataAttr.Cell.Format, ceditors.Format.toLowerCase());
@@ -5669,6 +5769,58 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             var lastone = selRows.length - 1;
             for (var i = 0; i < selRows.length; i++) {
                 CloneRecord(self, $(selRows[i]).clone(), ((lastone == i) ? true : false));
+            }
+        });
+
+        $('#' + self.activeOptions.GridContainerIds.SearchGridBox).on('change', function (e) {
+            e.stopPropagation();
+            return;
+            try {
+                var rows = $(this).val().split("\n");
+                $(this).val('');
+
+                for (var i = 0; i < rows.length; i++) {
+                    if ((rows[i]) && (rows[i].trim().length > 0)) {
+                        // number and order of the cells must match the number of fields and their order
+
+                        // Grid Fields
+                        // Name      Price      Somedate   Description    Revenue   FieldA         FieldB         FieldC
+
+                        // Excel Cells
+                        // John      5.6        6/23/2016  (empty cell)   3405.65   (empty cell)   (empty cell)   (empty cell)
+
+                        // Ensue that decimal, float, and money types use "." character as decimal separator
+                        // We use parseInt and parseFloat to parse the numbers
+                        // 55,55 => would return 55
+                        // 55.55 => would return 55.55
+
+                        // Limitations:
+                        // This functionality works only with the following data types.
+                        // Text, Description, Date, Datetime, Integer, Decimal, Float, and Money
+                        // Optionset, Boolean, and Lookup fields require further modifications to the CreateInlineRecord logic
+
+                        var cells = rows[i].split("\t");
+
+                        /* Uncomment for debug messages
+                        console.log("\r\nRow [" + i + "] = " + rows[i] + "\r\nCells:\r\n");
+                        for (var ii = 0; ii < cells.length; ii++) {
+                            if ((cells[ii]) && (cells[ii].length == 0)) {
+                                cells[ii] = null;
+                            }
+                            console.log("cell [" + ii + "] = " + cells[ii]);
+                        }
+                        */
+
+                        var msg = CreateInlineRecord(self, cells, (((i+1) == rows.length) ? true : null));
+                        if (msg) {
+                            DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + msg);
+                            Break;
+                        }
+                    }
+                }
+
+            } catch (ex) {
+                DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + ex.message);
             }
         });
     }
@@ -6597,7 +6749,7 @@ function CloneRecord(self, rowToBeCloned, lastone) {
     }
 }
 
-function CreateInlineRecord(self) {
+function CreateInlineRecord(self, excelCells, lastRec) {
     var msg = undefined;
 
     var extraRowHeight = '';
@@ -6759,7 +6911,14 @@ function CreateInlineRecord(self) {
             var ed = parseInt($thcell.attr(_thisGlobals.DataAttr.Header.EditorType));
             var schema = $thcell.attr(_thisGlobals.DataAttr.Header.SchemaName);
             var requier = ($thcell.attr(_thisGlobals.DataAttr.Header.Required) == _thisGlobals.DataAttr.YES) ? true : false;
-            var defaultVal = $thcell.attr(_thisGlobals.DataAttr.Header.DefaultValueForCreate);
+            var defaultVal = null;
+
+            if ((excelCells) && (excelCells[i - 1])) {
+                defaultVal = excelCells[i - 1];
+            } else {
+                defaultVal = $thcell.attr(_thisGlobals.DataAttr.Header.DefaultValueForCreate);
+            }
+
             formattedVal = '';
             val = undefined;
 
@@ -6998,6 +7157,8 @@ function CreateInlineRecord(self) {
                     callbackField.LookupName = parts[0];
                     callbackField.FormattedValue = callbackField.LookupName;
                     callbackField.Value = callbackField.LookupName;
+                } else if (requier) {
+                    LogEx("Lookup field with the schema name [" + schema + "] is requiered. No default value was present.");
                 }
             }
             callbackRowData.Fields.push(callbackField);
@@ -7047,10 +7208,20 @@ function CreateInlineRecord(self) {
             window.parent.DCrmEgGridCreateNewRecord(callbackData, self.activeOptions.ParentEntityInfo);
         }
 
-        if (self.activeOptions.RefreshAfterCreate) {
-            self.RefreshGridRows();
+        if (excelCells) {
+            if (lastRec) {
+                if (self.activeOptions.RefreshAfterCreate) {
+                    self.RefreshGridRows();
+                } else {
+                    self.ResetRowHighlighting();
+                }
+            }
         } else {
-            self.ResetRowHighlighting();
+            if (self.activeOptions.RefreshAfterCreate) {
+                self.RefreshGridRows();
+            } else {
+                self.ResetRowHighlighting();
+            }
         }
 
     } catch (e) {
@@ -7185,6 +7356,7 @@ function GetInitialFetch() {
       '<attribute name="dcrmeg_fromentityfieldsattrhidden" />' +
       '<attribute name="dcrmeg_displayfromentityhidden" />' +
       '<attribute name="dcrmeg_fieldcondition" />' +
+      '<attribute name="dcrmeg_entitiesinfo" />' +
       '<filter type="and">' +
         '<condition attribute="statecode" operator="eq" value="0" />';
         if (_thisGlobals.ParentFormEntityName) {
@@ -7248,10 +7420,13 @@ function GetSelectedFields(d) {
                 RealWidth: items[9],
                 ReadOnly: items[10],
                 LookupTargetEntity: items[11],
-                DefaultValue: ((items.length == 13) ? items[12] : null)
+                DefaultValue: ((items.length >= 13 && items[12].length > 0) ? items[12] : null),
+                DefaultView: ((items.length >= 14 && items[13].length > 0) ? items[13] : null),
+                DefaultViewObjectTypeCode: ((items.length == 15 && items[14].length > 0) ? items[14] : null),
             });
         });
     }
+    //console.log("Fields", ReloadedSavedFields);
     return ReloadedSavedFields;
 }
 
@@ -7528,7 +7703,17 @@ function GetTranslationsForCallback(translation) {
         XrmServiceToolkit.Soap.Fetch(GetInitialFetch(), false, LoadDCrmEGConfigurationCallback);
     } else {
         _thisHelpers.WaitDialog();
+        if ((_thisGlobals.xrmPage.data) && (_thisGlobals.xrmPage.data.entity)) {
+            _thisGlobals.xrmPage.data.entity.addOnSave(HandleParentFormOnSave);
+        }
     }
+}
+
+function HandleParentFormOnSave() {
+    _thisGlobals.xrmPage.data.entity.removeOnSave(HandleParentFormOnSave);
+    setTimeout(function () {
+        location.reload(true);
+    }, 1500);
 }
 
 function CreateGridContainers(data, parentcontainer) {
@@ -7696,11 +7881,15 @@ function CreateGridContainers(data, parentcontainer) {
 
     // Searchbox
     containerIds.SearchGridBox = _thisHelpers.GenerateUUID();
-    $('<input type="text" />')
+    $tmpBtn = $('<textarea rows=1>')
         .attr('id', containerIds.SearchGridBox)
-        .attr('placeholder', _thisGlobals.Translation_Labels.EnterTextToSearch)
+        .attr('placeholder', 'Paste from Excel to create new record') //_thisGlobals.Translation_Labels.EnterTextToSearch)
         .addClass('searchgridtextbox')
-        .appendTo($pagercontainer).hide();
+        .appendTo($pagercontainer);
+
+    if (!data.PasteFromExcel) {
+        $tmpBtn.hide();
+    }
 
     // Pager
     containerIds.Pager = _thisHelpers.GenerateUUID();
@@ -8876,6 +9065,40 @@ var MSProductGridHelper = (function () {
     return MSProductGridHelper;
 })();
 
+var FormattingOptions = (function () {
+    function FormattingOptions(entityschemaname) {
+        var self = this;
+
+        self.EntitySchemaName = entityschemaname;
+        self.Headers = []; //{ SchemaName: null, BackgroundColor: null, TextColor: null, FontCss: null, ApplyToColumn: false };
+        self.Fields = []; // { SchemaName: null, BackgroundColor: null, TextColor: null, FontCss: null, Condition: {Operator: null, Value: null, Guid: null} };
+
+        self.EvenRows = null;
+        self.OddRows = null;
+
+        self.GetHeader = function (schemaname) {
+            return InternalGet(self.Headers, schemaname);
+        }
+        self.GetField = function (schemaname) {
+            return InternalGet(self.Fields, schemaname);
+        }
+    }
+
+    function InternalGet(arr, schemaname) {
+        if (arr.length == 0) {
+            return null;
+        }
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].SchemaName == schemaname) {
+                return arr[i];
+                break;
+            }
+        }
+    }
+
+    return FormattingOptions;
+})();
+
 var DCrmEGConfigurationManager = (function () {
 
     function DCrmEGConfigurationManager(data) {
@@ -8912,6 +9135,7 @@ var DCrmEGConfigurationManager = (function () {
         self.DisplayCloneRecord = ((data.DisplayCloneRecord) && (data.DisplayCloneRecord == 'false')) ? false : true;
         self.DisplayCloneRecordButton = ((data.DisplayCloneRecordButton) && (data.DisplayCloneRecordButton == 'false')) ? false : true;
         self.OpenRecordBehavoir = ((data.OpenRecordBehavoir) && (data.OpenRecordBehavoir != 'undefined')) ? data.OpenRecordBehavoir : "10";
+        self.PasteFromExcel = ((data.PasteFromExcel) && (data.PasteFromExcel == 'true')) ? true : false;
 
         self.HasStatusField = (data.HasStatusField) ? data.HasStatusField : undefined;
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
@@ -8931,6 +9155,14 @@ var DCrmEGConfigurationManager = (function () {
         self.ChildConfigurations = [];
         self.ThisGrid = undefined;
         self.ParentDivContainer = undefined;
+        self.Formattings = undefined;
+        self.GetFormattingOptions = function () {
+            if (self.Formattings) {
+                return self.Formattings;
+            }
+            self.Formattings = new FormattingOptions(self.Entity.SchemaName);
+            return self.Formattings;
+        }
 
         self.GridFetchXml = undefined;
         /*
@@ -9262,6 +9494,9 @@ function LoadDCrmEGConfigurationCallback(fetchResults) {
     // All conditions
     val = (fetchResults[0].attributes['dcrmeg_fieldcondition']) ? fetchResults[0].attributes['dcrmeg_fieldcondition'].value : undefined;
     var consitions = (val) ? RetrieveEntityOutput(val, true).split(_thisGlobals._pSeperator) : '';
+    // All Formatting dcrmeg_entitiesinfo
+    val = (fetchResults[0].attributes['dcrmeg_entitiesinfo']) ? fetchResults[0].attributes['dcrmeg_entitiesinfo'].value : undefined;
+    var formattings = (val) ? val.split(_thisGlobals._pSeperator) : null;
 
     //console.log("Entities " + entities);
     //console.log("Entity Info " + entitesInfo);
@@ -9339,14 +9574,57 @@ Related [false] RelatedEntityLookup [undefined]
             data.DisplayCloneRecord = ((tmp.length > 25) ? tmp[25] : true);
             data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
             data.OpenRecordBehavoir = ((tmp.length > 27) ? tmp[27] : undefined);
+            data.PasteFromExcel = ((tmp.length > 28) ? tmp[28] : false);
         }
 
         config = new DCrmEGConfigurationManager(data);
         if (fields.length > 0) {
             config.SelectedFields = GetSelectedFields(FindEntiyGridFields(data.schemaName, fields));
+            //console.log("Fields", config.SelectedFields);
         }
         if (consitions.length > 0) {
             config.Conditions = FindEntiyGridFields(data.schemaName, consitions);
+        }
+
+        if (formattings) {
+            for (var index = 0; index < formattings.length; index++) {
+                var rec = formattings[index].split(_thisGlobals._OuterSeperator);
+                // Get formatting options for this entity
+                if (rec[1] == data.schemaName) {
+                    var formatOption = new FormattingOptions(rec[1]);
+
+                    var inner = rec[0].split(_thisGlobals._SEPERATOR);
+                    // inner[0] headers
+                    // inner[1] fields
+                    // inner[2] OddRows
+                    // inner[3] EvenRows
+                    if ((inner[0]) && (inner[0].length > 0)) {
+                        var headers = inner[0].split('[H]');
+                        for (var ii = 0; ii < headers.length; ii++) {
+                            if ((headers[ii]) && (headers[ii].length > 0)) {
+                                formatOption.Headers.push(JSON.parse(headers[ii]));
+                            }
+                        }
+                    }
+                    if ((inner[1]) && (inner[1].length > 0)) {
+                        var cells = inner[1].split('[F]');
+                        for (var ii = 0; ii < cells.length; ii++) {
+                            if ((cells[ii]) && (cells[ii].length > 0)) {
+                                formatOption.Fields.push(JSON.parse(cells[ii]));
+                            }
+                        }
+                    }
+                    if ((inner[2]) && (inner[2].length > 0)) {
+                        formatOption.OddRows = inner[2];
+                    }
+                    if ((inner[3]) && (inner[3].length > 0)) {
+                        formatOption.EvenRows = inner[3];
+                    }
+
+                    config.Formattings = formatOption;
+                    //console.log(config.Formattings);
+                }
+            }
         }
 
         if ((data.ParentSchemaName) && (parentconfig)) {
@@ -9517,8 +9795,6 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
 
     var table = $('#' + ContainerIds.Table)[0];
 
-    //console.log("Table width [" + $('#' + ContainerIds.Table).width() + "]");
-
     if ((!_thisGlobals.FormIsReadOnly) && ((data.AllowDelete) || (data.DisplayCloneRecordButton))) {
         var $chk = $("<input type='checkbox' />")
             .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.SelectAllRecords)
@@ -9541,6 +9817,8 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         .attr(_thisGlobals.DataAttr.Cell.FooterCell, _thisGlobals.DataAttr.NO)
         .appendTo($footer);
 
+    var formatOptions = data.GetFormattingOptions();
+
     for (var headerIndex = 0; headerIndex < data.SelectedFields.length; headerIndex++) {
         var item = data.SelectedFields[headerIndex];
 
@@ -9548,6 +9826,19 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             .addClass('TextAutoEclipse')
             .attr(_thisGlobals.ToolTipAttrName, item.Name)
             .appendTo($tr);
+
+        var headerFormatOptions = formatOptions.GetHeader(item.SchemaName);
+        if (headerFormatOptions) {
+            if ((headerFormatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != headerFormatOptions.BackgroundColor)) {
+                $theader.css("background-color", headerFormatOptions.BackgroundColor);
+            }
+            if ((headerFormatOptions.TextColor) && (_thisGlobals.DefaultTextColor != headerFormatOptions.TextColor)) {
+                $theader.css("color", headerFormatOptions.TextColor);
+            }
+            if (headerFormatOptions.FontCss) {
+                DeccoupleCss(headerFormatOptions.FontCss, $theader);
+            }
+        }
 
         if (item.RealWidth != '0') {
             $theader.width(item.RealWidth + '%');
@@ -9632,7 +9923,9 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
                 LookupId: '',
                 LookupLogicalName: '',
                 LookupName: '',
-                TargetEntities: []
+                TargetEntities: [],
+                DefaultView: item.DefaultView,
+                DefaultViewObjectTypeCode: item.DefaultViewObjectTypeCode
             };
 
             var earr = item.LookupTargetEntity.split(',');
@@ -10271,10 +10564,21 @@ var GridLoaderHelper = (function () {
                     } catch (e) {
                     }
 
+                    var formatOptions = self.data.GetFormattingOptions();
+                    var even = true;
+
                     for (var i = 0; i < fieldsresult.length; i++) {
                         var item = fieldsresult[i];
 
                         $tr = $('<tr' + extraRowHeight + '></tr>').attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id).appendTo($tbody);
+
+                        even = (i % 2 == 0);
+                        if ((!even) && (formatOptions.EvenRows)) {
+                            $tr.css('background-color', formatOptions.EvenRows);
+                        } else if ((even) && (formatOptions.OddRows)) {
+                            $tr.css('background-color', formatOptions.OddRows);
+                        }
+
                         var callbackRowData = { RecordGuid: item.id, Fields: [], RowIndex: i };
 
                         for (var iinner = 0; iinner < self.data.SelectedFields.length; iinner++) {
@@ -10351,7 +10655,9 @@ var GridLoaderHelper = (function () {
                                 }
                             }
 
-                            callbackField.FormattedValue = fval;
+                            if (fval.length > 0) {
+                                callbackField.FormattedValue = fval;
+                            }
                             // Add cell
                             $td = $('<td></td>')
                                 .attr(_thisGlobals.DataAttr.Cell.RecordGuid, item.id)
@@ -10359,6 +10665,37 @@ var GridLoaderHelper = (function () {
                                 .html('<span class="fieldcelltext" '
                                     + _thisGlobals.ToolTipAttrName + '="' + fval + '">' + fval + '</span>')
                                 .appendTo($tr);
+
+                            var headerformatOptions = formatOptions.GetHeader(inneritemSchemaName);
+                            var cellformatOptions = formatOptions.GetField(inneritemSchemaName);
+
+                            if ((headerformatOptions) && (headerformatOptions.ApplyToColumn)) {
+                                // BackgroundColor: null, TextColor: null, FontCss: null, ApplyToColumn: false };
+                                if ((headerformatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != headerformatOptions.BackgroundColor)) {
+                                    $td.css("background-color", headerformatOptions.BackgroundColor);
+                                }
+                                if ((headerformatOptions.TextColor) && (_thisGlobals.DefaultBackgroundColor != headerformatOptions.TextColor)) {
+                                    $td.css("color", headerformatOptions.TextColor);
+                                }
+                                if (headerformatOptions.FontCss) {
+                                    DeccoupleCss(headerformatOptions.FontCss, $td);
+                                }
+                            }
+
+                            if (cellformatOptions) {
+                                // BackgroundColor: null, TextColor: null, FontCss: null, Condition: {Operator: null, Value: null, Guid: null} };
+                                if ((cellformatOptions.Condition) && (ConditionIsTrue(cellformatOptions.Condition, tmpLcase, callbackField))) {
+                                    if ((cellformatOptions.BackgroundColor) && (_thisGlobals.DefaultBackgroundColor != cellformatOptions.BackgroundColor)) {
+                                        $td.css("background-color", cellformatOptions.BackgroundColor);
+                                    }
+                                    if ((cellformatOptions.TextColor) && (_thisGlobals.DefaultBackgroundColor != cellformatOptions.TextColor)) {
+                                        $td.css("color", cellformatOptions.TextColor);
+                                    }
+                                    if (cellformatOptions.FontCss) {
+                                        DeccoupleCss(cellformatOptions.FontCss, $td);
+                                    }
+                                }
+                            }
 
                             if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) && (self.ceditors[iinner].Format)) {
                                 $td.attr(_thisGlobals.DataAttr.Cell.Format, self.ceditors[iinner].Format.toLowerCase());
@@ -10461,7 +10798,6 @@ var GridLoaderHelper = (function () {
             }
 
             _thisHelpers.WaitDialog();
-            //$('#' + self.ContainerIds.Table).show();
         };
         
         self.RecordCountCallback = function (result) {
@@ -10521,7 +10857,12 @@ var GridLoaderHelper = (function () {
 
                                 for (var iinner = 0; iinner < SelectedFields.length; iinner++) {
                                     if (schName == SelectedFields[iinner].SchemaName.toLowerCase()) {
-                                        lbl = _thisHelpers.GetUserLocalizedLabel(ent.DisplayName);
+                                        lbl = _thisHelpers.GetUserLocalizedLabel(ent.DisplayName, ent.LogicalName);
+                                        if ((lbl == null) || (lbl == 'null') || (lbl.length == 0)) {
+                                            lbl = schName.replace(/\b[a-z]/g, function (letter) {
+                                                return letter.toUpperCase();
+                                            });
+                                        }
                                         _thisHelpers.SetHeaderCellText($($headers[iinner + 1]), lbl);
                                     }
                                 }
@@ -10568,4 +10909,153 @@ function FireGridRowOnload(tr, data, info) {
             }
         }
     }
+}
+
+function DeccoupleCss(css, elem, remove) {
+    try {
+        var arr = css.split(';');
+        for (var i = 0; i < arr.length; i++) {
+            if ((arr[i]) && (arr[i].length) && (arr[i].length > 0)) {
+                //console.log("arr[i] " + arr[i]);
+                var item = arr[i].split(":");
+                if (remove) {
+                    elem.css(item[0], "");
+                } else {
+                    elem.css(item[0], item[1]);
+                }
+            }
+        }
+    } catch (e) {
+        LogEx("DeccoupleCss:css\r\n" + css + "\r\nerror:\r\n" + e.message);
+    }
+}
+
+function ConditionIsTrue(condition, tmpLcase, callbackField) {
+    var result = false;
+    try {
+
+        if ((callbackField.Value == undefined) || (callbackField.Value == 'undefined') ||
+            (callbackField.Value == null) || (callbackField.Value == 'null')) {
+            if ((condition.Operator != 'not-null') && (condition.Operator != 'null')) {
+                return result;
+            }
+        }
+
+        switch (condition.Operator) {
+            case 'eq':
+                //if ((tmpLcase == _thisGlobals.CrmFieldTypes.LookupType) ||
+                //    (tmpLcase == _thisGlobals.CrmFieldTypes.CustomerType) ||
+                //    (tmpLcase == _thisGlobals.CrmFieldTypes.OwnerType)) {
+                //    result = (condition.Value == callbackField.Value) && (condition.Guid == callbackField.LookupGuid.replace('{', '').replace('}'));
+                //}
+                result = (condition.Value == callbackField.Value);
+                break;
+            case 'ne':
+                result = (condition.Value != callbackField.Value);
+                break;
+            case 'contains':
+                result = callbackField.Value.contains(condition.Value, true);
+                break;
+            case 'doesnotcontain':
+                result = !callbackField.Value.contains(condition.Value, true);
+                break;
+            case 'beginswith':
+                result = callbackField.Value.startsWith(condition.Value);
+                break;
+            case 'doesnotbeginwith':
+                result = !callbackField.Value.startsWith(condition.Value);
+                break;
+            case 'endswith':
+                result = callbackField.Value.endsWith(condition.Value);
+                break;
+            case 'doesnotendwith':
+                result = !callbackField.Value.endsWith(condition.Value);
+                break;
+            case 'not-null':
+                result = ((callbackField.Value != null) && (callbackField.Value != 'null') && (callbackField.Value != undefined) && (callbackField.Value != 'undefined') && (callbackField.Value.length > 0));
+                break;
+            case 'null':
+                result = ((callbackField.Value == null) || (callbackField.Value == 'null') || (callbackField.Value == undefined) || (callbackField.Value == 'undefined') || (callbackField.Value.length == 0));
+                break;
+            case 'gt':
+                result = callbackField.Value > condition.Value;
+                break;
+            case 'ge':
+                result = callbackField.Value >= condition.Value;
+                break;
+            case 'lt':
+                result = callbackField.Value < condition.Value;
+                break;
+            case 'le':
+                result = callbackField.Value <= condition.Value;
+                break;
+            case 'eq-userid':
+                result = callbackField.LookupGuid == _thisGlobals.LoggedInUserID.replace('{', '').replace('}');
+                break;
+            case 'ne-userid':
+                result = callbackField.LookupGuid != _thisGlobals.LoggedInUserID.replace('{', '').replace('}');
+                break;
+            case 'on':
+            case 'today':
+                var d = new Date();
+                var d2 = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() == d2.getFullYear()) && (d.getMonth() == d2.getMonth()) && (d.getDate() == d2.getDate());
+                break;
+            case 'on-or-after':
+                var d2 = Date.parseDate(condition.Value);
+                var d = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() >= d2.getFullYear()) && (d.getMonth() >= d2.getMonth()) && (d.getTime() >= d2.getTime());
+                break;
+            case 'on-or-before':
+                var d2 = Date.parseDate(condition.Value);
+                var d = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() <= d2.getFullYear()) && (d.getMonth() <= d2.getMonth()) && (d.getTime() <= d2.getTime());
+                break;
+            case 'yesterday':
+                var d = new Date();
+                d.setDate(d.getDate() - 1);
+                var d2 = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() == d2.getFullYear()) && (d.getMonth() == d2.getMonth()) && (d.getDate() == d2.getDate());
+                break;
+            case 'tomorrow':
+                var d = new Date();
+                d.setDate(d.getDate() + 1);
+                var d2 = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() == d2.getFullYear()) && (d.getMonth() == d2.getMonth()) && (d.getDate() == d2.getDate());
+                break;
+            case 'next-seven-days':
+                var d = new Date();
+                d.setDate(d.getDate() + 7);
+                var d2 = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() == d2.getFullYear()) && (d.getMonth() == d2.getMonth()) && (d.getDate() == d2.getDate());
+                break;
+            case 'last-seven-days':
+                var d = new Date();
+                d.setDate(d.getDate() - 7);
+                var d2 = Date.parseDate(callbackField.Value);
+                result = (d.getFullYear() == d2.getFullYear()) && (d.getMonth() == d2.getMonth()) && (d.getDate() == d2.getDate());
+                break;
+            //case 'next-week':
+            //    break;
+            //case 'last-week':
+            //    break;
+            //case 'this-week':
+            //    break;
+            //case 'next-month':
+            //    break;
+            //case 'last-month':
+            //    break;
+            //case 'this-month':
+            //    break;
+            //case 'next-year':
+            //    break;
+            //case 'last-year':
+            //    break;
+            //case 'this-year':
+            //    break;
+        }
+    } catch (e) {
+        LogEx("ConditionIsTrue: " + e.message);
+    }
+    return result;
 }

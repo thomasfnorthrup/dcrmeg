@@ -241,9 +241,13 @@ input[type="checkbox"]:focus{
 .searchgridtextbox {
     outline: 0;
     border: none;
-    height: 18px;
-    padding-left: 5px;
-    min-width: 180px;
+    height: 24px !important;
+    max-height: 24px !important;
+    overflow: auto !important;
+    margin-left: 5px;
+    width: 330px;
+    max-width: 330px !important;
+    resize:none;
     border: solid 1px lightgray;
 }
 
@@ -764,11 +768,11 @@ there's a rowspan on the first cell. Case added to the tests. issue#432 */
 }
 
 .rowheaderhovercolor {
-    background-color: #dcebef;
+    background-color: #dcebef!important;
 }
 
 .rowselected {
-    background-color: lightgoldenrodyellow!important;
+    background-color: #fafad2!important;
 }
 
 .fieldvaluechanged {

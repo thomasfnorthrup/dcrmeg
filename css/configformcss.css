@@ -33,45 +33,42 @@
 
 input[type="text"] {
 outline: 0;
-border: none;
+/*border: none;*/
 padding: 2px 0 2px 5px;
 }
 
-input[type="text"]:hover {
-    /*-moz-box-shadow: 1px 1px 2px #ccc;
-    -webkit-box-shadow: 1px 1px 2px #ccc;*/
-    box-shadow: 1px 1px 2px #ccc;
-    border: solid 1px #CCCCCC;
-    background-color: #F3F1F1;
-}
+    /*input[type="text"]:hover {
+        box-shadow: 1px 1px 2px #ccc;
+        border: solid 1px #CCCCCC;
+        background-color: #F3F1F1;
+    }
 
     input[type="text"]:focus {
         border: solid 1px lightgray;
-    }
+    }*/
 
-        @-moz-document url-prefix() {
+        /*@-moz-document url-prefix() {
           select {
-                     /*width: 110%;*/
             -moz-appearance: none;
             text-indent: 0.01px;
             text-overflow: "";
           }
-        }
+        }*/
 
         select {
             font-family: Segoe\000020UI,Tahoma,Arial;
             font-size: 12px;
             /*-webkit-border-radius: 3px;
             -moz-border-radius: 3px;*/
-            border-radius: 3px;
+            /*border-radius: 3px;
             -webkit-appearance: none;
-            border: 0;
+            border: 0;*/
             outline: 0;
         }
-        /* Remove arrow from IE */
+        /* Remove arrow from IE 
         select::-ms-expand {
             display: none;
-        }
+        }*/
             select:hover {
                 /*-moz-box-shadow: 1px 1px 2px #ccc;
                 -webkit-box-shadow: 1px 1px 2px #ccc;*/
@@ -112,12 +109,16 @@ input[type="text"]:hover {
         .innerSelectHandler {
         }
 
-        .flyout-ContentContainer {
-            height: 220px;
-            overflow:auto;
-            margin: 5px 10px 5px 0;
-            border: solid 1px lightgray;
-        }
+.conditioninput, .conditioncss {
+    width: 100px;
+}
+
+.flyout-ContentContainer {
+    height: 220px;
+    overflow:auto;
+    margin: 5px 10px 5px 0;
+    border: solid 1px lightgray;
+}
 
 .checklistcontainer {
     min-height: 100px;
@@ -322,13 +323,67 @@ Processing dialog
         background-color: white;
         font-size: 11px !important;
     }
-            .configuresortingdiv button:hover {
-                border-color: #82cbe2;
-                background-color: #eeeeee;
-            }
-            .configuresortingdiv button:focus {
-                background-color: #eeeeee;
-            }
+        .configuresortingdiv button:hover {
+            border-color: #82cbe2;
+            background-color: #eeeeee;
+        }
+        .configuresortingdiv button:focus {
+            background-color: #eeeeee;
+        }
+
+.selectedfieldstableclass td {
+    height: 30px;
+}
+.selectedfieldsformattingbtns {
+    padding:0;
+    height: 20px;
+    width:110px;
+    border: solid 1px lightgray;
+    background-color: white;
+    font-size: 11px !important;
+}
+.selectedfieldsformattingbtns:hover {
+    border-color: #82cbe2;
+    background-color: #eeeeee;
+}
+.selectedfieldsformattingbtns:focus {
+    background-color: #eeeeee;
+}
+
+.formattingcontainertable {
+    margin-top: 20px;
+    padding: 5px;
+    border:solid 1px lightgray;
+}
+
+.formattingmaincontainer button {
+    padding:0;
+    height: 20px;
+    min-width:60px;
+    border: solid 1px lightgray;
+    background-color: white;
+    font-size: 11px !important;
+}
+    .formattingmaincontainer button:hover {
+        border-color: #82cbe2;
+        background-color: #eeeeee;
+    }
+    .formattingmaincontainer button:focus {
+        background-color: #eeeeee;
+    }
+    .formattingmaincontainer input {
+        width:80px;
+    }
+
+.formattingcolorscss td {
+    border-right: solid 1px lightgray;
+    border-bottom: solid 1px lightgray;
+}
+
+.formattingcolorscss th {
+    border-right: solid 1px lightgray;
+    border-bottom: solid 1px lightgray;
+}
 
 .flyoutOverlayContent
 {
@@ -340,7 +395,7 @@ Processing dialog
     right: 0;
     border: 1px solid black;
     width: 260px;
-    height: 90px;
+    height: 100px;
     padding: 15px;
     background-color: white;
 }
@@ -396,53 +451,51 @@ Processing dialog
     background-color: white;
     font-size: 11px !important;
 }
-            .picklistselectbtn:hover {
-                border-color: #82cbe2;
-                background-color: #eeeeee;
-            }
-            .picklistselectbtn:focus {
-                background-color: #eeeeee;
-            }
-
-    .flyoutOverlayContentValue {
-        margin-bottom: 10px;
+    .picklistselectbtn:hover {
+        border-color: #82cbe2;
+        background-color: #eeeeee;
+    }
+    .picklistselectbtn:focus {
+        background-color: #eeeeee;
     }
 
+.flyoutOverlayContentValue {
+    margin-bottom: 10px;
+}
 
+.flyoutOverlayContentBtns {
+}
 
-    .flyoutOverlayContentBtns {
+    .flyoutOverlayContentBtns button {
+        border: solid 1px lightgray;
+        background-color: white;
+        font-size: 12px !important;
+        padding: 5px;
     }
-
-        .flyoutOverlayContentBtns button {
-            border: solid 1px lightgray;
-            background-color: white;
-            font-size: 12px !important;
-            padding: 5px;
+    .flyoutOverlayContentBtns button:hover {
+            border-color: #82cbe2;
+            background-color: #eeeeee;
         }
-        .flyoutOverlayContentBtns button:hover {
-                border-color: #82cbe2;
-                background-color: #eeeeee;
-            }
-        .flyoutOverlayContentBtns button:focus {
-                background-color: #eeeeee;
-            }
+    .flyoutOverlayContentBtns button:focus {
+            background-color: #eeeeee;
+        }
 .picklistflyoutOverlayContentBtns {
 }
 
-        .picklistflyoutOverlayContentBtns button {
-            border: solid 1px lightgray;
-            background-color: white;
-            font-size: 12px !important;
-            padding: 5px;
-            width: 80px;
+    .picklistflyoutOverlayContentBtns button {
+        border: solid 1px lightgray;
+        background-color: white;
+        font-size: 12px !important;
+        padding: 5px;
+        width: 80px;
+    }
+    .picklistflyoutOverlayContentBtns button:hover {
+            border-color: #82cbe2;
+            background-color: #eeeeee;
         }
-        .picklistflyoutOverlayContentBtns button:hover {
-                border-color: #82cbe2;
-                background-color: #eeeeee;
-            }
-        .picklistflyoutOverlayContentBtns button:focus {
-                background-color: #eeeeee;
-            }
+    .picklistflyoutOverlayContentBtns button:focus {
+            background-color: #eeeeee;
+        }
 
 .conditionscontainer {
     display:inline-block;

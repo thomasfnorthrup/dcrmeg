@@ -140,10 +140,10 @@ Array.prototype.ExactMatchExists = function (str) {
                     }
                     return text;
                 },
-                "CheckboxList": function (fields, CheckFieldClicked, SavedFields) {
+                "CheckboxList": function (fields, CheckFieldClicked, SavedFields, CheckListParent, noCondition) {
                     var WidthPercentage = '0';
                     var tip;
-                    var $parentContainer = $('#listoffieldstoselect');
+                    var $parentContainer = CheckListParent || $('#listoffieldstoselect');
 
                     var $thecontainer = $('<div></div').addClass('flyout-ContentContainer').appendTo($parentContainer);
 
@@ -237,7 +237,7 @@ Array.prototype.ExactMatchExists = function (str) {
                         //    $chk.prop('disabled', 'disabled');
                         //}
 
-                        if (SavedFields.length > 0) {
+                        if ((SavedFields) && (SavedFields.length > 0)) {
                             $.each(SavedFields, function (ind, saveditem) {
                                 if (saveditem.Name == item.Name) {
                                     $chk.prop('checked', true);
@@ -249,7 +249,7 @@ Array.prototype.ExactMatchExists = function (str) {
                         }
 
                         // Add button if not read only
-                        if (!_thisGlobals.FormIsReadOnly) {
+                        if ((!_thisGlobals.FormIsReadOnly) && (noCondition != true)) {
                             var tmpcondition = FindCondition(item.SchemaName);
 
                             var btnclass = 'fieldoptionsettingbutton';
@@ -395,10 +395,29 @@ Array.prototype.ExactMatchExists = function (str) {
                                     CreateTooltip();
                                 });
                         }
+
+                        // TODO
+                        if (noCondition) {
+                            $('<button></button>')
+                                .attr('data-tilename-id', id)
+                                .attr('data-tooltip', 'Editable field. Click to lock field')
+                                .attr('id', btnid)
+                                .addClass('lookupfieldseditable')
+                                .addClass(_thisGlobals.ToolTipClassSelector)
+                                .appendTo($td).on('click', function (e) {
+                                    e.stopPropagation();
+                                    var _this = $(this);
+                                    if (_this.hasClass('lookupfieldslocked')) {
+                                        _this.removeClass('lookupfieldslocked').attr('data-tooltip', 'Editable field. Click to lock field.');
+                                    } else {
+                                        _this.addClass('lookupfieldslocked').attr('data-tooltip', 'Locked field. Click to make field editable.');
+                                    }
+                                });
+                        }
                     });
 
                     $thecontainer.DestroyYourself = function () {
-                        $('#listoffieldstoselect').empty();
+                        $parentContainer.empty();
                     };
 
                     $thecontainer.GetContent = function () {
@@ -806,6 +825,101 @@ function FillEntitiesSelect(data) {
 }
 
 /*Retreive entity metadata*/
+function RetreiveLookupEntityMetadata(logicalName) {
+    _thisGlobals.EntityToGetMetadataFor = logicalName;
+
+    XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Attributes'], logicalName, false, RetreiveLookupEntityMetadateCallback, RetreiveLookupEntityMetadataErrorCallback);
+}
+
+function RetreiveLookupEntityMetadataErrorCallback(msg) {
+    window.parent.Xrm.Utility.alertDialog(msg);
+}
+
+function RetreiveLookupEntityMetadateCallback(result) {
+
+    if (result.length == 0) {
+        LogEx("RetreiveEntityMetadateCallback called - No metadata were retreived");
+        return;
+    }
+
+    var index = 0;
+    var ent = null;
+    var attrType, schName;
+
+    var AllLookupFieldsMetadata = [];
+
+    var fieldexclusion = ['createdonbehalfby', 'exchangerate', 'importsequencenumber', 'modifiedonbehalfby', 'overriddencreatedon', 'owningbusinessunit', 'owningteam', 'owninguser', 'timezoneruleversionnumber', 'utcconversiontimezonecode', 'versionnumber'];
+    var attrTypeExclusion = ["lookup", "boolean", "picklist", "datetime", "string", "memo", "integer", "double", "decimal", "money", "customer", "owner", "state", "status"];
+
+    var fe = fieldexclusion.join(" ");
+    var ate = attrTypeExclusion.join(" ");
+
+    for (index = 0, j = result[0].Attributes.length; index < j; index++) {
+        ent = result[0].Attributes[index];
+
+        if (ent.AttributeOf == null) {
+            attrType = ent.AttributeType.toLowerCase();
+            schName = ent.SchemaName.toLowerCase();
+
+            //LogIt("SchemaName [" + ent.SchemaName + "] attrType [" + attrType + "]");
+
+            if ((fieldexclusion.ExactMatchExists(schName) == false) && (attrTypeExclusion.ExactMatchExists(attrType) == true)) {
+                var ename = DCrmEditableGrid.Helper.GetUserLocalizedLabel(ent.DisplayName, ent.LogicalName);
+                if ((ename == null) || (ename == 'null') || (ename.length == 0)) {
+                    ename = schName.replace(/\b[a-z]/g, function (letter) {
+                        return letter.toUpperCase();
+                    });
+                }
+
+                AllLookupFieldsMetadata.push({
+                    SchemaName: schName,
+                    Name: ename,
+                    AttrType: attrType,
+                    ReadOnly: false,
+                    RequieredLevel: (((ent.RequiredLevel) && (ent.RequiredLevel.Value)) ? ent.RequiredLevel.Value : undefined) || 'None',
+                    MaxLength: ent.MaxLength || 'A',
+                    Format: ent.Format || 'A',
+                    MaxValue: ent.MaxValue || 'A',
+                    MinValue: ent.MinValue || 'A',
+                    Precision: ent.Precision || 'A',
+                    LookupTargetEntity: ((ent.Targets) && (ent.Targets.length)) ? ent.Targets.join(',').toLowerCase() : 'A',
+                    CustomAttribute: ent.IsCustomAttribute
+                });
+            }
+        }
+    }
+
+    // Call back to iframe
+    if (result.length > 0) {
+        AllLookupFieldsMetadata.sort(function (a, b) {
+            var alabel = (a.Name);
+            var blabel = (b.Name);
+            if (alabel < blabel)
+            { return -1 }
+            if (alabel > blabel)
+            { return 1 }
+            return 0;
+        });
+        DisplayLookupEntityFields(AllLookupFieldsMetadata);
+
+    } else {
+        RetreiveLookupEntityMetadataErrorCallback("Unable to retreive metadata for " + _thisGlobals.EntityToGetMetadataFor);
+    }
+}
+
+function DisplayLookupEntityFields(data) {
+    if (_thisGlobals.SelectLookupEntityFieldsCheckboxList) {
+        _thisGlobals.SelectLookupEntityFieldsCheckboxList.DestroyYourself();
+    }
+
+    _thisGlobals.SelectLookupEntityFieldsCheckboxList = DCrmEditableGrid.Helper.CheckboxList(
+        data, LookupEntityFieldsCheckboxListClickHandler, null, $('#listoflookupentityfieldstoselect'), true);
+    
+    $('#listoflookupentityfieldstitle').text('Select Fields for ' + _thisGlobals.EntityToGetMetadataFor.capitalizeFirstLetter());
+    $('#listoflookupentityfieldsflyout').show('slow');
+    CreateTooltip();
+}
+
 function RetreiveEntityMetadata(logicalName) {
     _thisGlobals.WaitDialog.show();
     _thisGlobals.EntityToGetMetadataFor = logicalName;
@@ -1315,7 +1429,6 @@ function SetupSelectedFieldRow(tbody, item) {
         if (dValue) {
             $td.attr('data-item-default', dValue);
         }
-
         $numInput = new NumericTextbox(id, null, null, ((dValue) ? dValue : ""), 130, $td, SaveFields, false);
 
     } else if ((item.AttrType == _thisGlobals.CrmFieldTypes.LookupType) || (item.AttrType == _thisGlobals.CrmFieldTypes.CustomerType) || (item.AttrType == _thisGlobals.CrmFieldTypes.OwnerType)) {
@@ -1374,6 +1487,14 @@ function SetupSelectedFieldRow(tbody, item) {
                     DialogOptions, null, null, LookupDefaultValueCallbackFunction);
             })
             .appendTo($td);
+
+        //$numInput = $('<button class="picklistselectbtn" title="Select fields to display form this lookup" style="margin-left:5px;">F</button>')
+        //    .attr('data-item-parentinputid', inputid)
+        //    .attr('data-tilename-id', id)
+        //    .on('click', function (e) {
+        //        e.stopPropagation();
+        //        RetreiveLookupEntityMetadata(item.LookupTargetEntity.split(',')[0]);
+        //    }).appendTo($td);
 
         // default view selector
         if (dValue) {
@@ -3660,6 +3781,26 @@ function InitializeSetupRoutines() {
         ResetHeaderFormattingElements();
     });
 
+    $('#listoflookupfieldstoselectcancelbtn').on('click', function (e) {
+        e.stopPropagation();
+        $('#listoflookupentityfieldsflyout').hide();
+    });
+
+    $('#listoflookupfieldstoselectokbtn').on('click', function (e) {
+        e.stopPropagation();
+        var checkboxs = $('#listoflookupentityfieldstoselect').find('input[type=checkbox]');
+        if (checkboxs) {
+            $.each(checkboxs, function (index, item) {
+                var input = $(item);
+                if (input.is(':checked')) {
+                    console.log(input.attr('id'));
+                }
+            });
+        }
+
+        $('#listoflookupentityfieldsflyout').hide();
+    });
+
     //$('#testheadercssinput').on('blur', function (e) {
     //    e.stopPropagation();
     //    var _this = $(this);
@@ -3678,6 +3819,10 @@ function InitializeSetupRoutines() {
     //        }
     //    }
     //});
+}
+
+function LookupEntityFieldsCheckboxListClickHandler(chk) {
+    console.log("Check clicked [" + chk.is(':checked') + "]");
 }
 
 /* Make selected entities list items sortable */
@@ -4317,9 +4462,66 @@ var DCrmEGConfigurationManager = (function () {
             return self.Formattings;
         }
 
-        //self.EntityFields = [];
-        //self.EntityConditions = [];
         self.ChildConfigurations = [];
+
+        // <link-entity name="%N%" from="%F%" to="%T%" visible="false" link-type="outer" alias="%A%">
+        // <link-entity name="contact" from="contactid" to="primarycontactid" visible="false" link-type="outer" alias="a_410707b195544cd984376608b1802904">
+        // <attribute name="lastname" />
+        // <attribute name="firstname" />
+        // </link-entity> + '[]'
+        self.LinkEntityFields = undefined;
+        // Add or Update
+        self.SetLinkEntityFields = function (name, from, to, fields) {
+            if (self.LinkEntityFields == undefined) {
+                self.LinkEntityFields = [];
+            }
+            var tmp = {
+                Name: name,
+                From: from,
+                To: to,
+                Alias: DCrmEditableGrid.Helper.GenerateRandomLetters(15),
+                Fields: fields
+            };
+            for (var i = 0; i < self.LinkEntityFields.length; i++) {
+                if (self.LinkEntityFields[i].To == to) {
+                    self.LinkEntityFields[i] = tmp;
+                    return;
+                }
+            }
+            self.LinkEntityFields.push(tmp);
+        }
+        self.SaveLinkEntityFields = function () {
+            if ((self.LinkEntityFields) && (self.LinkEntityFields.length) && (self.LinkEntityFields.length > 0)) {
+                var playload = JSON.stringify(self.LinkEntityFields);
+
+                if (playload) {
+                    console.log(JSON.parse(playload));
+                } else {
+                    console.log('Nothing????');
+                }
+            }
+        }
+        self.GetLinkEntityFields = function (to) {
+            for (var i = 0; i < self.LinkEntityFields.length; i++) {
+                if (self.LinkEntityFields[i].To == to) {
+                    return self.LinkEntityFields[i];
+                }
+            }
+            return null;
+        }
+        self.RemoveLinkEntityFields = function (to) {
+            var foundit = -1;
+            for (var i = 0; i < self.LinkEntityFields.length; i++) {
+                if (self.LinkEntityFields[i].To == to) {
+                    foundit = i;
+                    break;
+                }
+            }
+            if (foundit > -1) {
+                self.LinkEntityFields.splice(foundit, 1);
+            }
+        }
+
 
         self.Li = $('<li><div class="entitygridinfocontainer"><span class="EntityGridLabels" data-item-orglabel="' + data.Label
             + '" data-item-schemaname="' + data.SchemaName + '">'

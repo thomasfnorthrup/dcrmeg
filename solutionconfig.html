@@ -416,18 +416,38 @@ td input {
 				        <td class="Width35">Total records</td>
 				        <td><input type="text" size="100" id="dcrmeg_totalrecords" /></td>
 			        </tr>
-			        <tr>
+			        <!--<tr>
 				        <td>Activate editor on double click</td>
 				        <td><input type="text" size="100" id="dcrmeg_activateeditorondoubleclick" /></td>
 			        </tr>
 			        <tr>
 				        <td>Enter text to search</td>
 				        <td><input type="text" size="100" id="dcrmeg_entertexttosearch" /></td>
-			        </tr>
+			        </tr>-->
+                    <tr>
+                        <td>Auto Save On</td>
+                        <td><input type="text" size="100" id="dcrmeg_autosaveon" /></td>
+                    </tr>
+                    <tr>
+                        <td>Auto Save Off</td>
+                        <td><input type="text" size="100" id="dcrmeg_autosaveoff" /></td>
+                    </tr>
+                    <tr>
+                        <td>Paste from Excel</td>
+                        <td><input type="text" size="100" id="dcrmeg_pastefromexcel" /></td>
+                    </tr>
+                    <tr>
+                        <td>Set record status</td>
+                        <td><input type="text" size="100" id="dcrmeg_setrecordstatus" /></td>
+                    </tr>
+                    <tr>
+                        <td>Field value</td>
+                        <td><input type="text" size="100" id="dcrmeg_fieldvaluelabel" /></td>
+                    </tr>
 
                     <tr>
                         <td colspan="2" class="sectiondivider">
-                            <span>Tooltips (buttons, ...)</span>
+                            <span>Tooltips (toolbar buttons, ...)</span>
                         </td>
                     </tr>
 			        <tr>
@@ -466,6 +486,26 @@ td input {
 				        <td>Locked field</td>
 				        <td><input type="text" size="100" id="dcrmeg_lockedfield" /></td>
 			        </tr>
+                    <tr>
+                        <td>Refresh Grid</td>
+                        <td><input type="text" size="100" id="dcrmeg_refreshgrid" /></td>
+                    </tr>
+                    <tr>
+                        <td>Export Grid</td>
+                        <td><input type="text" size="100" id="dcrmeg_exportgrid" /></td>
+                    </tr>
+                    <tr>
+                        <td>Clone Selected Record</td>
+                        <td><input type="text" size="100" id="dcrmeg_cloneselectedrecord" /></td>
+                    </tr>
+                    <tr>
+                        <td>Clear all filters</td>
+                        <td><input type="text" size="100" id="dcrmeg_clearallfilters" /></td>
+                    </tr>
+                    <tr>
+                        <td>Remove filter</td>
+                        <td><input type="text" size="100" id="dcrmeg_removefilter" /></td>
+                    </tr>
 
 
                     <tr>
@@ -481,7 +521,14 @@ td input {
 				        <td>Cancel</td>
 				        <td><input type="text" size="100" id="dcrmeg_cancel" /></td>
 			        </tr>
-
+                    <tr>
+                        <td>Proceed to delete %S% record(s)?</td>
+                        <td><input type="text" size="100" id="dcrmeg_deleteconfirmation" /></td>
+                    </tr>
+                    <tr>
+                        <td>The record %S% contains unsaved changes.\n\nProceed to delete the record anyway?</td>
+                        <td><input type="text" size="100" id="dcrmeg_deleteunsavedconfirmation" /></td>
+                    </tr>
 
                     <tr>
                         <td colspan="2" class="sectiondivider">
@@ -489,7 +536,7 @@ td input {
                         </td>
                     </tr>
 			        <tr>
-				        <td>Page size</td>
+				        <td>Page</td>
 				        <td><input type="text" size="100" id="dcrmeg_pagesize" /></td>
 			        </tr>
 			        <tr>
@@ -504,10 +551,10 @@ td input {
 				        <td>Go to previous</td>
 				        <td><input type="text" size="100" id="dcrmeg_gotoprevious" /></td>
 			        </tr>
-			        <tr>
+			        <!--<tr>
 				        <td>Go to last</td>
 				        <td><input type="text" size="100" id="dcrmeg_gotolast" /></td>
-			        </tr>
+			        </tr>-->
 
                     <tr>
                         <td colspan="2" class="sectiondivider">
@@ -527,7 +574,7 @@ td input {
 				        <td><input type="text" size="100" id="dcrmeg_openlookuprecordinnewwindow" /></td>
 			        </tr>
 			        <tr>
-				        <td>Clear vlaue</td>
+				        <td>Clear value</td>
 				        <td><input type="text" size="100" id="dcrmeg_clearvlaue" /></td>
 			        </tr>
 			        <tr>
@@ -538,14 +585,18 @@ td input {
 				        <td>Open URL in new window</td>
 				        <td><input type="text" size="100" id="dcrmeg_openurlinnewwindow" /></td>
 			        </tr>
+                    <tr>
+                        <td>Clone Record</td>
+                        <td><input type="text" size="100" id="dcrmeg_clonerecord" /></td>
+                    </tr>
 
                     <tr>
                         <td colspan="2" class="sectiondivider">
-                            <span>Numeric summary</span>
+                            <span>Footer</span>
                         </td>
                     </tr>
 			        <tr>
-				        <td>SUM</td>
+				        <td>Aggregate</td>
 				        <td><input type="text" size="100" id="dcrmeg_sum" /></td>
 			        </tr>
 
@@ -574,6 +625,14 @@ td input {
 				        <td>Not a valid entry</td>
 				        <td><input type="text" size="100" id="dcrmeg_notavalidentry" /></td>
 			        </tr>
+                    <tr>
+                        <td>Error encountered during deletion.</td>
+                        <td><input type="text" size="100" id="dcrmeg_deletionerror" /></td>
+                    </tr>
+                    <tr>
+                        <td>Unable to create new record due to error</td>
+                        <td><input type="text" size="100" id="dcrmeg_createnewerror" /></td>
+                    </tr>
 
 		        </table>
                 </div>

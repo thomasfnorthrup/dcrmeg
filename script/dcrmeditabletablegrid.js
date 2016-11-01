@@ -1,4 +1,4 @@
-// version 5.0
+
 String.prototype.capitalizeFirstLetter = function () {
         return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
     };
@@ -45,7 +45,6 @@ Array.prototype.insert = function (index, item) {
                 "xrmPage": undefined,
                 "LoggedInUserID": undefined,
                 "Translation_Labels": {},
-
                 "CrmFieldTypes": {
                     LookupType: "lookup",
                     CustomerType: 'customer',
@@ -70,10 +69,8 @@ Array.prototype.insert = function (index, item) {
                 "ParentEntityName": undefined,
                 "ParentEntityId": undefined,
                 "TargetOutputEncSeed": '5CD566B7B6D04BE19572',
-
                 "userDatetimeSettings": undefined,
                 "userCurrencySettings": undefined,
-
                 "DataAttr": {
                     YES: "1",
                     NO: "0",
@@ -120,7 +117,6 @@ Array.prototype.insert = function (index, item) {
                         }
                     }
                 },
-
                 "DefaultCountry": "ca",
                 "DCrmEGConfiguration": [],
                 "EntityStates": [],
@@ -131,12 +127,10 @@ Array.prototype.insert = function (index, item) {
                     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\
 	                    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>\
                     </Relationships>',
-
                     "xl/_rels/workbook.xml.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
                     <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\
 	                    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>\
                     </Relationships>',
-
                     "[Content_Types].xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
                     <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\
 	                    <Default Extension="xml" ContentType="application/xml"/>\
@@ -145,7 +139,6 @@ Array.prototype.insert = function (index, item) {
 	                    <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>\
 	                    <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>\
                     </Types>',
-
                     "xl/workbook.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
                     <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\
 	                    <fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="24816"/>\
@@ -157,7 +150,6 @@ Array.prototype.insert = function (index, item) {
 		                    <sheet name="Sheet1" sheetId="1" r:id="rId1"/>\
 	                    </sheets>\
                     </workbook>',
-
                     "xl/worksheets/sheet1.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\
                     <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac">\
 	                    <sheetData>\
@@ -260,47 +252,37 @@ Array.prototype.insert = function (index, item) {
                     var text = '';
                     var thislen = len || 10;
                     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
                     for (var i = 0; i < thislen; i++) {
                         text += possible.charAt(Math.floor(Math.random() * possible.length));
                     }
                     return text;
                 },
                 "CopyTextToClipboard": function (text) {
-
                     // Works on Chrome + IE. No FF support!
-
                     if ((!text) && (text.length > 0)) {
                         //LogIt("Nothing to copy to clipboard.");
                         return;
                     }
-
                     var textArea = document.createElement("textarea");
-
                     // Place in top-left corner of screen regardless of scroll position.
                     textArea.style.position = 'fixed';
                     textArea.style.top = 0;
                     textArea.style.left = 0;
-
                     // Ensure it has a small width and height. Setting to 1px / 1em
                     // doesn't work as this gives a negative w/h on some browsers.
                     textArea.style.width = '2em';
                     textArea.style.height = '2em';
-
                     // We don't need padding, reducing the size if it does flash render.
                     textArea.style.padding = 0;
-
                     // Clean up any borders.
                     textArea.style.border = 'none';
                     textArea.style.outline = 'none';
                     textArea.style.boxShadow = 'none';
-
                     // Avoid flash of white box if rendered for any reason.
                     textArea.style.background = 'transparent';
                     textArea.value = text;
                     document.body.appendChild(textArea);
                     textArea.select();
-
                     try {
                         var successful = document.execCommand('copy');
                         var msg = successful ? 'successful' : 'unsuccessful';
@@ -312,7 +294,6 @@ Array.prototype.insert = function (index, item) {
                 },
                 "AddCurrencyFormat": function (value, Precision, cursymbol) {
                     var currencySymbol = cursymbol || _thisGlobals.userCurrencySettings.CurrencySymbol;
-
                     var fval = value + '';
                     fval = fval.replace(_thisGlobals.userCurrencySettings.DecimalSymbol, '.');
                     var num = parseFloat(fval);
@@ -320,17 +301,13 @@ Array.prototype.insert = function (index, item) {
                     if ((!isNaN(num)) && (num < 0)) {
                         isNegative = true;
                     }
-
                     if ((Precision == undefined) || (Precision == 'undefined')) {
                         Precision = _thisGlobals.userCurrencySettings.CurrencyDecimalPrecision;
                     }
-
                     fval = num.toFixed(Precision) + "";
                     fval = fval.replace('.', _thisGlobals.userCurrencySettings.DecimalSymbol);
-
                     var tmp = fval.split(_thisGlobals.userCurrencySettings.DecimalSymbol);
                     fval = tmp[0].replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + _thisGlobals.userCurrencySettings.NumberSeparator) + _thisGlobals.userCurrencySettings.DecimalSymbol + tmp[1];
-
                     if (isNegative) {
                         switch (_thisGlobals.userCurrencySettings.NegativeCurrencyFormatCode) {
                             case 1:
@@ -352,13 +329,13 @@ Array.prototype.insert = function (index, item) {
                                 fval += '-' + fval.replace('-', "") + currencySymbol;
                                 break;
                             case 6:
-                                fval = fval.replace('-', "") + '-' +  currencySymbol;
+                                fval = fval.replace('-', "") + '-' + currencySymbol;
                                 break;
                             case 7:
                                 fval = fval.replace('-', "") + currencySymbol + '-';
                                 break;
                             case 8:
-                                fval = '-'+ fval.replace('-', "") + ' ' + currencySymbol;
+                                fval = '-' + fval.replace('-', "") + ' ' + currencySymbol;
                                 break;
                             case 9:
                                 fval += '-' + currencySymbol + ' ' + fval.replace('-', "") + ')';
@@ -381,7 +358,6 @@ Array.prototype.insert = function (index, item) {
                             case 15:
                                 fval = '(' + fval.replace('-', "") + currencySymbol + ')';
                                 break;
-
                             default:
                                 fval = currencySymbol + fval;
                                 break;
@@ -405,7 +381,6 @@ Array.prototype.insert = function (index, item) {
                                 break;
                         }
                     }
-
                     return fval;
                 },
                 "AddDecimalFormat": function (value, Precision) {
@@ -416,16 +391,13 @@ Array.prototype.insert = function (index, item) {
                     if ((!isNaN(num)) && (num < 0)) {
                         isNegative = true;
                     }
-
                     if ((Precision == undefined) || (Precision == 'undefined')) {
                         Precision = _thisGlobals.userCurrencySettings.CurrencyDecimalPrecision;
                     }
-
                     fval = num.toFixed(Precision) + "";
                     fval = fval.replace('.', _thisGlobals.userCurrencySettings.DecimalSymbol);
                     var tmp = fval.split(_thisGlobals.userCurrencySettings.DecimalSymbol);
                     fval = tmp[0].replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + _thisGlobals.userCurrencySettings.NumberSeparator) + _thisGlobals.userCurrencySettings.DecimalSymbol + tmp[1];
-
                     if (isNegative) {
                         switch (_thisGlobals.userCurrencySettings.NegativeNumberFormatCode) {
                             case 0:
@@ -447,7 +419,6 @@ Array.prototype.insert = function (index, item) {
                                 break;
                         }
                     }
-
                     return fval;
                 },
                 "AddIntegerFormat": function (value) {
@@ -458,9 +429,8 @@ Array.prototype.insert = function (index, item) {
                         isNegative = true;
                     }
                     fval = fval.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + _thisGlobals.userCurrencySettings.NumberSeparator);
-
-                    if(isNegative) {
-                        switch(_thisGlobals.userCurrencySettings.NegativeNumberFormatCode) {
+                    if (isNegative) {
+                        switch (_thisGlobals.userCurrencySettings.NegativeNumberFormatCode) {
                             case 0:
                                 fval = '(' + fval.replace('-', "") + ')';
                                 break;
@@ -517,14 +487,12 @@ Array.prototype.insert = function (index, item) {
                 },
                 "FormatPhoneNumber": function (value) {
                     var txt = value.replace(/[^0-9]/g, '');
-
                     // If the number has a valid length, format the number.
                     switch (txt.length) {
                         case "4105551212".length:
                             return "(" + txt.substr(0, 3) + ") " + txt.substr(3, 3) + "-" + txt.substr(6, 4);
                             //return txt.substr(0, 3) + "-" + txt.substr(3, 3) + "-" + txt.substr(6, 4);
                             break;
-
                         case "5551212".length:
                             return txt.substr(0, 3) + "-" + txt.substr(3, 4);
                             break;
@@ -587,13 +555,10 @@ Array.prototype.insert = function (index, item) {
                     var dcrmeg = FindDCrmEGConfigurationBySchema(schemaname);
                     var manager = dcrmeg.ThisGrid;
                     var tableRows = dcrmeg.ThisGrid.GetBodyRows();
-
                     if (checked) {
                         var totalRows = tableRows.length;
-
                         for (var i = 0; i < totalRows; ++i) {
                             var $row = $(tableRows[i]);
-
                             $row.addClass(DCrmEditableGrid.Globals.DefaultGridOptions.rowSelectedCss);
                             $row.find('input:first').prop('checked', true);
                             manager.activeOptions.selectedRows[manager.activeOptions.selectedRows.length] = tableRows[i];
@@ -634,11 +599,15 @@ Array.prototype.insert = function (index, item) {
                             return (defaultVal) ? defaultVal : '';
                         }
                     }
+                },
+                "IsNullOrUndefined": function (val) {
+                    return ((val == undefined) || (val == null) || (val == 'undefined') || (val == 'null'));
                 }
             }
         }
     });
 })(jQuery);
+
 
 var _thisGlobals = DCrmEditableGrid.Globals;
 var _thisHelpers = DCrmEditableGrid.Helper;
@@ -2313,6 +2282,7 @@ $.fn.DCrmEditableGrid.Lookup = function (table, editorsArrayi, requiredErrorCont
         LookupName: "", (Average order shipment time (sample))
         LookupTargetEntity: "account,contact"
         DefaultView: 576dfa60-6456-e511-80c0-080027c01cb9
+        DefaultViewFetchXml: null
         DefaultViewObjectTypeCode: "112"
 
         TargetEntities:
@@ -3521,7 +3491,7 @@ var CrmEditableGrid = (function () {
         self.mainTable = $table;
         self.mainTableRaw = $table[0];
         self.activeOptions = $.extend({}, defaults, options);
-
+        
         self.errorcontainer = $("#" + self.activeOptions.RequiredErrorContainer);
         self.inputFormatErrorContainer = $('#' + self.activeOptions.InputFormatErrorContainer);
 
@@ -3814,10 +3784,10 @@ var CrmEditableGrid = (function () {
                         if ((self.activeOptions.HasStatusField) &&
                             (self.activeOptions.DisplaySetRecordState)){
                             $('<li class="divider"></li>').appendTo(menu);
-                            $('<li><a href="#" class="contextMenuLink" id="SetRecordStatus"><span class="itemTitle">Set record status</span></a></li>').appendTo(menu);
+                            $('<li><a href="#" class="contextMenuLink" id="SetRecordStatus"><span class="itemTitle">' + _thisGlobals.Translation_Labels.SetRecordStatus + '</span></a></li>').appendTo(menu);
                         }
                     }
-
+                    
                     if ((contextMenuTargetText.length > 0) &&
                         (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid)) &&
                         (self.contextMenuTarget.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid).trim().length > 0)) {
@@ -3856,7 +3826,7 @@ var CrmEditableGrid = (function () {
                             $('<li class="divider"></li>').appendTo(menu);
                         }
                         haveanymenu = true;
-                        $('<li><a href="#" class="contextMenuLink" id="CloneRecordCtxMenuItem"><span class="itemTitle">Clone record</span></a></li>').appendTo(menu);
+                        $('<li><a href="#" class="contextMenuLink" id="CloneRecordCtxMenuItem"><span class="itemTitle">' + _thisGlobals.Translation_Labels.CloneRecord + '</span></a></li>').appendTo(menu);
 
                     }
 
@@ -4811,7 +4781,7 @@ list of translated languages
             if (self.activeOptions.TotalRecordsCount > 0) {
                 if (self.activeOptions.TotalRecordsCount > self.activeOptions.PagerSize) {
                     var totalPages = Math.ceil(self.activeOptions.TotalRecordsCount / self.activeOptions.PagerSize);
-                    $('#' + self.activeOptions.GridContainerIds.PagerLabel).text("Page " + self.activeOptions.Page + "/" + totalPages);
+                    $('#' + self.activeOptions.GridContainerIds.PagerLabel).text(_thisGlobals.Translation_Labels.PageSize + " " + self.activeOptions.Page + "/" + totalPages);
                 } else {
                     $('#' + self.activeOptions.GridContainerIds.PagerLabel).text("Page 1");
                 }
@@ -5111,7 +5081,7 @@ list of translated languages
             self.AggregateCallback = function (result) {
                 if ((result) && (result.length) && (result.length > 0)) {
                     if (result[0].attributes['fetch_aggregate']) {
-                        var aggreagtecell = self.mainTable.find("tfoot:first").find("tr:first").find("td")[self.activeOptions.AggregateCellIndex];
+                        var aggreagtecell = self.mainTable.find("tfoot:last").find("tr:first").find("td")[self.activeOptions.AggregateCellIndex];
                         _thisHelpers.SetFooterCellText($(aggreagtecell),
                             self.activeOptions.AggregateCellOp.toUpperCase() + " " + result[0].attributes['fetch_aggregate'].formattedValue);
                     }
@@ -5592,7 +5562,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             }
 
             if (msg) {
-                DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + msg);
+                DisplayCrmAlertDialog(_thisGlobals.Translation_Labels.CreateNewError + "\r" + msg);
             }
 
             return false;
@@ -5608,12 +5578,15 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
             var toDelGuids = [];
             var toCheckForSubgrid = [];
             var $row = undefined;
+            var confirmMsg = '';
+
             for (var i = 0; i < selRows.length; i++) {
                 $row = $(selRows[i]);
                 
                 var dirtycells = $row.find('td.IsDirty');
                 if ((dirtycells) && (dirtycells.length)) {
-                    if (confirm('The record "' + _thisHelpers.GetActiveCellText($(dirtycells[0])) + '" contains unsaved changes.\n\nProceed to delete the record anyway?') == true) {
+                    confirmMsg = _thisGlobals.Translation_Labels.DeleteUnsavedConfirmation.replace('%S%', _thisHelpers.GetActiveCellText($(dirtycells[0])));
+                    if (confirm(confirmMsg) == true) {
                         toDel.push(parseInt($row.attr(_thisGlobals.DataAttr.Row.InternalIndex)));
                         toDelGuids.push($row.attr(_thisGlobals.DataAttr.Cell.RecordGuid));
                         toCheckForSubgrid.push($row);
@@ -5628,7 +5601,8 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 
             };
 
-            if ((toDelGuids.length > 0) && (confirm('Proceed to delete "' + toDelGuids.length + '" record?') == true)) {
+            confirmMsg = _thisGlobals.Translation_Labels.DeleteConfirmation.replace('%S%', toDelGuids.length + '');
+            if ((toDelGuids.length > 0) && (confirm(confirmMsg) == true)) {
 
                 if (window.parent.DCrmEgGridDeleting) {
                     if (!window.parent.DCrmEgGridDeleting(toDelGuids, self.activeOptions.ParentEntityInfo)) {
@@ -5697,7 +5671,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 }
 
                 if (haveErrors.length > 0) {
-                    DisplayCrmAlertDialog("Error encountered during deletion.\r" + haveErrors);
+                    DisplayCrmAlertDialog(_thisGlobals.Translation_Labels.DeletionError + "\r" + haveErrors);
                 }
             }
         });
@@ -5813,14 +5787,14 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                         var msg = CreateInlineRecord(self, cells, (((i+1) == rows.length) ? true : null));
                         if (msg) {
-                            DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + msg);
+                            DisplayCrmAlertDialog(_thisGlobals.Translation_Labels.CreateNewError + "\r" + msg);
                             Break;
                         }
                     }
                 }
 
             } catch (ex) {
-                DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + ex.message);
+                DisplayCrmAlertDialog(_thisGlobals.Translation_Labels.CreateNewError + "\r" + ex.message);
             }
         });
     }
@@ -5889,7 +5863,9 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 }
 
             } else if (field.InternalEditorType == DCrmEditableGrid.Editors.Numeric) {
-                if (field.ValueToSave.length > 0) {
+                if ((field.ValueToSave != undefined) &&
+                    (field.ValueToSave != null) && (field.ValueToSave != 'undefined') &&
+                    (field.ValueToSave != 'null') && (field.ValueToSave.length > 0)) {
                     tmp = parseInt(_thisHelpers.RemoveNumericFormat(field.ValueToSave));
                 }
                 val = { value: tmp, type: "int" };
@@ -5932,14 +5908,14 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 }
 
             } else if (field.InternalEditorType == DCrmEditableGrid.Editors.Decimal) {
-                if (field.ValueToSave) {
+                if ((field.ValueToSave != undefined) && (field.ValueToSave != null) && (field.ValueToSave != 'undefined') && (field.ValueToSave != 'null')) {
                     tmp = field.ValueToSave;
                 }
                 // decimal and flaot types are treated the same
                 val = { value: tmp, type: "decimal" };
 
             } else if (field.InternalEditorType == DCrmEditableGrid.Editors.Currency) {
-                if (field.ValueToSave) {
+                if ((field.ValueToSave != undefined) && (field.ValueToSave != null) && (field.ValueToSave != 'undefined') && (field.ValueToSave != 'null')) {
                     tmp = field.ValueToSave;
                 }
                 val = { value: tmp, type: "Money" };
@@ -5984,7 +5960,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 "<entity name='" + schemaName + "'>" +
                     "<attribute name='" + primaryidattr + "' aggregate='count' alias='count' />";
         if (filters.length > 0) {
-            fetchXml += '<filter type="and">' + filters + '</filter>';
+            fetchXml += filters;
         }
         fetchXml += "</entity>" +
             "</fetch>";
@@ -6555,7 +6531,7 @@ You can’t set the values for partylist or regarding lookups.
         menu.remove();
         
         if (msg) {
-            DisplayCrmAlertDialog("Unable to create new record due to exception:\r" + msg);
+            DisplayCrmAlertDialog(_thisGlobals.Translation_Labels.CreateNewError + "\r" + msg);
         }
     });
 
@@ -7572,12 +7548,13 @@ function GetAllUserSettingsCallback(allsettings) {
 }
 
 function GetTranslationsFor(lcid) {
+    //console.log("User LCID [" + lcid + "]");
+
     var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
       '<entity name="dcrmeg_dcrmegtranslation">' +
         '<attribute name="dcrmeg_dcrmegtranslationid" />' +
         '<attribute name="dcrmeg_name" />' +
         '<attribute name="dcrmeg_lcid" />' +
-
         '<attribute name="dcrmeg_totalrecords" />' +
         '<attribute name="dcrmeg_copyvaluetoclipboard" />' +
         '<attribute name="dcrmeg_openrecordinnewwindow" />' +
@@ -7593,12 +7570,9 @@ function GetTranslationsFor(lcid) {
         '<attribute name="dcrmeg_newrecord" />' +
         '<attribute name="dcrmeg_deleteselectedrecords" />' +
         '<attribute name="dcrmeg_savechanges" />' +
-        '<attribute name="dcrmeg_activateeditorondoubleclick" />' +
-        '<attribute name="dcrmeg_entertexttosearch" />' +
         '<attribute name="dcrmeg_gotofirst" />' +
         '<attribute name="dcrmeg_gotonext" />' +
         '<attribute name="dcrmeg_gotoprevious" />' +
-        '<attribute name="dcrmeg_gotolast" />' +
         '<attribute name="dcrmeg_pagesize" />' +
         '<attribute name="dcrmeg_lockedfield" />' +
         '<attribute name="dcrmeg_requiredfield" />' +
@@ -7610,7 +7584,24 @@ function GetTranslationsFor(lcid) {
         '<attribute name="dcrmeg_notavalidentry" />' +
         '<attribute name="dcrmeg_lookupmorerecords" />' +
         '<attribute name="dcrmeg_openurlinnewwindow" />' +
-        
+        '<attribute name="dcrmeg_autosaveon" />' +
+        '<attribute name="dcrmeg_autosaveoff" />' +
+        '<attribute name="dcrmeg_refreshgrid" />' +
+        '<attribute name="dcrmeg_exportgrid" />' +
+        '<attribute name="dcrmeg_clonerecord" />' +
+        '<attribute name="dcrmeg_cloneselectedrecord" />' +
+        '<attribute name="dcrmeg_clearallfilters" />' +
+        '<attribute name="dcrmeg_pastefromexcel" />' +
+        '<attribute name="dcrmeg_setrecordstatus" />' +
+        '<attribute name="dcrmeg_fieldvaluelabel" />' +
+        '<attribute name="dcrmeg_removefilter" />' +
+        '<attribute name="dcrmeg_deletionerror" />' +
+        '<attribute name="dcrmeg_deleteunsavedconfirmation" />' +
+        '<attribute name="dcrmeg_deleteconfirmation" />' +
+        '<attribute name="dcrmeg_createnewerror" />' +
+        //'<attribute name="dcrmeg_activateeditorondoubleclick" />' +
+        //'<attribute name="dcrmeg_entertexttosearch" />' +
+        //'<attribute name="dcrmeg_gotolast" />' +
         '<order attribute="dcrmeg_name" descending="false" />' +
         '<filter type="and">' +
           '<condition attribute="dcrmeg_lcid" operator="eq" value="' + lcid + '" />' +
@@ -7620,83 +7611,133 @@ function GetTranslationsFor(lcid) {
   XrmServiceToolkit.Soap.Fetch(fetch, false, GetTranslationsForCallback);
 }
 
-function GetTranslationsForCallback(translation) {
+function SetDefaultTranslations() {
+    _thisGlobals.Translation_Labels.ValidationRequired = 'Required Field';
+    _thisGlobals.Translation_Labels.ValidationInvalidFormat = 'Invalid Format';
+
+    _thisGlobals.Translation_Labels.TotalRecords = "Total records";
+    _thisGlobals.Translation_Labels.CopyValueToClipboard = "Copy value to clipboard";
+    _thisGlobals.Translation_Labels.OpenRecordInNewWindow = "Open record in new window";
+    _thisGlobals.Translation_Labels.OpenLookupInNewWindow = "Open lookup record in new window";
+    _thisGlobals.Translation_Labels.ClearValue = "Clear value";
+    _thisGlobals.Translation_Labels.Ok = "Ok";
+    _thisGlobals.Translation_Labels.Cancel = "Cancel";
+    _thisGlobals.Translation_Labels.AggregateFunctions = "Aggregate functions";
+    _thisGlobals.Translation_Labels.SelectRecord = "Select record";
+    _thisGlobals.Translation_Labels.SelectAllRecords = "Select all records";
+    _thisGlobals.Translation_Labels.UndoChanges = "Undo changes";
+    _thisGlobals.Translation_Labels.UndoAllChanges = "Undo all changes";
+    _thisGlobals.Translation_Labels.NewRecord = "New record";
+    _thisGlobals.Translation_Labels.DeleteSelectedRecord = "Delete selected record(s)";
+    _thisGlobals.Translation_Labels.SaveChanges = "Save changes";
+    _thisGlobals.Translation_Labels.ActivateEditorOnDBClick = "Activate editors on double click";
+    _thisGlobals.Translation_Labels.EnterTextToSearch = "Enter text to search";
+    _thisGlobals.Translation_Labels.GoToFirst = "Go to first";
+    _thisGlobals.Translation_Labels.GoToNext = "Go to next";
+    _thisGlobals.Translation_Labels.GoToPrevious = "Go to previous";
+    _thisGlobals.Translation_Labels.GoToLast = "Go to last";
+    _thisGlobals.Translation_Labels.PageSize = "Page";
+    _thisGlobals.Translation_Labels.LockedField = "Requiered field";
+    _thisGlobals.Translation_Labels.ReadOnly = "Read-only";
+    _thisGlobals.Translation_Labels.OpenRecord = "Open record";
+    _thisGlobals.Translation_Labels.IncorrectFormat = "Incorrect format";
+    _thisGlobals.Translation_Labels.MaxValue = "Max value";
+    _thisGlobals.Translation_Labels.MinValue = "Min value";
+    _thisGlobals.Translation_Labels.NotaValidEntry = "Not a valid entry";
+    _thisGlobals.Translation_Labels.LookupMoreRecords = "Lookup more records";
+    _thisGlobals.Translation_Labels.OpenUrlInNewWindow = "Open URL in new window";
+
     _thisGlobals.Translation_Labels.AutoSaveOn = 'Auto Save On';
     _thisGlobals.Translation_Labels.AutoSaveOff = 'Auto Save Off';
     _thisGlobals.Translation_Labels.RefreshGrid = 'Refresh';
+    _thisGlobals.Translation_Labels.Export = "Export";
+    _thisGlobals.Translation_Labels.CloneRecord = "Clone Record";
+    _thisGlobals.Translation_Labels.CloneSelectedRecord = "Clone Selected Record";
+    _thisGlobals.Translation_Labels.ClearAllFilters = "Clear All Filters";
+    _thisGlobals.Translation_Labels.PasteFromExcel = 'Paste from Excel to create new record';
+    _thisGlobals.Translation_Labels.SetRecordStatus = 'Set Record Status';
+    _thisGlobals.Translation_Labels.FieldValue = 'Field Value';
+    _thisGlobals.Translation_Labels.RemoveFilter = 'Remove filter';
+
+    _thisGlobals.Translation_Labels.DeletionError = 'Error encountered during deletion.';
+    _thisGlobals.Translation_Labels.DeleteUnsavedConfirmation = 'The record %S% contains unsaved changes.\n\nProceed to delete the record anyway?';
+    _thisGlobals.Translation_Labels.DeleteConfirmation = 'Proceed to delete %S% record(s)?';
+    _thisGlobals.Translation_Labels.CreateNewError = 'Unable to create new record due to error';
+}
+
+function GetTranslationsForCallback(translation) {
+
+    SetDefaultTranslations();
 
     if (translation.length > 0) {
         var $tmp = undefined;
 
-        $("#validationerror").text((translation[0].attributes["dcrmeg_requiredfield"] ? translation[0].attributes["dcrmeg_requiredfield"].value : ''));
-        $("#inputformaterror").text((translation[0].attributes["dcrmeg_incorrectformat"] ? translation[0].attributes["dcrmeg_incorrectformat"].value : ''));
+        _thisGlobals.Translation_Labels.ValidationRequired = (translation[0].attributes["dcrmeg_requiredfield"] ? translation[0].attributes["dcrmeg_requiredfield"].value : _thisGlobals.Translation_Labels.ValidationRequired);
+        _thisGlobals.Translation_Labels.ValidationInvalidFormat = (translation[0].attributes["dcrmeg_incorrectformat"] ? translation[0].attributes["dcrmeg_incorrectformat"].value : _thisGlobals.Translation_Labels.ValidationInvalidFormat);
+        $("#validationerror").text(_thisGlobals.Translation_Labels.ValidationRequired);
+        $("#inputformaterror").text(_thisGlobals.Translation_Labels.ValidationInvalidFormat);
 
-        _thisGlobals.Translation_Labels.TotalRecords = (translation[0].attributes["dcrmeg_totalrecords"] ? translation[0].attributes["dcrmeg_totalrecords"].value : '');
-        _thisGlobals.Translation_Labels.CopyValueToClipboard = (translation[0].attributes["dcrmeg_copyvaluetoclipboard"] ? translation[0].attributes["dcrmeg_copyvaluetoclipboard"].value : '');
-        _thisGlobals.Translation_Labels.OpenRecordInNewWindow = (translation[0].attributes["dcrmeg_openrecordinnewwindow"] ? translation[0].attributes["dcrmeg_openrecordinnewwindow"].value : '');
-        _thisGlobals.Translation_Labels.OpenLookupInNewWindow = (translation[0].attributes["dcrmeg_openlookuprecordinnewwindow"] ? translation[0].attributes["dcrmeg_openlookuprecordinnewwindow"].value : '');
-        _thisGlobals.Translation_Labels.ClearValue = (translation[0].attributes["dcrmeg_clearvlaue"] ? translation[0].attributes["dcrmeg_clearvlaue"].value : '');
-        _thisGlobals.Translation_Labels.Ok = (translation[0].attributes["dcrmeg_ok"] ? translation[0].attributes["dcrmeg_ok"].value : '');
-        _thisGlobals.Translation_Labels.Cancel = (translation[0].attributes["dcrmeg_cancel"] ? translation[0].attributes["dcrmeg_cancel"].value : '');
-        _thisGlobals.Translation_Labels.Sum = (translation[0].attributes["dcrmeg_sum"] ? translation[0].attributes["dcrmeg_sum"].value : '');
-        _thisGlobals.Translation_Labels.SelectRecord = (translation[0].attributes["dcrmeg_selectrecord"] ? translation[0].attributes["dcrmeg_selectrecord"].value : '');
-        _thisGlobals.Translation_Labels.SelectAllRecords = (translation[0].attributes["dcrmeg_selectallrecords"] ? translation[0].attributes["dcrmeg_selectallrecords"].value : '');
-        _thisGlobals.Translation_Labels.UndoChanges = (translation[0].attributes["dcrmeg_undochanges"] ? translation[0].attributes["dcrmeg_undochanges"].value : '');
-        _thisGlobals.Translation_Labels.UndoAllChanges = (translation[0].attributes["dcrmeg_undoallchanges"] ? translation[0].attributes["dcrmeg_undoallchanges"].value : '');
-        _thisGlobals.Translation_Labels.NewRecord = (translation[0].attributes["dcrmeg_newrecord"] ? translation[0].attributes["dcrmeg_newrecord"].value : '');
-        _thisGlobals.Translation_Labels.DeleteSelectedRecord = (translation[0].attributes["dcrmeg_deleteselectedrecords"] ? translation[0].attributes["dcrmeg_deleteselectedrecords"].value : '');
-        _thisGlobals.Translation_Labels.SaveChanges = (translation[0].attributes["dcrmeg_savechanges"] ? translation[0].attributes["dcrmeg_savechanges"].value : '');
-        _thisGlobals.Translation_Labels.ActivateEditorOnDBClick = (translation[0].attributes["dcrmeg_activateeditorondoubleclick"] ? translation[0].attributes["dcrmeg_activateeditorondoubleclick"].value : '');
-        _thisGlobals.Translation_Labels.EnterTextToSearch = (translation[0].attributes["dcrmeg_entertexttosearch"] ? translation[0].attributes["dcrmeg_entertexttosearch"].value : '');
-        _thisGlobals.Translation_Labels.GoToFirst = (translation[0].attributes["dcrmeg_gotofirst"] ? translation[0].attributes["dcrmeg_gotofirst"].value : '');
-        _thisGlobals.Translation_Labels.GoToNext = (translation[0].attributes["dcrmeg_gotonext"] ? translation[0].attributes["dcrmeg_gotonext"].value : '');
-        _thisGlobals.Translation_Labels.GoToPrevious = (translation[0].attributes["dcrmeg_gotoprevious"] ? translation[0].attributes["dcrmeg_gotoprevious"].value : '');
-        _thisGlobals.Translation_Labels.GoToLast = (translation[0].attributes["dcrmeg_gotolast"] ? translation[0].attributes["dcrmeg_gotolast"].value : '');
-        _thisGlobals.Translation_Labels.PageSize = (translation[0].attributes["dcrmeg_pagesize"] ? translation[0].attributes["dcrmeg_pagesize"].value : '');
-        _thisGlobals.Translation_Labels.LockedField = (translation[0].attributes["dcrmeg_lockedfield"] ? translation[0].attributes["dcrmeg_lockedfield"].value : '');
-        _thisGlobals.Translation_Labels.ReadOnly = (translation[0].attributes["dcrmeg_readonly"] ? translation[0].attributes["dcrmeg_readonly"].value : '');
-        _thisGlobals.Translation_Labels.OpenRecord = (translation[0].attributes["dcrmeg_openrecord"] ? translation[0].attributes["dcrmeg_openrecord"].value : '');
-        _thisGlobals.Translation_Labels.IncorrectFormat = (translation[0].attributes["dcrmeg_incorrectformat"] ? translation[0].attributes["dcrmeg_incorrectformat"].value : '');
-        _thisGlobals.Translation_Labels.MaxValue = (translation[0].attributes["dcrmeg_maxvalue"] ? translation[0].attributes["dcrmeg_maxvalue"].value : '');
-        _thisGlobals.Translation_Labels.MinValue = (translation[0].attributes["dcrmeg_minvalue"] ? translation[0].attributes["dcrmeg_minvalue"].value : '');
-        _thisGlobals.Translation_Labels.NotaValidEntry = (translation[0].attributes["dcrmeg_notavalidentry"] ? translation[0].attributes["dcrmeg_notavalidentry"].value : '');
-        _thisGlobals.Translation_Labels.OpenUrlInNewWindow = (translation[0].attributes["dcrmeg_openurlinnewwindow"] ? translation[0].attributes["dcrmeg_openurlinnewwindow"].value : '');
+        _thisGlobals.Translation_Labels.TotalRecords = (translation[0].attributes["dcrmeg_totalrecords"] ? translation[0].attributes["dcrmeg_totalrecords"].value : _thisGlobals.Translation_Labels.TotalRecords);
+        _thisGlobals.Translation_Labels.CopyValueToClipboard = (translation[0].attributes["dcrmeg_copyvaluetoclipboard"] ? translation[0].attributes["dcrmeg_copyvaluetoclipboard"].value : _thisGlobals.Translation_Labels.CopyValueToClipboard);
+        _thisGlobals.Translation_Labels.OpenRecordInNewWindow = (translation[0].attributes["dcrmeg_openrecordinnewwindow"] ? translation[0].attributes["dcrmeg_openrecordinnewwindow"].value : _thisGlobals.Translation_Labels.OpenRecordInNewWindow);
+        _thisGlobals.Translation_Labels.OpenLookupInNewWindow = (translation[0].attributes["dcrmeg_openlookuprecordinnewwindow"] ? translation[0].attributes["dcrmeg_openlookuprecordinnewwindow"].value : _thisGlobals.Translation_Labels.OpenLookupInNewWindow);
+        _thisGlobals.Translation_Labels.ClearValue = (translation[0].attributes["dcrmeg_clearvlaue"] ? translation[0].attributes["dcrmeg_clearvlaue"].value : _thisGlobals.Translation_Labels.ClearValue);
 
-        _thisGlobals.Translation_Labels.Export = "Export";
+        _thisGlobals.Translation_Labels.Ok = (translation[0].attributes["dcrmeg_ok"] ? translation[0].attributes["dcrmeg_ok"].value : _thisGlobals.Translation_Labels.Ok);
+        $("#fieldfilter_btnok").text(_thisGlobals.Translation_Labels.Ok);
 
-    } else {
-        _thisGlobals.Translation_Labels.TotalRecords = "Total records";
-        _thisGlobals.Translation_Labels.CopyValueToClipboard = "Copy value to clipboard";
-        _thisGlobals.Translation_Labels.OpenRecordInNewWindow = "Open record in new window";
-        _thisGlobals.Translation_Labels.OpenLookupInNewWindow = "Open lookup record in new window";
-        _thisGlobals.Translation_Labels.ClearValue = "Clear value";
-        _thisGlobals.Translation_Labels.Ok = "Ok";
-        _thisGlobals.Translation_Labels.Cancel = "Cancel";
-        _thisGlobals.Translation_Labels.Sum = "Aggregate";
-        _thisGlobals.Translation_Labels.SelectRecord = "Select record";
-        _thisGlobals.Translation_Labels.SelectAllRecords = "Select all records";
-        _thisGlobals.Translation_Labels.UndoChanges = "Undo changes";
-        _thisGlobals.Translation_Labels.UndoAllChanges = "Undo all changes";
-        _thisGlobals.Translation_Labels.NewRecord = "New record";
-        _thisGlobals.Translation_Labels.DeleteSelectedRecord = "Delete selected record(s)";
-        _thisGlobals.Translation_Labels.SaveChanges = "Save changes";
-        _thisGlobals.Translation_Labels.ActivateEditorOnDBClick = "Activate editors on double click";
-        _thisGlobals.Translation_Labels.EnterTextToSearch = "Enter text to search";
-        _thisGlobals.Translation_Labels.GoToFirst = "Go to first";
-        _thisGlobals.Translation_Labels.GoToNext = "Go to next";
-        _thisGlobals.Translation_Labels.GoToPrevious = "Go to previous";
-        _thisGlobals.Translation_Labels.GoToLast = "Go to last";
-        _thisGlobals.Translation_Labels.PageSize = "Page size";
-        _thisGlobals.Translation_Labels.LockedField = "Requiered field";
-        _thisGlobals.Translation_Labels.ReadOnly = "Read-only";
-        _thisGlobals.Translation_Labels.OpenRecord = "Open record";
-        _thisGlobals.Translation_Labels.IncorrectFormat = "Incorrect format";
-        _thisGlobals.Translation_Labels.MaxValue = "Max value";
-        _thisGlobals.Translation_Labels.MinValue = "Min value";
-        _thisGlobals.Translation_Labels.NotaValidEntry = "Not a valid entry";
-        _thisGlobals.Translation_Labels.LookupMoreRecords = "Lookup more records";
-        _thisGlobals.Translation_Labels.OpenUrlInNewWindow = "Open URL in new window";
-        _thisGlobals.Translation_Labels.Export = "Export";
+        _thisGlobals.Translation_Labels.Cancel = (translation[0].attributes["dcrmeg_cancel"] ? translation[0].attributes["dcrmeg_cancel"].value : _thisGlobals.Translation_Labels.Cancel);
+        $("#fieldfilter_btncancel").text(_thisGlobals.Translation_Labels.Cancel);
+
+        _thisGlobals.Translation_Labels.AggregateFunctions = (translation[0].attributes["dcrmeg_sum"] ? translation[0].attributes["dcrmeg_sum"].value : _thisGlobals.Translation_Labels.AggregateFunctions);
+        _thisGlobals.Translation_Labels.SelectRecord = (translation[0].attributes["dcrmeg_selectrecord"] ? translation[0].attributes["dcrmeg_selectrecord"].value : _thisGlobals.Translation_Labels.SelectRecord);
+        _thisGlobals.Translation_Labels.SelectAllRecords = (translation[0].attributes["dcrmeg_selectallrecords"] ? translation[0].attributes["dcrmeg_selectallrecords"].value : _thisGlobals.Translation_Labels.SelectAllRecords);
+        _thisGlobals.Translation_Labels.UndoChanges = (translation[0].attributes["dcrmeg_undochanges"] ? translation[0].attributes["dcrmeg_undochanges"].value : _thisGlobals.Translation_Labels.UndoChanges);
+        _thisGlobals.Translation_Labels.UndoAllChanges = (translation[0].attributes["dcrmeg_undoallchanges"] ? translation[0].attributes["dcrmeg_undoallchanges"].value : _thisGlobals.Translation_Labels.UndoAllChanges);
+        _thisGlobals.Translation_Labels.NewRecord = (translation[0].attributes["dcrmeg_newrecord"] ? translation[0].attributes["dcrmeg_newrecord"].value : _thisGlobals.Translation_Labels.NewRecord);
+        _thisGlobals.Translation_Labels.DeleteSelectedRecord = (translation[0].attributes["dcrmeg_deleteselectedrecords"] ? translation[0].attributes["dcrmeg_deleteselectedrecords"].value : _thisGlobals.Translation_Labels.DeleteSelectedRecord);
+        _thisGlobals.Translation_Labels.SaveChanges = (translation[0].attributes["dcrmeg_savechanges"] ? translation[0].attributes["dcrmeg_savechanges"].value : _thisGlobals.Translation_Labels.SaveChanges);
+        //_thisGlobals.Translation_Labels.ActivateEditorOnDBClick = (translation[0].attributes["dcrmeg_activateeditorondoubleclick"] ? translation[0].attributes["dcrmeg_activateeditorondoubleclick"].value : _thisGlobals.Translation_Labels.ActivateEditorOnDBClick);
+        //_thisGlobals.Translation_Labels.EnterTextToSearch = (translation[0].attributes["dcrmeg_entertexttosearch"] ? translation[0].attributes["dcrmeg_entertexttosearch"].value : _thisGlobals.Translation_Labels.EnterTextToSearch);
+        _thisGlobals.Translation_Labels.GoToFirst = (translation[0].attributes["dcrmeg_gotofirst"] ? translation[0].attributes["dcrmeg_gotofirst"].value : _thisGlobals.Translation_Labels.GoToFirst);
+        _thisGlobals.Translation_Labels.GoToNext = (translation[0].attributes["dcrmeg_gotonext"] ? translation[0].attributes["dcrmeg_gotonext"].value : _thisGlobals.Translation_Labels.GoToNext);
+        _thisGlobals.Translation_Labels.GoToPrevious = (translation[0].attributes["dcrmeg_gotoprevious"] ? translation[0].attributes["dcrmeg_gotoprevious"].value : _thisGlobals.Translation_Labels.GoToPrevious);
+        //_thisGlobals.Translation_Labels.GoToLast = (translation[0].attributes["dcrmeg_gotolast"] ? translation[0].attributes["dcrmeg_gotolast"].value : _thisGlobals.Translation_Labels.GoToLast);
+        _thisGlobals.Translation_Labels.PageSize = (translation[0].attributes["dcrmeg_pagesize"] ? translation[0].attributes["dcrmeg_pagesize"].value : _thisGlobals.Translation_Labels.PageSize);
+        _thisGlobals.Translation_Labels.LockedField = (translation[0].attributes["dcrmeg_lockedfield"] ? translation[0].attributes["dcrmeg_lockedfield"].value : _thisGlobals.Translation_Labels.LockedField);
+        _thisGlobals.Translation_Labels.ReadOnly = (translation[0].attributes["dcrmeg_readonly"] ? translation[0].attributes["dcrmeg_readonly"].value : _thisGlobals.Translation_Labels.ReadOnly);
+        _thisGlobals.Translation_Labels.OpenRecord = (translation[0].attributes["dcrmeg_openrecord"] ? translation[0].attributes["dcrmeg_openrecord"].value : _thisGlobals.Translation_Labels.OpenRecord);
+        _thisGlobals.Translation_Labels.IncorrectFormat = (translation[0].attributes["dcrmeg_incorrectformat"] ? translation[0].attributes["dcrmeg_incorrectformat"].value : _thisGlobals.Translation_Labels.IncorrectFormat);
+        _thisGlobals.Translation_Labels.MaxValue = (translation[0].attributes["dcrmeg_maxvalue"] ? translation[0].attributes["dcrmeg_maxvalue"].value : _thisGlobals.Translation_Labels.MaxValue);
+        _thisGlobals.Translation_Labels.MinValue = (translation[0].attributes["dcrmeg_minvalue"] ? translation[0].attributes["dcrmeg_minvalue"].value : _thisGlobals.Translation_Labels.MinValue);
+        _thisGlobals.Translation_Labels.NotaValidEntry = (translation[0].attributes["dcrmeg_notavalidentry"] ? translation[0].attributes["dcrmeg_notavalidentry"].value : _thisGlobals.Translation_Labels.NotaValidEntry);
+        _thisGlobals.Translation_Labels.OpenUrlInNewWindow = (translation[0].attributes["dcrmeg_openurlinnewwindow"] ? translation[0].attributes["dcrmeg_openurlinnewwindow"].value : _thisGlobals.Translation_Labels.OpenUrlInNewWindow);
+
+        _thisGlobals.Translation_Labels.AutoSaveOn = (translation[0].attributes["dcrmeg_autosaveon"] ? translation[0].attributes["dcrmeg_autosaveon"].value : _thisGlobals.Translation_Labels.AutoSaveOn);
+        _thisGlobals.Translation_Labels.AutoSaveOff = (translation[0].attributes["dcrmeg_autosaveoff"] ? translation[0].attributes["dcrmeg_autosaveoff"].value : _thisGlobals.Translation_Labels.AutoSaveOff);
+        _thisGlobals.Translation_Labels.RefreshGrid = (translation[0].attributes["dcrmeg_refreshgrid"] ? translation[0].attributes["dcrmeg_refreshgrid"].value : _thisGlobals.Translation_Labels.RefreshGrid);
+        _thisGlobals.Translation_Labels.Export = (translation[0].attributes["dcrmeg_exportgrid"] ? translation[0].attributes["dcrmeg_exportgrid"].value : _thisGlobals.Translation_Labels.Export);
+        _thisGlobals.Translation_Labels.CloneRecord = (translation[0].attributes["dcrmeg_clonerecord"] ? translation[0].attributes["dcrmeg_clonerecord"].value : _thisGlobals.Translation_Labels.CloneRecord);
+        _thisGlobals.Translation_Labels.CloneSelectedRecord = (translation[0].attributes["dcrmeg_cloneselectedrecord"] ? translation[0].attributes["dcrmeg_cloneselectedrecord"].value : _thisGlobals.Translation_Labels.CloneSelectedRecord);
+        _thisGlobals.Translation_Labels.ClearAllFilters = (translation[0].attributes["dcrmeg_clearallfilters"] ? translation[0].attributes["dcrmeg_clearallfilters"].value : _thisGlobals.Translation_Labels.ClearAllFilters);
+        _thisGlobals.Translation_Labels.PasteFromExcel = (translation[0].attributes["dcrmeg_pastefromexcel"] ? translation[0].attributes["dcrmeg_pastefromexcel"].value : _thisGlobals.Translation_Labels.PasteFromExcel);
+        _thisGlobals.Translation_Labels.SetRecordStatus = (translation[0].attributes["dcrmeg_setrecordstatus"] ? translation[0].attributes["dcrmeg_setrecordstatus"].value : _thisGlobals.Translation_Labels.SetRecordStatus);
+        _thisGlobals.Translation_Labels.FieldValue = (translation[0].attributes["dcrmeg_fieldvaluelabel"] ? translation[0].attributes["dcrmeg_fieldvaluelabel"].value : _thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_datetimeconditionslabel").text(_thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_numericconditionslabel").text(_thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_stringconditionslabel").text(_thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_optionsetconditionslabel").text(_thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_lookupconditionslabel").text(_thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_systemuserctllabel").text(_thisGlobals.Translation_Labels.FieldValue);
+        $("#fieldfilter_customerlookuplabel").text(_thisGlobals.Translation_Labels.FieldValue);
+
+        _thisGlobals.Translation_Labels.RemoveFilter = (translation[0].attributes["dcrmeg_removefilter"] ? translation[0].attributes["dcrmeg_removefilter"].value : _thisGlobals.Translation_Labels.RemoveFilter);
+        $('#fieldfilter_btnremovefilter').text(_thisGlobals.Translation_Labels.RemoveFilter);
+
+        _thisGlobals.Translation_Labels.DeletionError = (translation[0].attributes["dcrmeg_deletionerror"] ? translation[0].attributes["dcrmeg_deletionerror"].value : _thisGlobals.Translation_Labels.DeletionError);
+        _thisGlobals.Translation_Labels.DeleteUnsavedConfirmation = (translation[0].attributes["dcrmeg_deleteunsavedconfirmation"] ? translation[0].attributes["dcrmeg_deleteunsavedconfirmation"].value : _thisGlobals.Translation_Labels.DeleteUnsavedConfirmation);
+        _thisGlobals.Translation_Labels.DeleteConfirmation = (translation[0].attributes["dcrmeg_deleteconfirmation"] ? translation[0].attributes["dcrmeg_deleteconfirmation"].value : _thisGlobals.Translation_Labels.DeleteConfirmation);
+        _thisGlobals.Translation_Labels.CreateNewError = (translation[0].attributes["dcrmeg_createnewerror"] ? translation[0].attributes["dcrmeg_createnewerror"].value : _thisGlobals.Translation_Labels.CreateNewError);
     }
 
     if (_thisGlobals.ParentFieldsFormType != 1) {
@@ -7713,7 +7754,7 @@ function HandleParentFormOnSave() {
     _thisGlobals.xrmPage.data.entity.removeOnSave(HandleParentFormOnSave);
     setTimeout(function () {
         location.reload(true);
-    }, 1500);
+    }, 2000);
 }
 
 function CreateGridContainers(data, parentcontainer) {
@@ -7822,7 +7863,7 @@ function CreateGridContainers(data, parentcontainer) {
     containerIds.ClearAllFilters = _thisHelpers.GenerateUUID();
     $tmpBtn = $('<button></button>')
         .attr('id', containerIds.ClearAllFilters)
-        .attr(_thisGlobals.ToolTipAttrName, 'Clear all filters')
+        .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.ClearAllFilters)
         .addClass('ToolarButton ToolbarClearAllFilters')
         .appendTo($gridToolbar);
 
@@ -7842,7 +7883,7 @@ function CreateGridContainers(data, parentcontainer) {
     containerIds.CloneRecord = _thisHelpers.GenerateUUID();
     $tmpBtn = $('<button></button>')
         .attr('id', containerIds.CloneRecord)
-        .attr(_thisGlobals.ToolTipAttrName, 'Clone selected record')
+        .attr(_thisGlobals.ToolTipAttrName, _thisGlobals.Translation_Labels.CloneSelectedRecord)
         .addClass('ToolarButton ToolbarCloneRecord')
         .appendTo($gridToolbar);
 
@@ -7883,7 +7924,7 @@ function CreateGridContainers(data, parentcontainer) {
     containerIds.SearchGridBox = _thisHelpers.GenerateUUID();
     $tmpBtn = $('<textarea rows=1>')
         .attr('id', containerIds.SearchGridBox)
-        .attr('placeholder', 'Paste from Excel to create new record') //_thisGlobals.Translation_Labels.EnterTextToSearch)
+        .attr('placeholder', _thisGlobals.Translation_Labels.PasteFromExcel) //_thisGlobals.Translation_Labels.EnterTextToSearch)
         .addClass('searchgridtextbox')
         .appendTo($pagercontainer);
 
@@ -9218,9 +9259,14 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
         */
         self.GetFetchXml = function (page, pagingCookie) {
             var fetch = '';
+            var additional = null;
             page = page || "1";
 
             if (self.GridFetchXml) {
+
+                if (window.parent.DCrmEgGridOnBeforeFetchRecords) {
+                    additional = window.parent.DCrmEgGridOnBeforeFetchRecords({ ParentEntityLabel: self.Entity.Label, ParentEntitySchemaName: self.Entity.SchemaName });
+                }
 
                 if (pagingCookie) {
                     fetch += self.GridFetchXml.HeadForPaging.replace("%P%", page + "").replace("%PC%", pagingCookie)
@@ -9246,6 +9292,9 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                         }).join('');
                     }
 
+                    if ((additional) && (additional.Condition)) {
+                        fetch += additional.Condition;
+                    }
                     fetch += self.GridFetchXml.FilterTail;
 
                 } else if (self.GridFetchXml.InlineFilters.length > 0) {
@@ -9253,6 +9302,15 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                     fetch += self.GridFetchXml.InlineFilters.map(function (elem) {
                         return elem.Filter;
                     }).join('');
+
+                    if ((additional) && (additional.Condition)) {
+                        fetch += additional.Condition;
+                    }
+                    fetch += self.GridFetchXml.FilterTail;
+
+                } else if ((additional) && (additional.Condition)) {
+                    fetch += self.GridFetchXml.FilterHead;
+                    fetch += additional.Condition;
                     fetch += self.GridFetchXml.FilterTail;
                 }
 
@@ -9281,6 +9339,11 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                         }
                     }
                     fetch += self.GridFetchXml.LinkEntityTail;
+                }
+
+
+                if ((additional) && (additional.LinkEntity)) {
+                    fetch += additional.LinkEntity;
                 }
 
                 fetch += self.GridFetchXml.Tail;
@@ -9395,8 +9458,16 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
 
         self.GetFetchXmlFilters = function () {
             var fetch = '';
+            var additional = null;
+
             if (self.GridFetchXml) {
+
+                if (window.parent.DCrmEgGridOnBeforeFetchRecords) {
+                    additional = window.parent.DCrmEgGridOnBeforeFetchRecords({ ParentEntityLabel: self.Entity.Label, ParentEntitySchemaName: self.Entity.SchemaName });
+                }
+
                 if (self.GridFetchXml.Filters.length > 0) {
+                    fetch += self.GridFetchXml.FilterHead;
                     fetch += self.GridFetchXml.Filters.join('');
 
                     if (self.GridFetchXml.InlineFilters.length > 0) {
@@ -9405,11 +9476,59 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                         }).join('');
                     }
 
+                    if ((additional) && (additional.Condition)) {
+                        fetch += additional.Condition;
+                    }
+
+                    fetch += self.GridFetchXml.FilterTail;
                 } else if (self.GridFetchXml.InlineFilters.length > 0) {
+                    fetch += self.GridFetchXml.FilterHead;
                     fetch += self.GridFetchXml.InlineFilters.map(function (elem) {
                         return elem.Filter;
                     }).join('');
+
+                    if ((additional) && (additional.Condition)) {
+                        fetch += additional.Condition;
+                    }
+
+                    fetch += self.GridFetchXml.FilterTail;
+                } else if ((additional) && (additional.Condition)) {
+                    fetch += self.GridFetchXml.FilterHead;
+                    fetch += additional.Condition;
+                    fetch += self.GridFetchXml.FilterTail;
                 }
+
+                if (self.GridFetchXml.LinkEntities.length > 0) {
+                    for (var i = 0; i < self.GridFetchXml.LinkEntities.length; i++) {
+                        var le = self.GridFetchXml.LinkEntities[i];
+
+                        //[{Schema: null, Filter: null, Operator: null, Value: null, FecthOp: null, FetchValue: null, LookupGuid: null, LookupUiType}]
+                        fetch += self.GridFetchXml.LinkEntityHead
+                            .replace('%n%', le.LinkEntityHeadData.Schema)
+                            .replace('%f%', le.LinkEntityHeadData.From)
+                            .replace('%t%', le.LinkEntityHeadData.To)
+                            .replace('%a%', le.LinkEntityHeadData.Alias);
+
+                        if (le.LinkEntityFields.length > 0) {
+                            for (var ii = 0; ii < le.LinkEntityFields.length; ii++) {
+                                fetch += '<attribute name="' + le.LinkEntityFields[ii] + '" />';
+                            }
+                        }
+                        if (le.LinkEntityFilters.length > 0) {
+                            fetch += self.GridFetchXml.FilterHead;
+                            fetch += le.LinkEntityFilters.map(function (elem) {
+                                return elem.Filter;
+                            }).join('');
+                            fetch += self.GridFetchXml.FilterTail;
+                        }
+                    }
+                    fetch += self.GridFetchXml.LinkEntityTail;
+                }
+
+                if ((additional) && (additional.LinkEntity)) {
+                    fetch += additional.LinkEntity;
+                }
+
             }
             return fetch;
         };
@@ -10068,7 +10187,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         if ((data.DisplaySum) && ((ed == DCrmEditableGrid.Editors.Numeric) ||
             (ed == DCrmEditableGrid.Editors.Decimal) ||
             (ed == DCrmEditableGrid.Editors.Currency))) {
-            $("<img title='Aggregate functions' class='aggregate'></img><span class='footercelltext'></span>").appendTo($footercellInner);
+            $("<img title='" + _thisGlobals.Translation_Labels.AggregateFunctions + "' class='aggregate'></img><span class='footercelltext'></span>").appendTo($footercellInner);
         } else {
             $("<span class='footercelltext'></span>").appendTo($footercellInner);
         }
@@ -10817,7 +10936,7 @@ var GridLoaderHelper = (function () {
                     "<entity name='" + self.data.Entity.SchemaName + "'>" +
                         "<attribute name='" + self.PrimaryIdAttribute + "' aggregate='count' alias='count' />";
             if (filters.length > 0) {
-                fetchXml += '<filter type="and">' + filters + '</filter>';
+                fetchXml += filters;
             }
             fetchXml += "</entity>" +
                 "</fetch>";

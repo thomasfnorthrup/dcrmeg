@@ -1,5 +1,5 @@
 ﻿
-// testvalidation
+// JavaScript callback examples
 
 function Log(s, a) {
     if (typeof console != "undefined" && typeof console.debug != "undefined") {
@@ -11,6 +11,7 @@ function Log(s, a) {
     }
 }
 
+// Only for CRM 2015 and 2016
 // Add the FormOnloadHandler function to form (where grid is to be displayed) onload using form editor
 function FormOnloadHandler(context) {
     window.parent.ValidateDCrmEgGrid = ValidateDCrmEgGrid;
@@ -21,6 +22,24 @@ function FormOnloadHandler(context) {
     window.parent.DCrmEgGridCreateNewRecord = DCrmEgGridCreateNewRecord;
     window.parent.DCrmEgGridOnload = DCrmEgGridOnload;
     window.parent.DCrmEgGridRowOnload = DCrmEgGridRowOnload;
+    window.parent.DCrmEgGridOnBeforeFetchRecords = DCrmEgGridOnBeforeFetchRecords;
+
+    //// Changing title in 2016
+    //// Timer is needed as not all elements may have been added to the document.all collection
+    //// may need to adjust the timer duration
+    //setTimeout(function () {
+    //    console.log("Form loaded. Changing title....");
+    //    var allelem = window.parent.document.all;
+    //    console.log("All elements length " + allelem.length);
+    //    for (var i = 0; i < allelem.length; i++) {
+    //        var id = allelem[i].id || allelem[i].getAttribute('id');
+    //        if (id == 'FormTitle') {
+    //            // H1 element where title is displayed
+    //            allelem[i].childNodes[0].innerText = "Hello there";
+    //            break;
+    //        }
+    //    }
+    //}, 1000);
 }
 
 
@@ -33,6 +52,10 @@ function ValidateDCrmEgGrid(param, field) {
         // Text
         case 0:
             Log("Text - NewValue [" + param.NewValue + "] OriginalValue [" + param.OriginalValue + "]");
+            if (param.NewValue.length == 0) {
+                allow = false;
+                Log("not allowed");
+            }
             break;
 
         // Whole Number
@@ -177,7 +200,7 @@ function DCrmEgGridCreateNewRecord(data, entityinfo) {
 }
 
 function DCrmEgGridRowOnload(rowData, entityinfo) {
-    return;
+
     Log("ParentEntityName [" + entityinfo.ParentEntityName + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaname + "]");
     Log("Record Guid [" + rowData.RecordGuid + "]");
 
@@ -216,6 +239,13 @@ function DCrmEgGridRowOnload(rowData, entityinfo) {
             case CrmFieldTypes.LookupType:
             case CrmFieldTypes.CustomerType:
             case CrmFieldTypes.OwnerType:
+                //// new_myschool parentaccountid
+                //var dctl = Xrm.Page.getControl("new_myschool");
+                //if ((dctl) && (dctl.addPreSearch)) {
+                //    console.log("Have the lookup========>");
+                //} else {
+                //    console.log("Do not have the lookup============>");
+                //}
                 Log("Field Lookup Guid ["
                     + field.LookupGuid + "] Lookup LogicalName ["
                     + field.LookupLogicalName + "] Lookup Name ["
@@ -233,18 +263,18 @@ function DCrmEgGridRowOnload(rowData, entityinfo) {
             case CrmFieldTypes.DateTimeType:
                 Log("Field FormattedValue ["
                     + field.FormattedValue + "]");
-                field.ReadOnly = true;
-                // Optional, set field (cell) background and forground colors
-                field.BackgroundColor = 'lightyellow';
-                field.ForgroundColor = 'black';
+                //field.ReadOnly = true;
+                //// Optional, set field (cell) background and forground colors
+                //field.BackgroundColor = 'lightyellow';
+                //field.ForgroundColor = 'black';
                 break;
             case CrmFieldTypes.OptionSetType:
             case CrmFieldTypes.BooleanType:
                 Log("Field FormattedValue ["
                     + field.FormattedValue + "] Value [" + field.Value + "]");
-                field.ReadOnly = true;
-                field.BackgroundColor = '#CCCCCC';
-                field.ForgroundColor = 'blue';
+                //field.ReadOnly = true;
+                //field.BackgroundColor = '#CCCCCC';
+                //field.ForgroundColor = 'blue';
                 break;
             case CrmFieldTypes.State:
             case CrmFieldTypes.Status:
@@ -253,17 +283,42 @@ function DCrmEgGridRowOnload(rowData, entityinfo) {
             default:
                 break;
         }
-
     }
-
-
 }
 
 function DCrmEgGridOnload(data, entityinfo) {
-    return;
     Log("Onload - ParentEntityName [" + entityinfo.ParentEntityLabel + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaName + "]");
 
-    data.Option.readonly = (data.Option.text == "Accounting") || (data.Option.text == "Consulting") || (data.Option.text == "Friday");
+    //data.Option.readonly = (data.Option.text == "Accounting") || (data.Option.text == "Consulting") || (data.Option.text == "Friday");
 
     Log("Option set - text [" + data.Option.text + "] value [" + data.Option.value + "] ReadOnly [" + data.Option.readonly + "]");
+}
+
+function DCrmEgGridOnBeforeFetchRecords(entityinfo) {
+    var additions = null;
+
+    Log("DCrmEgGridOnBeforeFetchRecords - ParentEntityName [" + entityinfo.ParentEntityLabel + "] ParentEntitySchemaname [" + entityinfo.ParentEntitySchemaName + "]");
+
+    //// Add additional conditions
+    //if (entityinfo.ParentEntitySchemaName == 'account') {
+        //additions = {};
+
+        //// Example for a sinle value condition
+        //additional.Condition = '<condition attribute="primarycontactid" operator="eq" value="{76E339A4-1528-E611-80DD-08002738AA19}" />';
+
+        //// Example for multi value condition
+        //additions.Condition = '<condition attribute="primarycontactid" operator="in">' +
+        //    '<value>{64E339A4-1528-E611-80DD-08002738AA19}</value>' +
+        //    '<value>{76E339A4-1528-E611-80DD-08002738AA19}</value>' +
+        //'</condition>';
+
+        //// Example for a link entity
+        //additions.LinkEntity = '<link-entity name="incident" from="customerid" to="accountid" alias="aa">' +
+        //  '<filter type="and">' +
+        //    '<condition attribute="primarycontactidname" operator="like" value="fjghg%" />' +
+        //  '</filter>' +
+        //'</link-entity>';
+    //}
+
+    return additions;
 }

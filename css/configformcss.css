@@ -400,6 +400,21 @@ Processing dialog
     background-color: white;
 }
 
+.flyoutOverlayContentLookupFields
+{
+    position: absolute;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: 1px solid black;
+    width: 300px;
+    height: 300px;
+    padding: 15px;
+    background-color: white;
+}
+
 .picklistflyoutOverlay {
     display: none;
     width: 100%;
@@ -584,6 +599,23 @@ Processing dialog
     .fieldoptionsettingbutton:hover {
         border: solid 1px lightgray;
     }
+
+.lookupfieldseditable {
+    background-color: white;
+    float: right;
+    padding: 2px;
+    margin:2px 5px 0 0;
+    height: 20px;
+    width: 30px;
+    border:none;
+    background-image: url(dcrmeg_editproperty16);  
+    background-repeat: no-repeat; 
+    background-position:  center;
+}
+
+.lookupfieldslocked {
+    background-image: url(dcrmeg_lock); 
+}
 
 .checklistbuttoncondition {
     background-color: lightblue;

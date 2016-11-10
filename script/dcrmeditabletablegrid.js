@@ -5863,9 +5863,11 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 }
 
             } else if (field.InternalEditorType == DCrmEditableGrid.Editors.Numeric) {
-                if ((field.ValueToSave != undefined) &&
+                if (field.ValueToSave === 0) {
+                    tmp = field.ValueToSave;
+                } else if ((field.ValueToSave != undefined) &&
                     (field.ValueToSave != null) && (field.ValueToSave != 'undefined') &&
-                    (field.ValueToSave != 'null') && (field.ValueToSave.length > 0)) {
+                    (field.ValueToSave != 'null') && (field.ValueToSave != '')) {
                     tmp = parseInt(_thisHelpers.RemoveNumericFormat(field.ValueToSave));
                 }
                 val = { value: tmp, type: "int" };
@@ -5908,14 +5910,22 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                 }
 
             } else if (field.InternalEditorType == DCrmEditableGrid.Editors.Decimal) {
-                if ((field.ValueToSave != undefined) && (field.ValueToSave != null) && (field.ValueToSave != 'undefined') && (field.ValueToSave != 'null')) {
+                if (field.ValueToSave === 0) {
+                    tmp = field.ValueToSave;
+                } else if ((field.ValueToSave != undefined) && (field.ValueToSave != null)
+                    && (field.ValueToSave != 'undefined')
+                    && (field.ValueToSave != 'null') && (field.ValueToSave != '')) {
                     tmp = field.ValueToSave;
                 }
                 // decimal and flaot types are treated the same
                 val = { value: tmp, type: "decimal" };
 
             } else if (field.InternalEditorType == DCrmEditableGrid.Editors.Currency) {
-                if ((field.ValueToSave != undefined) && (field.ValueToSave != null) && (field.ValueToSave != 'undefined') && (field.ValueToSave != 'null')) {
+                if (field.ValueToSave === 0) {
+                    tmp = field.ValueToSave;
+                } else if ((field.ValueToSave != undefined) && (field.ValueToSave != null)
+                    && (field.ValueToSave != 'undefined') &&
+                    (field.ValueToSave != 'null') && (field.ValueToSave != '')) {
                     tmp = field.ValueToSave;
                 }
                 val = { value: tmp, type: "Money" };

@@ -684,6 +684,7 @@ var SelectBooleanCheck = (function () {
 
     function SelectBooleanCheck(id, elemWidth, parentElem, data, defaultValue, saveFunction) {
         var self = this;
+        self.SaveFuncPtr = saveFunction;
         var select = '<option selected="selected" value="1">True</option><option value="0">False</option>';
 
         if (data.length > 0) {
@@ -699,7 +700,7 @@ var SelectBooleanCheck = (function () {
             .attr('data-tilename-id', id)
             .on('change', function (e) {
                 e.stopPropagation();
-
+                
                 var val = $(this).val();
                 var txt = $(this).find(":selected").text();
                 $(this).parent().attr('data-item-default', txt + '{}' + val);
@@ -722,6 +723,7 @@ var OptionSetSelect = (function () {
 
     function OptionSetSelect(id, elemWidth, parentElem, data, defaultValue, saveFunction) {
         var self = this;
+        self.SaveFuncPtr = saveFunction;
         var select = '<option selected="selected" value="-1">---</option>';
 
         if (data.length > 0) {
@@ -1401,27 +1403,28 @@ function SetupSelectedFieldRow(tbody, item) {
                 SaveFields();
             })
             .appendTo($td);
-
     } else if (item.AttrType == _thisGlobals.CrmFieldTypes.BooleanType) {
         var optionset = XrmServiceToolkit.Soap.RetrieveAttributeMetadata(_thisGlobals._CurConfiguration.Entity.SchemaName, item.SchemaName, true);
         var data = [];
         if (optionset.length > 0) {
             data.push(
             {
-                Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.TrueOption.Label),
-                value: optionset[0].OptionSet.TrueOption.Value
+                Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.FalseOption.Label),
+                value: optionset[0].OptionSet.FalseOption.Value + ""
             });
             data.push(
             {
-                Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.FalseOption.Label),
-                value: optionset[0].OptionSet.FalseOption.Value
+                Label: DCrmEditableGrid.Helper.GetUserLocalizedLabel(optionset[0].OptionSet.TrueOption.Label),
+                value: optionset[0].OptionSet.TrueOption.Value + ""
             });
         }
 
         if (dValue) {
             $td.attr('data-item-default', dValue);
         } else {
-            $td.attr('data-item-default', data[0].Label + '{}' + data[0].value);
+            // 0 false, 4 true
+            dValue = data[0].Label + '{}' + data[0].value;
+            $td.attr('data-item-default', dValue);
         }
         $numInput = new SelectBooleanCheck(id, 140, $td, data, dValue, SaveFields);
 

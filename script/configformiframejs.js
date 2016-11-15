@@ -727,7 +727,7 @@ var OptionSetSelect = (function () {
         var select = '<option selected="selected" value="-1">---</option>';
 
         if (data.length > 0) {
-            var dv = (defaultValue) ? defaultValue.split('{}')[1] : '';
+            var dv = (defaultValue) ? defaultValue.split('{}')[1] : '-1';
 
             for (var i = 0; i < data.length; i++) {
                 select += '<option ' + ((dv == data[i].value) ? 'selected="selected"' : '') + ' value="' + data[i].value + '">' + data[i].Label + '</option>';
@@ -1392,14 +1392,20 @@ function SetupSelectedFieldRow(tbody, item) {
     $td = $('<td></td>').appendTo(row);
 
     if ((item.AttrType == _thisGlobals.CrmFieldTypes.TextType) || (item.AttrType == _thisGlobals.CrmFieldTypes.MemoType)) {
-        $td.attr('data-item-default', ((dValue) ? dValue : "Default Value"));
+        if (dValue) {
+            $td.attr('data-item-default', dValue);
+        }
         $numInput = $('<input style="width:130px;" type="text" />')
             .attr('data-tilename-id', id)
-            .val(((dValue) ? dValue : "Default Value"))
+            .val(((dValue) ? dValue : ""))
             .on('blur', function (e) {
                 e.stopPropagation();
                 var val = $(this).val();
-                $(this).parent().attr('data-item-default', val);
+                if ((val) && (val.length > 0)) {
+                    $(this).parent().attr('data-item-default', val);
+                } else {
+                    $(this).parent().removeAttr('data-item-default');
+                }
                 SaveFields();
             })
             .appendTo($td);
@@ -1514,7 +1520,7 @@ function SetupSelectedFieldRow(tbody, item) {
         $numInput = $('<input style="width:130px;" type="text" />')
             .val((dValue || ''))
             .attr('data-tilename-id', id)
-            .attr('data-item-haschanged', '0')
+            .attr('data-item-haschanged', 'N')
             .attr('id', inputid)
             .appendTo($td);
 
@@ -1536,17 +1542,17 @@ function SetupSelectedFieldRow(tbody, item) {
                 }
             },
             onChangeDateTime: function (dp, $input) {
-                var compare = $input.attr('data-item-openervalue') || '';
+                var compare = $input.attr('data-item-openervalue') || 'N';
 
                 if ($input.val() != compare) {
-                    $input.attr('data-item-haschanged', '1');
+                    $input.attr('data-item-haschanged', 'Y');
                 } else {
-                    $input.attr('data-item-haschanged', '0');
+                    $input.attr('data-item-haschanged', 'N');
                 }
             },
             onClose: function (dp, $input) {
-                var compare = $input.attr('data-item-openervalue') || '';
-                if (($input.attr('data-item-haschanged') == '1') && ($input.val() != compare)) {
+                var compare = $input.attr('data-item-openervalue') || 'N';
+                if (($input.attr('data-item-haschanged') == 'Y') && ($input.val() != compare)) {
                     $input.parent().attr('data-item-default', $input.val());
                     SaveFields();
                 } else if (($input.val().length == 0) && ($input.attr('data-item-openervalue'))) {

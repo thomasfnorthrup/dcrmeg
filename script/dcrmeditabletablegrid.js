@@ -38,6 +38,10 @@ Array.prototype.insert = function (index, item) {
     this.splice(index, 0, item);
 };
 
+Array.prototype.DeleteItem = function (index) {
+    this.splice(index, 1);
+};
+
 (function ($) {
     $.extend(true, window, {
         "DCrmEditableGrid": {
@@ -705,7 +709,7 @@ $.fn.DCrmEditableGrid = function () {
 $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorContainer, inputFormatErrorContainer) {
     'use strict';
 
-    var $editor = $("<input type=text />").addClass('TextEditors').hide().appendTo(table.parent());
+    var $editor = $('<input id="' + _thisHelpers.GenerateUUID() + '" type=text />').addClass('TextEditors').hide().appendTo(table.parent());
     if (editorsArrayi.editor != DCrmEditableGrid.Editors.Text) {
         $editor.addClass('NumericTextbox');
     }
@@ -1011,8 +1015,10 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
         return false;
 
     }).on('keypress', function (e) {
+
+        e.stopPropagation();
         if ($editor.EditorType != DCrmEditableGrid.Editors.Text) {
-            var tkey = e.which || e.keycode;
+            var tkey = e.which || e.keycode;            
             var prevente = false;
             var curPos = this.selectionStart;
 
@@ -1046,7 +1052,6 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
 
             if (prevente) {
                 e.preventDefault();
-                e.stopPropagation();
                 return false;
             }
         }
@@ -1056,6 +1061,7 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
         TabCalled = false;
         EditorValueChanged = true;
         HideError();
+        e.stopPropagation();
 
         if (tkey === DCrmEditableGrid.Keys.ENTER) {
             TabCalled = true;
@@ -1102,7 +1108,6 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
 
         if (prevent) {
             e.preventDefault();
-            e.stopPropagation();
             return false;
         }
     }).on('paste', function (e) {
@@ -1147,7 +1152,7 @@ $.fn.DCrmEditableGrid.TextBox = function (table, editorsArrayi, requiredErrorCon
     return $editor;
 };
 
-$.fn.DCrmEditableGrid.DatePicker = function (table, editorsArrayi, requiredErrorContainer) {
+$.fn.DCrmEditableGrid.DatePicker = function (table, editorsArrayi, requiredErrorContainer, minutestep) {
     'use strict';
 
     // 6/13/2014 10:51 AM
@@ -1203,6 +1208,7 @@ $.fn.DCrmEditableGrid.DatePicker = function (table, editorsArrayi, requiredError
         format: DatePickerDateFormat,
         formatDate: _thisGlobals.userDatetimeSettings.DateFormat,
         formatTime: _thisGlobals.userDatetimeSettings.TimeFormat,
+        step: minutestep,
         onShow: function (dp, $input) {
             OriginalValue = undefined;
             active = table.activeCell;
@@ -3541,7 +3547,8 @@ var CrmEditableGrid = (function () {
         self.GridEditors = CreateEditors(self.activeOptions.columneditors,
             self.mainTable, self.errorcontainer,
             self.inputFormatErrorContainer,
-            self.activeOptions.ParentEntityInfo.ParentEntitySchemaname);
+            self.activeOptions.ParentEntityInfo.ParentEntitySchemaname,
+            self.activeOptions.DateTimeMinuteStep);
         
         self.showEditor = function (e) {
             self.mainTable.activeCell = undefined;
@@ -5240,7 +5247,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
     }
 
-    function CreateEditors(editorsArray, parent, requiredContainer, inputFormatErrorContainer, parentEntitySchemaname) {
+    function CreateEditors(editorsArray, parent, requiredContainer, inputFormatErrorContainer, parentEntitySchemaname, datetimeeditorstep) {
         var alleditors = [];
         alleditors[0] = null;
         var index = 0;
@@ -5255,7 +5262,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                     break;
                 case DCrmEditableGrid.Editors.DatePicker:
                 case DCrmEditableGrid.Editors.DateTimePicker:
-                    alleditors[index] = new $.fn.DCrmEditableGrid.DatePicker(parent, editorsArray[i], requiredContainer);
+                    alleditors[index] = new $.fn.DCrmEditableGrid.DatePicker(parent, editorsArray[i], requiredContainer, datetimeeditorstep);
                     break;
                 case DCrmEditableGrid.Editors.Checkbox:
                     alleditors[index] = new $.fn.DCrmEditableGrid.CheckBox(parent, editorsArray[i], requiredContainer);
@@ -9200,6 +9207,7 @@ var DCrmEGConfigurationManager = (function () {
         self.NewBtnBehavoir = ((data.NewBtnBehavoir) && (data.NewBtnBehavoir != 'undefined')) ? data.NewBtnBehavoir : "30";
         self.BooleanEditorBehavoir = ((data.BooleanEditorBehavoir) && (data.BooleanEditorBehavoir != 'undefined')) ? data.BooleanEditorBehavoir : "20";
         self.HideAutosaveButton = ((data.HideAutosaveButton) && (data.HideAutosaveButton == 'true')) ? true : false;
+        self.DateTimeMinuteStep = ((data.DateTimeMinuteStep) && (data.DateTimeMinuteStep != 'undefined')) ? parseInt(data.DateTimeMinuteStep) : 5;
 
         self.SelectedFields = undefined;
         self.Conditions = undefined;
@@ -9704,6 +9712,7 @@ Related [false] RelatedEntityLookup [undefined]
             data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
             data.OpenRecordBehavoir = ((tmp.length > 27) ? tmp[27] : undefined);
             data.PasteFromExcel = ((tmp.length > 28) ? tmp[28] : false);
+            data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -10641,6 +10650,14 @@ function GetFilterContainer(fieldtype) {
     return id;
 }
 
+function GetDcrmEgGrid(schemaname) {
+    var config = FindDCrmEGConfigurationBySchema(schemaname);
+    if (config) {
+        return config.ThisGrid;
+    }
+    return null;
+}
+
 var GridLoaderHelper = (function () {
     function GridLoaderHelper(data, ContainerIds, ceditors, parentChildLookupInfo, NumericFields, parentcontainer) {
         var self = this;
@@ -10914,7 +10931,8 @@ var GridLoaderHelper = (function () {
                     RefreshAfterSave: self.data.RefreshAfterSave,
                     NewBtnBehavoir: self.data.NewBtnBehavoir,
                     BooleanEditorBehavoir: self.data.BooleanEditorBehavoir,
-                    OpenRecordBehavoir: self.data.OpenRecordBehavoir
+                    OpenRecordBehavoir: self.data.OpenRecordBehavoir,
+                    DateTimeMinuteStep: self.data.DateTimeMinuteStep
                 };
 
                 self.Grid = new CrmEditableGrid($('#' + self.ContainerIds.Table), options);

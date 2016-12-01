@@ -3209,6 +3209,23 @@ function InitializeSetupRoutines() {
         SetParentFormDirty();
     });
 
+    // datetimeeditorminutestep
+    $('#datetimeeditorminutestep').on('blur', function (e) {
+        var val = $(this).val();
+        if (val.length == 0) {
+            $(this).val(_thisGlobals._CurConfiguration.DateTimeMinuteStep);
+            return;
+        }
+        var num = parseInt(val);
+        if (isNaN(num)) {
+            $(this).val(_thisGlobals._CurConfiguration.DateTimeMinuteStep);
+            return;
+        } else {
+            _thisGlobals._CurConfiguration.DateTimeMinuteStep = num + '';
+        }
+        SetParentFormDirty();
+    });
+
     $("#cancelsetpicklistcondition").on('click', function (e) {
         $("#picklistconditionflyout").hide('slow');
     });
@@ -3676,6 +3693,7 @@ function InitializeSetupRoutines() {
         $('#entitiesAreRelated').attr('disabled', 'disabled');
         $('#displaySum').attr('disabled', 'disabled');
         $('#gridtitle').attr('disabled', 'disabled');
+        $('#datetimeeditorminutestep').attr('disabled', 'disabled');
 
         $('#displayclearfilterbutton').attr('disabled', 'disabled');
         $('#displayheaderfilter').attr('disabled', 'disabled');
@@ -4457,6 +4475,7 @@ var DCrmEGConfigurationManager = (function () {
         self.SortOrder = ((data.SortOrder) && (data.SortOrder != 'undefined')) ? data.SortOrder : undefined;
         self.NewBtnBehavoir = ((data.NewBtnBehavoir) && (data.NewBtnBehavoir != 'undefined')) ? data.NewBtnBehavoir : "30";
         self.BooleanEditorBehavoir = ((data.BooleanEditorBehavoir) && (data.BooleanEditorBehavoir != 'undefined')) ? data.BooleanEditorBehavoir : "20";
+        self.DateTimeMinuteStep = ((data.DateTimeMinuteStep) && (data.DateTimeMinuteStep != 'undefined')) ? data.DateTimeMinuteStep : "5";
 
         self.HideAutosaveButton = ((data.HideAutosaveButton) && (data.HideAutosaveButton == 'true')) ? true : false;
 
@@ -4698,6 +4717,7 @@ function DisplaySelectedEntityInfo(li, schema) {
     $('#createnewbtnclick').val(_thisGlobals._CurConfiguration.NewBtnBehavoir);
     $('#booleaneditorbehaviour').val(_thisGlobals._CurConfiguration.BooleanEditorBehavoir);
     $('#openrecordbehavoir').val(_thisGlobals._CurConfiguration.OpenRecordBehavoir);
+    $('#datetimeeditorminutestep').val(_thisGlobals._CurConfiguration.DateTimeMinuteStep);
     RetreiveEntityMetadata(schema);
 }
 
@@ -4812,6 +4832,7 @@ function LoadDCrmEGConfiguration() {
             data.DisplayCloneRecordButton = ((tmp.length > 26) ? tmp[26] : true);
             data.OpenRecordBehavoir = ((tmp.length > 27) ? tmp[27] : undefined);
             data.PasteFromExcel = ((tmp.length > 28) ? tmp[28] : false);
+            data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
             
         }
 
@@ -5024,7 +5045,8 @@ function SaveDCrmEGConfiguration() {
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecord
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecordButton
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].OpenRecordBehavoir
-        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].PasteFromExcel;
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].PasteFromExcel
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DateTimeMinuteStep;
         
         if (_thisGlobals.DCrmEGConfiguration[i].Fields) {
             if (i > 0) {
@@ -5100,7 +5122,8 @@ function SaveDCrmEGConfigurationInternal(config) {
     + _thisGlobals._SEPERATOR + config.DisplayCloneRecord
     + _thisGlobals._SEPERATOR + config.DisplayCloneRecordButton
     + _thisGlobals._SEPERATOR + config.OpenRecordBehavoir
-    + _thisGlobals._SEPERATOR + config.PasteFromExcel;
+    + _thisGlobals._SEPERATOR + config.PasteFromExcel
+    + _thisGlobals._SEPERATOR + config.DateTimeMinuteStep;
     
     if (config.Fields) {
         _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.SchemaName;

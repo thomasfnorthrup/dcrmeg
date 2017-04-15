@@ -2342,9 +2342,19 @@ function SaveConditions() {
         //};
         //jheadersinfo.push(item);
 
+        var tmpVal = (_thisGlobals.ReloadedFieldConditions[i].ConditionValue) ? _thisGlobals.ReloadedFieldConditions[i].ConditionValue : '';
+        if (_thisGlobals.ReloadedFieldConditions[i].CrmFieldType == _thisGlobals.CrmFieldTypes.DateTimeType) {
+            if ((tmpVal.contains('/')) && (_thisGlobals.userDatetimeSettings.DateSeparator != '/')) {
+                tmpVal = tmpVal.split('/').join(_thisGlobals.userDatetimeSettings.DateSeparator);
+            }
+            if ((tmpVal.contains('.')) && (_thisGlobals.userDatetimeSettings.DateSeparator != '.')) {
+                tmpVal = tmpVal.split('.').join(_thisGlobals.userDatetimeSettings.DateSeparator);
+            }
+        }
+
         if (i > 0) {
             headersinfo += _thisGlobals._OuterSeperator + _thisGlobals.ReloadedFieldConditions[i].ConditionAttribute + _thisGlobals._SEPERATOR
-            + ((_thisGlobals.ReloadedFieldConditions[i].ConditionValue) ? _thisGlobals.ReloadedFieldConditions[i].ConditionValue : '') + _thisGlobals._SEPERATOR
+            + tmpVal + _thisGlobals._SEPERATOR
             + ((_thisGlobals.ReloadedFieldConditions[i].OperatorFetchOp) ? (cop + ';' + _thisGlobals.ReloadedFieldConditions[i].OperatorFetchOp) : cop) + _thisGlobals._SEPERATOR
             + ((_thisGlobals.ReloadedFieldConditions[i].ConditionLabel) ? _thisGlobals.ReloadedFieldConditions[i].ConditionLabel : '') + _thisGlobals._SEPERATOR
             + _thisGlobals.ReloadedFieldConditions[i].CrmFieldType + _thisGlobals._SEPERATOR
@@ -2353,7 +2363,7 @@ function SaveConditions() {
             + ((_thisGlobals.ReloadedFieldConditions[i].CrmFieldLabel) ? _thisGlobals.ReloadedFieldConditions[i].CrmFieldLabel : '');
         } else {
             headersinfo = _thisGlobals.ReloadedFieldConditions[i].ConditionAttribute + _thisGlobals._SEPERATOR
-            + ((_thisGlobals.ReloadedFieldConditions[i].ConditionValue) ? _thisGlobals.ReloadedFieldConditions[i].ConditionValue : '') + _thisGlobals._SEPERATOR
+            + tmpVal + _thisGlobals._SEPERATOR
             + ((_thisGlobals.ReloadedFieldConditions[i].OperatorFetchOp) ? (cop + ';' + _thisGlobals.ReloadedFieldConditions[i].OperatorFetchOp) : cop) + _thisGlobals._SEPERATOR
             + ((_thisGlobals.ReloadedFieldConditions[i].ConditionLabel) ? _thisGlobals.ReloadedFieldConditions[i].ConditionLabel : '') + _thisGlobals._SEPERATOR
             + _thisGlobals.ReloadedFieldConditions[i].CrmFieldType + _thisGlobals._SEPERATOR
@@ -2402,7 +2412,12 @@ function DisplayConditions() {
             }
 
             if (Atype == _thisGlobals.CrmFieldTypes.DateTimeType) {
-                Aval = Aval.split(_thisGlobals.userDatetimeSettings.DateSeparator).join('-');
+                if (Aval.contains('/')) {
+                    Aval = Aval.split('/').join('-');
+                }
+                if (Aval.contains('.')) {
+                    Aval = Aval.split('.').join('-');
+                }
             }
 
             if (Aval.contains(';')) {
@@ -2978,6 +2993,9 @@ function InitializeSetupRoutines() {
 
     _thisGlobals.ToolTipClassSelector = DCrmEditableGrid.Helper.GenerateRandomLetters(10);
     _thisGlobals.userDatetimeSettings = GetCurrentUserDateTimeSettings();
+    //console.log("DateFormat [" + _thisGlobals.userDatetimeSettings.DateFormat +
+    //    "] DateTime Format [" + _thisGlobals.userDatetimeSettings.DateTimeFormat + "] Date Seperator [" +
+    //    _thisGlobals.userDatetimeSettings.DateSeparator + "]");
 
     _thisGlobals.Translation_Labels.widthAutoCalculate = "0, width is auto calculated";
     _thisGlobals.Translation_Labels.width = "Width";
@@ -3057,6 +3075,9 @@ function InitializeSetupRoutines() {
     $("#hideautosave_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#hideautosave_label").text());
     $("#allowcreate_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#allowcreate_label").text());
     $("#allowdelete_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#allowdelete_label").text());
+
+    $("#distinctvalues_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#distinctvalues_label").text());
+
     $("#refreshaftercreate_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#refreshaftercreate_label").text());
     $("#refreshaftersave_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#refreshaftersave_label").text());
     $("#createnewbtnclick_label").addClass(_thisGlobals.ToolTipClassSelector).attr(_thisGlobals.ToolTipAttrName, $("#createnewbtnclick_label").text());
@@ -3165,7 +3186,10 @@ function InitializeSetupRoutines() {
     });
     $('#allowdelete_check').on('click', function (e) {
         _thisGlobals._CurConfiguration.AllowDelete = $(this).prop('checked');
-
+        SetParentFormDirty();
+    });
+    $('#distinctvalues_check').on('click', function (e) {
+        _thisGlobals._CurConfiguration.DistinctValues = $(this).prop('checked');	 
         SetParentFormDirty();
     });
     $('#refreshaftercreate_check').on('click', function (e) {
@@ -3861,6 +3885,8 @@ function EntityGridMakeSortable() {
             if (elem[0].tagName != 'LI') {
                 _thisGlobals.BeforeDragParentLi = undefined;
             } else {
+                // data-item-configid
+                // FindDCrmEGConfigurationByLiId(elem.find('span:first').attr('data-item-configid'))
                 _thisGlobals.BeforeDragParentLi = FindDCrmEGConfigurationBySchema(elem.find('span:first').attr('data-item-schemaname'));
             }
             _super($item, container);
@@ -4179,11 +4205,14 @@ var LookupViewHelper = (function () {
         }
 
         // Set up views
-        self.Select2Views = self.Select2Jq.select2({
+        /*
+{
             placeholder: "Set Default View",
             maximumSelectionLength: 1,
             allowClear: true
-        })
+        }
+         */
+        self.Select2Views = self.Select2Jq.select2()
             .on("select2:select", function (e) {
                 var input = self.Select2Jq.find('option:selected');
                 //console.log("select2:select id [" + $(input[0]).attr('id') + "] savedqueryid [" + $(input[0]).attr('savedqueryid')
@@ -4468,6 +4497,7 @@ var DCrmEGConfigurationManager = (function () {
         self.AutoSaveChanges = ((data.AutoSaveChanges) && (data.AutoSaveChanges == 'false')) ? false : true;
         self.AllowCreateNew = ((data.AllowCreateNew) && (data.AllowCreateNew == 'false')) ? false : true;
         self.AllowDelete = ((data.AllowDelete) && (data.AllowDelete == 'false')) ? false : true;
+        self.DistinctValues = ((data.DistinctValues) && (data.DistinctValues) == 'true') ? true : false;
         self.RefreshAfterCreate = ((data.RefreshAfterCreate) && (data.RefreshAfterCreate == 'false')) ? false : true;
         self.RefreshAfterSave = ((data.RefreshAfterSave) && (data.RefreshAfterSave == 'true')) ? true : false;
         self.PasteFromExcel = ((data.PasteFromExcel) && (data.PasteFromExcel == 'true')) ? true : false;
@@ -4552,7 +4582,7 @@ var DCrmEGConfigurationManager = (function () {
 
 
         self.Li = $('<li><div class="entitygridinfocontainer"><span class="EntityGridLabels" data-item-orglabel="' + data.Label
-            + '" data-item-schemaname="' + data.SchemaName + '">'
+            + '" data-item-schemaname="' + data.SchemaName + '" data-item-configid="' + id + '">'
             + data.Label + '</span><button class="entitylistbuttons"></button></div><ol id="' + DCrmEditableGrid.Helper.GenerateUUID() + '"></ol></li>')
             .attr('id', id).appendTo($(parentContainer));
 
@@ -4710,6 +4740,7 @@ function DisplaySelectedEntityInfo(li, schema) {
     $('#hideautosave_check').prop('checked', _thisGlobals._CurConfiguration.HideAutosaveButton);
     $('#allowcreate_check').prop('checked', _thisGlobals._CurConfiguration.AllowCreateNew);
     $('#allowdelete_check').prop('checked', _thisGlobals._CurConfiguration.AllowDelete);
+    $('#distinctvalues_check').prop('checked', _thisGlobals._CurConfiguration.DistinctValues);
     $('#refreshaftercreate_check').prop('checked', _thisGlobals._CurConfiguration.RefreshAfterCreate);
     $('#refreshaftersave_check').prop('checked', _thisGlobals._CurConfiguration.RefreshAfterSave);
     $('#pastefromexcel_check').prop('checked', _thisGlobals._CurConfiguration.PasteFromExcel);
@@ -4753,12 +4784,6 @@ function LoadDCrmEGConfiguration() {
     // Display order
     var entities = (val) ? RetrieveEntityOutput(val, true).split(_thisGlobals._SEPERATOR) : '';
     //console.log("Loading entities", entities);
-
-    //if ((allEntittiesInfo) && (allEntittiesInfo.length > 0)) {
-    //    var allconfigs = JSON.parse(allEntittiesInfo);
-    //    for (var i = 0; i < entities.length; i++) {
-    //    }
-    //}
 
     // All Entities info
     val = _thisGlobals.xrmPage.data.entity.attributes.get(_thisGlobals.DisplayFromEntityFieldName).getValue();
@@ -4833,39 +4858,12 @@ function LoadDCrmEGConfiguration() {
             data.OpenRecordBehavoir = ((tmp.length > 27) ? tmp[27] : undefined);
             data.PasteFromExcel = ((tmp.length > 28) ? tmp[28] : false);
             data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
+            data.DistinctValues = ((tmp.length > 30) ? tmp[30] : false);
             
         }
 
         config = new DCrmEGConfigurationManager(data);
         config.Fields = FindEntiyGridFields(data.SchemaName, fields);
-
-        //if (config.Fields) {
-        //    var arr = config.Fields.split(_thisGlobals._OuterSeperator);
-        //    $.each(arr, function (index, item) {
-        //        var items = item.split(_thisGlobals._SEPERATOR);
-
-        //        if (items.length == 1) {
-        //            return;
-        //        }
-
-        //        config.EntityFields.push({
-        //            Name: items[0],
-        //            SchemaName: items[1],
-        //            AttrType: items[2],
-        //            RequieredLevel: items[3],
-        //            MaxLength: items[4],
-        //            Format: items[5],
-        //            MaxValue: items[6],
-        //            MinValue: items[7],
-        //            Precision: items[8],
-        //            RealWidth: items[9],
-        //            ReadOnly: items[10],
-        //            LookupTargetEntity: items[11],
-        //            DefaultValue: ((items.length == 13) ? items[12] : null)
-        //        });
-        //    });
-        //}
-
 
         if (consitions.length > 0) {
             config.Conditions = FindEntiyGridFields(data.SchemaName, consitions);
@@ -5046,7 +5044,8 @@ function SaveDCrmEGConfiguration() {
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DisplayCloneRecordButton
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].OpenRecordBehavoir
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].PasteFromExcel
-        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DateTimeMinuteStep;
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DateTimeMinuteStep
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DistinctValues;
         
         if (_thisGlobals.DCrmEGConfiguration[i].Fields) {
             if (i > 0) {
@@ -5123,7 +5122,8 @@ function SaveDCrmEGConfigurationInternal(config) {
     + _thisGlobals._SEPERATOR + config.DisplayCloneRecordButton
     + _thisGlobals._SEPERATOR + config.OpenRecordBehavoir
     + _thisGlobals._SEPERATOR + config.PasteFromExcel
-    + _thisGlobals._SEPERATOR + config.DateTimeMinuteStep;
+    + _thisGlobals._SEPERATOR + config.DateTimeMinuteStep
+    + _thisGlobals._SEPERATOR + config.DistinctValues;
     
     if (config.Fields) {
         _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.SchemaName;

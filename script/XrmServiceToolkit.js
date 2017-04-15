@@ -2185,7 +2185,11 @@ XrmServiceToolkit.Soap = function () {
 
             if (newMoreRecords) {
                 pageNumber += 1;
-                var newPageCookie = selectSingleNodeText(moreResultXml, "//a:PagingCookie").replace(/\"/g, '\'').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&quot;');;
+                var temp = selectSingleNodeText(moreResultXml, "//a:PagingCookie");
+                var newPageCookie = "";
+                if ((temp != undefined) && (temp != null) && (temp != "undefined")) {
+                    newPageCookie = temp.replace(/\"/g, '\'').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&quot;');;
+                }
 
                 fetchMore(fetchCoreXml, pageNumber, newPageCookie, fetchResults);
             } else {
@@ -2295,9 +2299,12 @@ XrmServiceToolkit.Soap = function () {
                     entity.deserialize(fetchResult.childNodes[ii]);
                     fetchResults.push(entity);
                 }
-                var pageCookie = undefined;
+                var pageCookie = "";
                 if (moreRecords) {
-                    pageCookie = selectSingleNodeText(resultXml, "//a:PagingCookie").replace(/\"/g, '\'').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&quot;');
+                    var temp = selectSingleNodeText(resultXml, "//a:PagingCookie");
+                    if ((temp != undefined) && (temp != null) && (temp != "undefined")) {
+                        pageCookie = temp.replace(/\"/g, '\'').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&quot;');
+                    }
                 }
 
                 if (!async) {

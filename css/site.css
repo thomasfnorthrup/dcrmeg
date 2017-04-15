@@ -801,46 +801,6 @@ there's a rowspan on the first cell. Case added to the tests. issue#432 */
         border: solid 1px lightgray;
     }
 
-/*OptionSet (select) editor*/
-        @-moz-document url-prefix() {
-          .OptionsetEditor {
-                     width: 110%;
-            -moz-appearance: none;
-            text-indent: 0.01px;
-            text-overflow: "";
-          }
-        }
-
-        .OptionsetEditor {
-            padding: 2px 0 2px 2px;
-            font-family: Segoe\000020UI,Tahoma,Arial;
-            font-size: 12px;
-            -webkit-border-radius: 3px;
-            -moz-border-radius: 3px;
-            border-radius: 3px;
-            -webkit-appearance: none;
-            border: 0;
-            outline: 0;
-            -webkit-transition: 0.3s ease all;
-            -moz-transition: 0.3s ease all;
-            -o-transition: 0.3s ease all;
-            transition: 0.3s ease all;
-        }
-
-        .OptionsetEditor::-ms-expand {
-            display: none;
-        }
-        .OptionsetEditor:hover {
-            -moz-box-shadow: 1px 1px 2px #ccc;
-            -webkit-box-shadow: 1px 1px 2px #ccc;
-            box-shadow: 1px 1px 2px #ccc;
-            border: solid 1px #CCCCCC;
-            background-color: #F3F1F1;
-        }
-        .OptionsetEditor option:focus {
-            background-color: white;
-        }
-
 /*  Context Menu */
 .contextMenuPlugin {
     -moz-user-select: none;
@@ -1672,6 +1632,7 @@ position:relative;
     -ms-user-select: none;
     -webkit-user-select: none;
     user-select: none;
+    min-height: 15px;
 }
   .select2-results__option[aria-selected] {
     cursor: pointer; }

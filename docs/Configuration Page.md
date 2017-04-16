@@ -1,6 +1,6 @@
 ## Configuration Page
 
-![](Configuration Page_Config.PNG)
+<p><img src="https://github.com/mehrgithub/dcrmeg/raw/master/docs/Configuration%20Page_Config.PNG" /></p>
 
 # Select the entity where the grid is to be displayed
 # Select the entity where grid data is to be pulled from

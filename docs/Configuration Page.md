@@ -91,7 +91,7 @@ Text, Description, Date, Datetime, Integer, Decimal, Float, and Money</p>
 <br>
 <span style="color:red; font-size:14px">1</span> Displays selected xxxxx (entity) fields and various options that can be set.<br>
 <span style="color:red; font-size:14px">2</span> Allows to set up to two fields to be used for initial sorting<br>
-<img src="https://github.com/mehrgithub/dcrmeg/raw/master/docs/Configuration_ConfigureSorting.PNG" /><br>
+<img src="https://github.com/mehrgithub/dcrmeg/raw/master/docs/Configuration_configureSorting.PNG" /><br>
 <span style="color:red; font-size:14px">3</span> Controls whether the field is read-only<br>
 <span style="color:red; font-size:14px">4</span> Controls the width of the grid header in pixels (example: 120). Default 0, the grid auto calculates the width.<br>
 <span style="color:red; font-size:14px">5</span> Values set in these fields is used during the creation of inline records to set the initial value of the field in the new record.<br>

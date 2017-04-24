@@ -1,6 +1,6 @@
 **Opportunity_Account_Relationship.png**
 
-![](Opportunity_Opportunity_Account_Relationship.png)
+![](Opportunity_Opportunity_Account_Relationship.PNG)
 
 **account_form_01.PNG**
 

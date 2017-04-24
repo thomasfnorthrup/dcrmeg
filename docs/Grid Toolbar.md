@@ -1,5 +1,5 @@
 ## Grid Toolbar
 
-![](Grid Toolbar_toolbar.PNG)
+![](Grid%20Toolbar_toolbar.PNG)
 
 

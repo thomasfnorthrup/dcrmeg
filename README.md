@@ -1,5 +1,6 @@
 <h2>Project Description</h2>
 <p>D CRM Editable Grid is a zero code (Html5 JavaScript) add on for Dynamics CRM 2013, 2015, and 2016 for easily implementing custom editable grids</p>
+<h3-><a href="https://github.com/mehrgithub/dcrmeg/blob/master/docs/Documentation.md">Documentation</a></h3>
 <h2>Features</h2>
 <div><ul>
 <li>In-line editing </li><li>Editing multiple records at the same time </li><li>Allows multiple entity relationships to be represented in a single CRM form </li><li>Allows multiple grids on a single form in different sections </li><li>One configuration to display multiple entities on one form. Add field default value, condition, re-arrange fields display order, and set other options
@@ -10,7 +11,6 @@
 </li><li>Set record status </li><li>Optional auto save and auto refresh on save </li><li>Sorting </li><li>Paging </li><li>Navigation via keyboard arrows or tab keys </li><li>Unlimited undo - Place focus on a cell that has gone through one/multiple changes, use undo button to traverse back through the changes until reaching the original value.
 </li><li>Undo all changes - Resets all changed cells to their original value. </li><li>Open record from the grid (in the same window or in a new window) </li></ul></div>
 
-<h3-><a href="https://github.com/mehrgithub/dcrmeg/blob/master/docs/Documentation.md">Documentation</a><br /></h3>
 <p>
 <img title="GridConfigSec1.PNG" src="https://github.com/mehrgithub/dcrmeg/raw/master/docs/Home_GridWithColors.PNG"><br>
 <br>

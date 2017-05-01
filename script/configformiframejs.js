@@ -107,6 +107,7 @@ Array.prototype.ExactMatchExists = function (str) {
                 "_SEPERATOR": '||',
                 "_OuterSeperator": '[]',
                 "_pSeperator": '%%',
+                "_sSeperator": '$$',
 
                 "TargetOutputEncSeed": '5CD566B7B6D04BE19572',
                 "userDatetimeSettings": undefined,
@@ -1123,8 +1124,6 @@ function FillEntityMetadata(data) {
         ResetEvenOddRowColors($row1, $row2);
         $('#headerformattingcontainer').addClass('displaynone');
         
-        //console.log("Getting options for entity [" + _thisGlobals.EntityToGetMetadataFor + "]");
-
         var formattingopions = _thisGlobals._CurConfiguration.GetFormattingOptions();
 
         $.each(_thisGlobals.ReloadedSavedFields, function (index, item) {
@@ -1232,7 +1231,6 @@ function DeccoupleCss(css, elem, remove) {
         var arr = css.split(';');
         for (var i = 0; i < arr.length; i++) {
             if ((arr[i]) && (arr[i].length) && (arr[i].length > 0)) {
-                //console.log("arr[i] " + arr[i]);
                 var item = arr[i].split(":");
                 if (remove) {
                     elem.css(item[0], "");
@@ -1976,7 +1974,6 @@ function PopulateSavedFields() {
                 RealIndex: ''
             });
         });
-        //console.log("Fields", _thisGlobals.ReloadedSavedFields);
     }
 
     _thisGlobals.ReloadedFieldConditions = [];
@@ -3169,6 +3166,14 @@ function InitializeSetupRoutines() {
 
         SetParentFormDirty();
     });
+    $('#systemcurrencyprecision').on('change', function (e) {
+        var val = $(this).val();
+        _thisGlobals._CurConfiguration.SystemCurrencyPrecision = val;
+
+        SetParentFormDirty();
+    });
+
+
     $('#autosavechanges_check').on('click', function (e) {
         _thisGlobals._CurConfiguration.AutoSaveChanges = $(this).prop('checked');
 
@@ -3233,7 +3238,6 @@ function InitializeSetupRoutines() {
         SetParentFormDirty();
     });
 
-    // datetimeeditorminutestep
     $('#datetimeeditorminutestep').on('blur', function (e) {
         var val = $(this).val();
         if (val.length == 0) {
@@ -3249,7 +3253,6 @@ function InitializeSetupRoutines() {
         }
         SetParentFormDirty();
     });
-
     $("#cancelsetpicklistcondition").on('click', function (e) {
         $("#picklistconditionflyout").hide('slow');
     });
@@ -3479,6 +3482,8 @@ function InitializeSetupRoutines() {
         var frColor = $("#conditionforegroundcolor").spectrum("get").toHexString();
 
         var options = _thisGlobals._CurConfiguration.GetFormattingOptions();
+        console.log(options);
+
         var headeroption = options.GetField(schema);
 
         var cellcondition = null;
@@ -3617,16 +3622,16 @@ function InitializeSetupRoutines() {
             return;
         }
 
-        if (EntityGridEntityExists(schemaName)) {
-            return;
-        }
+        //if (EntityGridEntityExists(schemaName)) {
+        //    return;
+        //}
 
         var data = { SchemaName: schemaName, Label: entityLabel };
         var config = new DCrmEGConfigurationManager(data);
         AddToMainConfiguration(config);
         SetParentTitle();
         SetParentFormDirty();
-        DisplaySelectedEntityInfo(config.Li, schemaName);
+        DisplaySelectedEntityInfo(config.Li, schemaName, config.Entity.LiId);
     });
     $('#configuresorting').on('click', function (e) {
         var $rows = $('#selectedfieldstable').find('tbody:first').find('tr');
@@ -3726,6 +3731,7 @@ function InitializeSetupRoutines() {
         $('#displayclonerecord').attr('disabled', 'disabled');
         $('#displayclonerecordbutton').attr('disabled', 'disabled');
         $('#openrecordbehavoir').prop('disabled', 'disabled');
+        $('#systemcurrencyprecision').prop('disabled', 'disabled');
         
         $('#deleteallfieldconditionsbtn').attr('disabled', 'disabled');
 
@@ -3859,12 +3865,10 @@ function InitializeSetupRoutines() {
     //    var target = _this.parent().prev().prev();
     //    if (val != '') {
     //        _this.attr('data-item-prev', val);
-    //        console.log(val);
     //        DeccoupleCss(val, _this.parent().prev().prev());
     //    } else {
     //        val = _this.attr('data-item-prev');
     //        if (val) {
-    //            console.log(val);
     //            DeccoupleCss(val, _this.parent().prev().prev(), true);
     //            _this.removeAttr('data-item-prev');
     //        }
@@ -3885,9 +3889,8 @@ function EntityGridMakeSortable() {
             if (elem[0].tagName != 'LI') {
                 _thisGlobals.BeforeDragParentLi = undefined;
             } else {
-                // data-item-configid
-                // FindDCrmEGConfigurationByLiId(elem.find('span:first').attr('data-item-configid'))
-                _thisGlobals.BeforeDragParentLi = FindDCrmEGConfigurationBySchema(elem.find('span:first').attr('data-item-schemaname'));
+                // data-item-liid
+                _thisGlobals.BeforeDragParentLi = FindDCrmEGConfigurationByLiId(elem.find('span:first').attr('data-item-liid')); // FindDCrmEGConfigurationBySchema(elem.find('span:first').attr('data-item-schemaname'));
             }
             _super($item, container);
         },
@@ -3896,13 +3899,15 @@ function EntityGridMakeSortable() {
             var parent = $item.parent().parent();
             var $thisspan = $item.find('span:first');
             var schema = $thisspan.attr('data-item-schemaname');
+            var liid = $thisspan.attr('data-item-liid');
 
-            var config = FindDCrmEGConfigurationBySchema(schema);
+            var config = FindDCrmEGConfigurationByLiId(liid);
 
             if (parent[0].tagName == 'LI') {
 
                 var parentspan = $(parent).find('span:first');
                 var parentschema = parentspan.attr('data-item-schemaname');
+                var parentliid = $(parent).attr('id');
 
                 var result = XrmServiceToolkit.Soap.RetrieveEntityMetadata(['Relationships'], schema, false);
                 if ((result) && (result.length > 0)) {
@@ -3915,15 +3920,15 @@ function EntityGridMakeSortable() {
 
                     var related = GetEntityRelationships(result[0].ManyToOneRelationships, parentschema);
                     if (related) {
+                        // TODO
                         $thisspan.text($thisspan.attr('data-item-orglabel') + ' '); // + ' - ' + related + ' = ' + parentspan.attr('data-item-orglabel'));
-                        $('<label> <input data-item-schema="' + schema + '" onclick="InnerRelationshipHandler(event, this);" checked="checked" type="checkbox"></input>' + related
+                        $('<label> <input data-item-schema="' + schema + '" data-item-liid="' + liid + '" onclick="InnerRelationshipHandler(event, this);" checked="checked" type="checkbox"></input>' + related
                             + ' = ' + parentspan.attr('data-item-orglabel') + '</label>').insertAfter($thisspan);
 
-                        config.Entity.ParentLiId = $(parent).attr('id');
+                        config.Entity.ParentLiId = parentliid;
                         config.Entity.RelatedToParentLI = true;
                         config.Entity.RelatedToParentLILookupSchemaName = related;
                         config.Entity.ParentSchemaName = parentschema;
-
                     } else {
                         config.Entity.ParentLiId = undefined;
                         config.Entity.RelatedToParentLI = false;
@@ -3931,12 +3936,13 @@ function EntityGridMakeSortable() {
                         config.Entity.ParentSchemaName = parentschema;
                     }
 
-                    var parentconfig = FindDCrmEGConfigurationBySchema(parentschema);
+                    var parentconfig = FindDCrmEGConfigurationByLiId(parentliid); // FindDCrmEGConfigurationBySchema(parentschema);
                     parentconfig.ChildConfigurations.push(jQuery.extend(true, {}, config));
                     if (_thisGlobals.BeforeDragParentLi) {
                         _thisGlobals.BeforeDragParentLi.RemoveChild(schema);
                     } else {
-                        RemoveDCrmEGConfiguration(schema, false);
+                        // RemoveDCrmEGConfiguration(schema, false);
+                        RemoveDCrmEGConfigurationbyLiId(liid, false);
                     }
 
                 } else {
@@ -4013,7 +4019,8 @@ function ResetLiData(a, b, c) {
     }
 
     var clone = jQuery.extend(true, {}, c);
-    RemoveDCrmEGConfiguration(c.Entity.SchemaName, false);
+    //RemoveDCrmEGConfiguration(c.Entity.SchemaName, false);
+    RemoveDCrmEGConfigurationbyLiId(c.Entity.LiId, false);
     AddToMainConfiguration(clone);
 }
 
@@ -4039,6 +4046,8 @@ function ResetEntityGrid() {
     _thisGlobals._CurConfiguration = undefined;
 }
 
+// TODO
+// Obsolete - remove it
 function EntityGridEntityExists(schema) {
     var li = $('#makesortable').find('li');
     var tmp = '';
@@ -4056,13 +4065,14 @@ function EntityGridEntityExists(schema) {
 function GetEntitesDispayOrder() {
     var li = $('#makesortable').find('li');
     var tmp = '';
-
     if ((li) && (li.length)) {
         for (var i = 0; i < li.length; i++) {
+            var elem = $(li[i]).find('span:first');
+
             if (i > 0) {
-                tmp += _thisGlobals._SEPERATOR + $(li[i]).find('span:first').attr('data-item-schemaname');
+                tmp += _thisGlobals._SEPERATOR + elem.attr('data-item-schemaname') + _thisGlobals._sSeperator + elem.attr('data-item-liid');
             } else {
-                tmp = $(li[i]).find('span:first').attr('data-item-schemaname');
+                tmp = elem.attr('data-item-schemaname') + _thisGlobals._sSeperator + elem.attr('data-item-liid');
             }
         }
     }
@@ -4102,11 +4112,10 @@ function GetEntityRelationshipsMain(data, displayon) {
 
     displayon = displayon || GetHiddenFieldValue(1);
     var relationships = [];
-
     if (displayon) {
         if ((data) && (data.length)) {
             for (var index = 0; index < data.length; index++) {
-                if (data[index].ReferencedEntity == displayon) {
+                if ((data[index].IsValidForAdvancedFind) && (data[index].ReferencedEntity == displayon)) {
 
                     relationships.push(data[index].ReferencingAttribute);
                     $('#relatedEntityLookupSelect')
@@ -4127,7 +4136,7 @@ function GetEntityRelationships(data, displayon) {
         if ((data) && (data.length)) {
 
             for (var index = 0; index < data.length; index++) {
-                if (data[index].ReferencedEntity == displayon) {
+                if ((data[index].IsValidForAdvancedFind) && (data[index].ReferencedEntity == displayon)) {
                     foundit = data[index].ReferencingAttribute;
                     break;
                 }
@@ -4215,8 +4224,6 @@ var LookupViewHelper = (function () {
         self.Select2Views = self.Select2Jq.select2()
             .on("select2:select", function (e) {
                 var input = self.Select2Jq.find('option:selected');
-                //console.log("select2:select id [" + $(input[0]).attr('id') + "] savedqueryid [" + $(input[0]).attr('savedqueryid')
-                //    + "] value [" + $(input[0]).val() + "] [");
                 var queryId = $(input[0]).attr('savedqueryid');
                 if (queryId) {
                     self.Select2Jq.parent().parent()
@@ -4226,7 +4233,6 @@ var LookupViewHelper = (function () {
                 SaveFields();
             })
             .on("select2:unselect", function (e) {
-                //console.log("select2:unselect", e);
                 self.Select2Jq.parent().parent().removeAttr('data-item-viewid').removeAttr('data-item-viewentityobjecttypecode');
                 SaveFields();
                 //$(e.params.data.element).attr('savedqueryid') (points to currently selected option which will be set to un selected
@@ -4271,7 +4277,8 @@ var FormattingOptions = (function () {
     function FormattingOptions(entityschemaname) {
         var self = this;
 
-        self.EntitySchemaName = entityschemaname;
+        self.EntityIdentity = entityschemaname;
+        self.EntitySchemaName = GetActualSchema(entityschemaname);
         self.Headers = []; //{ HtmlHeaderId: null, SchemaName: null, BackgroundColor: null, TextColor: null, FontCss: null, ApplyToColumn: false };
         self.Fields = []; // { HtmlCellId: null, SchemaName: null, BackgroundColor: null, TextColor: null, FontCss: null, Condition: {Operator: null, Value: null, Guid: null} };
 
@@ -4324,7 +4331,7 @@ var FormattingOptions = (function () {
                 tmp += _thisGlobals._SEPERATOR;
             }
             if (tmp.length > 0) {
-                tmp += _thisGlobals._OuterSeperator + self.EntitySchemaName;
+                tmp += _thisGlobals._OuterSeperator + self.EntityIdentity;
             }
             return tmp;
         }
@@ -4453,12 +4460,13 @@ var DCrmEGConfigurationManager = (function () {
 
         var id = DCrmEditableGrid.Helper.GenerateUUID();
         var related = undefined;
+        var actualSchema = GetActualSchema(data.SchemaName);
 
         if (data.isRelated) {
-            RetreiveEntityRelationShips(data.SchemaName);
+            RetreiveEntityRelationShips(actualSchema);
             related = data.related;
         } else {
-            var tmpRelated = RetreiveEntityRelationShips(data.SchemaName);
+            var tmpRelated = RetreiveEntityRelationShips(actualSchema);
             if (tmpRelated.length > 0) {
                 related = tmpRelated[0];
             }
@@ -4466,8 +4474,9 @@ var DCrmEGConfigurationManager = (function () {
 
         self.Entity = {
             LiId: id,
-            SchemaName: data.SchemaName,
+            SchemaName: actualSchema,
             Label: data.Label,
+            Identity: actualSchema + _thisGlobals._sSeperator + id,
 
             RelatedToDisplayOnEntity: data.isRelated,
             RelatedToDisplayOnLookupSchemaName: (related) ? related : undefined,
@@ -4479,7 +4488,7 @@ var DCrmEGConfigurationManager = (function () {
             RelatedToParentLILookupSchemaName: (data.RelatedToParentLILookupSchemaName) ? data.RelatedToParentLILookupSchemaName : undefined
         };
 
-        self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : data.Label;
+        self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : self.Entity.Label;
 
         self.DisplayClearFilterButton = ((data.DisplayClearFilterButton) && (data.DisplayClearFilterButton == 'false')) ? false : true;
         self.DisplayHeaderFilter = ((data.DisplayHeaderFilter) && (data.DisplayHeaderFilter == 'false')) ? false : true;
@@ -4493,6 +4502,7 @@ var DCrmEGConfigurationManager = (function () {
         self.DisplaySum = ((data.DisplaySum) && (data.DisplaySum == 'false')) ? false : true;
         self.FieldDisplayOption = (data.FieldDisplayOption) ? data.FieldDisplayOption : 100000003; // All fields
         self.RecordsPerPage = (data.RecordsPerPage) ? data.RecordsPerPage : '5';
+        self.SystemCurrencyPrecision = (data.SystemCurrencyPrecision) ? data.SystemCurrencyPrecision : '2';
 
         self.AutoSaveChanges = ((data.AutoSaveChanges) && (data.AutoSaveChanges == 'false')) ? false : true;
         self.AllowCreateNew = ((data.AllowCreateNew) && (data.AllowCreateNew == 'false')) ? false : true;
@@ -4516,7 +4526,7 @@ var DCrmEGConfigurationManager = (function () {
             if (self.Formattings) {
                 return self.Formattings;
             }
-            self.Formattings = new FormattingOptions(self.Entity.SchemaName);
+            self.Formattings = new FormattingOptions(self.Entity.Identity);
             return self.Formattings;
         }
 
@@ -4552,11 +4562,11 @@ var DCrmEGConfigurationManager = (function () {
             if ((self.LinkEntityFields) && (self.LinkEntityFields.length) && (self.LinkEntityFields.length > 0)) {
                 var playload = JSON.stringify(self.LinkEntityFields);
 
-                if (playload) {
-                    console.log(JSON.parse(playload));
-                } else {
-                    console.log('Nothing????');
-                }
+                //if (playload) {
+                //    console.log(JSON.parse(playload));
+                //} else {
+                //    console.log('Nothing????');
+                //}
             }
         }
         self.GetLinkEntityFields = function (to) {
@@ -4581,9 +4591,9 @@ var DCrmEGConfigurationManager = (function () {
         }
 
 
-        self.Li = $('<li><div class="entitygridinfocontainer"><span class="EntityGridLabels" data-item-orglabel="' + data.Label
-            + '" data-item-schemaname="' + data.SchemaName + '" data-item-configid="' + id + '">'
-            + data.Label + '</span><button class="entitylistbuttons"></button></div><ol id="' + DCrmEditableGrid.Helper.GenerateUUID() + '"></ol></li>')
+        self.Li = $('<li><div class="entitygridinfocontainer"><span class="EntityGridLabels" data-item-orglabel="' + self.Entity.Label
+            + '" data-item-schemaname="' + self.Entity.SchemaName + '" data-item-liid="' + id + '">'
+            + self.Entity.Label + '</span><button class="entitylistbuttons"></button></div><ol id="' + DCrmEditableGrid.Helper.GenerateUUID() + '"></ol></li>')
             .attr('id', id).appendTo($(parentContainer));
 
         self.Li.find('.entitygridinfocontainer').on('click', function (e) {
@@ -4591,14 +4601,14 @@ var DCrmEGConfigurationManager = (function () {
 
             if ((e.target) && (e.target.tagName == 'DIV')) {
                 var li = $(this).parent();
-                DisplaySelectedEntityInfo(li, self.Entity.SchemaName);
+                DisplaySelectedEntityInfo(li, self.Entity.SchemaName, self.Entity.LiId);
             }
         });
 
         self.Li.find('span:first').on('click', function (e) {
             e.stopPropagation();
             var li = $(this).parent().parent();
-            DisplaySelectedEntityInfo(li, self.Entity.SchemaName);
+            DisplaySelectedEntityInfo(li, self.Entity.SchemaName, self.Entity.LiId);
         });
 
         self.Li.find('.entitylistbuttons').on('click', function (e) {
@@ -4621,7 +4631,8 @@ var DCrmEGConfigurationManager = (function () {
                 }
             }
 
-            RemoveDCrmEGConfiguration(self.Entity.SchemaName, true);
+            //RemoveDCrmEGConfiguration(self.Entity.SchemaName, true);
+            RemoveDCrmEGConfigurationbyLiId(self.Entity.LiId, true);
             self.DestroyLi();
             SetParentTitle();
             SetParentFormDirty();
@@ -4629,7 +4640,7 @@ var DCrmEGConfigurationManager = (function () {
 
         self.RemoveChild = function (schemaname) {
             var condition = -1;
-            var config = FindDCrmEGConfigurationBySchema(self.Entity.SchemaName);
+            var config = FindDCrmEGConfigurationByLiId(self.Entity.LiId); // FindDCrmEGConfigurationBySchema(self.Entity.SchemaName);
 
             for (var i = 0; i < config.ChildConfigurations.length; i++) {
                 if (config.ChildConfigurations[i].Entity.SchemaName == schemaname) {
@@ -4644,7 +4655,7 @@ var DCrmEGConfigurationManager = (function () {
 
         self.RemoveChildByLiId = function (id) {
             var condition = -1;
-            var config = FindDCrmEGConfigurationBySchema(self.Entity.SchemaName);
+            var config = FindDCrmEGConfigurationByLiId(self.Entity.LiId); // FindDCrmEGConfigurationBySchema(self.Entity.SchemaName);
 
             for (var i = 0; i < config.ChildConfigurations.length; i++) {
                 if (config.ChildConfigurations[i].Entity.LiId == id) {
@@ -4699,7 +4710,7 @@ var DCrmEGConfigurationManager = (function () {
     return DCrmEGConfigurationManager;
 })();
 
-function DisplaySelectedEntityInfo(li, schema) {
+function DisplaySelectedEntityInfo(li, schema, liid) {
     var $this = $('#makesortable');
 
     if ($this.attr('data-item-lastfocus')) {
@@ -4710,7 +4721,8 @@ function DisplaySelectedEntityInfo(li, schema) {
 
     ResetAllUI();
 
-    _thisGlobals._CurConfiguration = FindDCrmEGConfigurationBySchema(schema);
+    _thisGlobals._CurConfiguration = FindDCrmEGConfigurationByLiId(liid); // FindDCrmEGConfigurationBySchema(schema);
+    console.log(_thisGlobals._CurConfiguration);
 
     var tmpRel = RetreiveEntityRelationShips(schema);
     if (tmpRel.length > 0) {
@@ -4748,6 +4760,7 @@ function DisplaySelectedEntityInfo(li, schema) {
     $('#createnewbtnclick').val(_thisGlobals._CurConfiguration.NewBtnBehavoir);
     $('#booleaneditorbehaviour').val(_thisGlobals._CurConfiguration.BooleanEditorBehavoir);
     $('#openrecordbehavoir').val(_thisGlobals._CurConfiguration.OpenRecordBehavoir);
+    $('#systemcurrencyprecision').val(_thisGlobals._CurConfiguration.SystemCurrencyPrecision);
     $('#datetimeeditorminutestep').val(_thisGlobals._CurConfiguration.DateTimeMinuteStep);
     RetreiveEntityMetadata(schema);
 }
@@ -4783,17 +4796,14 @@ function LoadDCrmEGConfiguration() {
     var val = _thisGlobals.xrmPage.data.entity.attributes.get(_thisGlobals.HeaderFieldNames).getValue();
     // Display order
     var entities = (val) ? RetrieveEntityOutput(val, true).split(_thisGlobals._SEPERATOR) : '';
-    //console.log("Loading entities", entities);
 
     // All Entities info
     val = _thisGlobals.xrmPage.data.entity.attributes.get(_thisGlobals.DisplayFromEntityFieldName).getValue();
     var entitesInfo = (val) ? RetrieveEntityOutput(val, true).split(_thisGlobals._pSeperator) : '';
-    //console.log("Loading entitesInfo", entitesInfo);
 
     // All fields
     val = _thisGlobals.xrmPage.data.entity.attributes.get(_thisGlobals.FromEntityFieldsAttr).getValue();
     var fields = (val) ? RetrieveEntityOutput(val, true).split(_thisGlobals._pSeperator) : '';
-    //console.log("Loading Fields", fields);
 
     // All conditions
     val = _thisGlobals.xrmPage.data.entity.attributes.get(_thisGlobals.FieldConditionValues).getValue();
@@ -4802,11 +4812,14 @@ function LoadDCrmEGConfiguration() {
     // All formattings (headers and cells)
     val = _thisGlobals.xrmPage.data.entity.attributes.get('dcrmeg_entitiesinfo').getValue();
     var formattings = (val) ? val.split(_thisGlobals._pSeperator) : null;
-    //console.log(formattings);
 
     for (var i = 0; i < entities.length; i++) {
 
         parentconfig = undefined;
+        // TODO
+        // This is the problem
+        // when saving entity info and other (fileds,...) we need to have a distinct id fot each entity
+        // look for _thisGlobals._sSeperator in the schemaname (entities[i]
         var tmp = FindEntityGridInfo(entities[i], entitesInfo);
 
         var data = { SchemaName: tmp[0], Label: tmp[1] };
@@ -4859,6 +4872,7 @@ function LoadDCrmEGConfiguration() {
             data.PasteFromExcel = ((tmp.length > 28) ? tmp[28] : false);
             data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
             data.DistinctValues = ((tmp.length > 30) ? tmp[30] : false);
+            data.SystemCurrencyPrecision = ((tmp.length > 31) ? tmp[31] : undefined);
             
         }
 
@@ -4874,7 +4888,7 @@ function LoadDCrmEGConfiguration() {
                 var rec = formattings[index].split(_thisGlobals._OuterSeperator);
                 // Get formatting options for this entity
                 if (rec[1] == data.SchemaName) {
-                    var formatOption = new FormattingOptions(rec[1]);
+                    var formatOption = new FormattingOptions(config.Entity.Identity);
 
                     var inner = rec[0].split(_thisGlobals._SEPERATOR);
                     // inner[0] headers
@@ -4905,7 +4919,6 @@ function LoadDCrmEGConfiguration() {
                     }
 
                     config.Formattings = formatOption;
-                    //console.log(config.Formattings);
                 }
             }
         }
@@ -4935,7 +4948,11 @@ function LoadDCrmEGConfiguration() {
             var checked = (data.RelatedToParentLI) ? 'checked=checked' : '';
             li.text(config.Entity.Label + ' ');
             if (data.RelatedToParentLILookupSchemaName) {
-                $('<label> <input type="checkbox" ' + checked + '  data-item-schema="' + data.SchemaName + '" onclick="InnerRelationshipHandler(event, this);"></input>' + data.RelatedToParentLILookupSchemaName + ' = ' + parentconfig.Entity.Label + '</label>').insertAfter(li);
+                $('<label> <input type="checkbox" ' + checked
+                    + '  data-item-schema="' + config.Entity.SchemaName
+                    + '" data-item-liid="' + config.Entity.LiId
+                    + '" onclick="InnerRelationshipHandler(event, this);"></input>'
+                    + data.RelatedToParentLILookupSchemaName + ' = ' + parentconfig.Entity.Label + '</label>').insertAfter(li);
             }
             // add to parent
             parentconfig.ChildConfigurations.push(config);
@@ -4945,14 +4962,24 @@ function LoadDCrmEGConfiguration() {
     }
 
     if (_thisGlobals.DCrmEGConfiguration.length > 0) {
-        DisplaySelectedEntityInfo(_thisGlobals.DCrmEGConfiguration[0].Li, _thisGlobals.DCrmEGConfiguration[0].Entity.SchemaName);
+        DisplaySelectedEntityInfo(_thisGlobals.DCrmEGConfiguration[0].Li, _thisGlobals.DCrmEGConfiguration[0].Entity.SchemaName, _thisGlobals.DCrmEGConfiguration[0].Entity.LiId);
     }
+}
+
+function GetActualSchema(identity) {
+    if (identity.contains(_thisGlobals._sSeperator)) {
+        return identity.split(_thisGlobals._sSeperator)[0];
+    }
+    return identity;
 }
 
 function InnerRelationshipHandler(e, input) {
     e.stopPropagation();
-    var schema = $(input).attr('data-item-schema');
-    var config = FindDCrmEGConfigurationBySchema(schema);
+    //var schema = $(input).attr('data-item-schema');
+    //var config = FindDCrmEGConfigurationBySchema(schema);
+
+    var liid = $(input).attr('data-item-liid');
+    var config = FindDCrmEGConfigurationByLiId(liid);
     if (config) {
         config.Entity.RelatedToParentLI = ($(input).is(':checked')) ? true : false;
         SetParentFormDirty();
@@ -4994,7 +5021,6 @@ function SaveDCrmEGConfiguration() {
     _thisGlobals._FormattingInfo = '';
 
     //var local = JSON.stringify(_thisGlobals.DCrmEGConfiguration);
-    //console.log(local);
     //var obj = JSON.parse(local);
     //for (var index = 0; index < obj.length; index++) {
     //    var inner = JSON.parse(obj[index]);
@@ -5012,7 +5038,13 @@ function SaveDCrmEGConfiguration() {
             _thisGlobals._Entityinfo += _thisGlobals._pSeperator;
         }
 
-        _thisGlobals._Entityinfo += _thisGlobals.DCrmEGConfiguration[i].Entity.SchemaName + _thisGlobals._SEPERATOR
+        // TODO
+        // Add an id to Schemaname to ensure we grab the right one
+        // _thisGlobals.DCrmEGConfiguration[i].Entity.Identity
+        // if both entities are the same account account
+        // _thisGlobals._sSeperator  Identity
+
+        _thisGlobals._Entityinfo += _thisGlobals.DCrmEGConfiguration[i].Entity.Identity + _thisGlobals._SEPERATOR
         + _thisGlobals.DCrmEGConfiguration[i].Entity.Label + _thisGlobals._SEPERATOR
 
         + _thisGlobals.DCrmEGConfiguration[i].Entity.RelatedToDisplayOnEntity + _thisGlobals._SEPERATOR
@@ -5045,19 +5077,20 @@ function SaveDCrmEGConfiguration() {
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].OpenRecordBehavoir
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].PasteFromExcel
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DateTimeMinuteStep
-        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DistinctValues;
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DistinctValues
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].SystemCurrencyPrecision;
         
         if (_thisGlobals.DCrmEGConfiguration[i].Fields) {
             if (i > 0) {
                 _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator;
             }
-            _thisGlobals._Fieldsinfo += _thisGlobals.DCrmEGConfiguration[i].Fields + _thisGlobals._OuterSeperator + _thisGlobals.DCrmEGConfiguration[i].Entity.SchemaName;
+            _thisGlobals._Fieldsinfo += _thisGlobals.DCrmEGConfiguration[i].Fields + _thisGlobals._OuterSeperator + _thisGlobals.DCrmEGConfiguration[i].Entity.Identity;
         }
         if (_thisGlobals.DCrmEGConfiguration[i].Conditions) {
             if (i > 0) {
                 _thisGlobals._Conditioninfo += _thisGlobals._pSeperator;
             }
-            _thisGlobals._Conditioninfo += _thisGlobals.DCrmEGConfiguration[i].Conditions + _thisGlobals._OuterSeperator + _thisGlobals.DCrmEGConfiguration[i].Entity.SchemaName;
+            _thisGlobals._Conditioninfo += _thisGlobals.DCrmEGConfiguration[i].Conditions + _thisGlobals._OuterSeperator + _thisGlobals.DCrmEGConfiguration[i].Entity.Identity;
         }
         if (_thisGlobals.DCrmEGConfiguration[i].Formattings) {
             if (_thisGlobals._FormattingInfo.length > 0) {
@@ -5089,8 +5122,9 @@ function SaveDCrmEGConfiguration() {
 }
 
 function SaveDCrmEGConfigurationInternal(config) {
-
-    _thisGlobals._Entityinfo += _thisGlobals._pSeperator + config.Entity.SchemaName + _thisGlobals._SEPERATOR
+    // TODO
+    // _thisGlobals._sSeperator
+    _thisGlobals._Entityinfo += _thisGlobals._pSeperator + config.Entity.Identity + _thisGlobals._SEPERATOR
     + config.Entity.Label + _thisGlobals._SEPERATOR
 
     + config.Entity.RelatedToDisplayOnEntity + _thisGlobals._SEPERATOR
@@ -5123,13 +5157,14 @@ function SaveDCrmEGConfigurationInternal(config) {
     + _thisGlobals._SEPERATOR + config.OpenRecordBehavoir
     + _thisGlobals._SEPERATOR + config.PasteFromExcel
     + _thisGlobals._SEPERATOR + config.DateTimeMinuteStep
-    + _thisGlobals._SEPERATOR + config.DistinctValues;
+    + _thisGlobals._SEPERATOR + config.DistinctValues
+    + _thisGlobals._SEPERATOR + config.SystemCurrencyPrecision;
     
     if (config.Fields) {
-        _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.SchemaName;
+        _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.Identity;
     }
     if (config.Conditions) {
-        _thisGlobals._Conditioninfo += _thisGlobals._pSeperator + config.Conditions + _thisGlobals._OuterSeperator + config.Entity.SchemaName;
+        _thisGlobals._Conditioninfo += _thisGlobals._pSeperator + config.Conditions + _thisGlobals._OuterSeperator + config.Entity.Identity;
     }
     if (config.Formattings) {
         if (_thisGlobals._FormattingInfo.length > 0) {
@@ -5306,6 +5341,26 @@ function RemoveDCrmEGConfiguration(schemaname, removeChildren) {
     var condition = -1;
     for (var i = 0; i < _thisGlobals.DCrmEGConfiguration.length; i++) {
         if (_thisGlobals.DCrmEGConfiguration[i].Entity.SchemaName == schemaname) {
+            condition = i;
+            break;
+        }
+    }
+    if (condition != -1) {
+        if (removeChildren) {
+            RemoveChildConfiguration(_thisGlobals.DCrmEGConfiguration[condition]);
+        }
+        _thisGlobals.DCrmEGConfiguration[condition] = undefined;
+        _thisGlobals.DCrmEGConfiguration.splice(condition, 1);
+        return true;
+    }
+
+    return false;
+}
+
+function RemoveDCrmEGConfigurationbyLiId(liid, removeChildren) {
+    var condition = -1;
+    for (var i = 0; i < _thisGlobals.DCrmEGConfiguration.length; i++) {
+        if (_thisGlobals.DCrmEGConfiguration[i].Entity.LiId == liid) {
             condition = i;
             break;
         }

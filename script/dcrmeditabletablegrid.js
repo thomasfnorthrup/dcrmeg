@@ -68,6 +68,7 @@ Array.prototype.DeleteItem = function (index) {
                 "_SEPERATOR": '||',
                 "_OuterSeperator": '[]',
                 "_pSeperator": '%%',
+                "_sSeperator": '$$',
                 "ParentFieldsFormType": 2,
                 "FormIsReadOnly": false,
                 "ParentEntityName": undefined,
@@ -307,9 +308,14 @@ Array.prototype.DeleteItem = function (index) {
                     if ((!isNaN(num)) && (num < 0)) {
                         isNegative = true;
                     }
+
+                    // TODO
+                    // if field precision is set to use system
                     if ((Precision == undefined) || (Precision == 'undefined')) {
                         Precision = _thisGlobals.userCurrencySettings.CurrencyDecimalPrecision;
                     }
+                    //Precision = _thisGlobals.SystemCurrencyPrecision;
+
                     fval = num.toFixed(Precision) + "";
                     fval = fval.replace('.', _thisGlobals.userCurrencySettings.DecimalSymbol);
                     var tmp = fval.split(_thisGlobals.userCurrencySettings.DecimalSymbol);
@@ -620,6 +626,7 @@ var _thisHelpers = DCrmEditableGrid.Helper;
 
 _thisGlobals.xrmPage = window.parent.Xrm.Page;
 _thisGlobals.LoggedInUserID = _thisGlobals.xrmPage.context.getUserId();
+_thisGlobals.SystemCurrencyPrecision = 2;
 
 function DisplayCrmAlertDialog(msg) {
     window.parent.Xrm.Utility.alertDialog(msg);
@@ -1366,7 +1373,6 @@ $.fn.DCrmEditableGrid.CheckBox = function (table, editorsArrayi) {
             }
         })
         .on('keydown', function (e) {
-            console.log("Handling IE 10-11 specific! Does not fire in Chrome, FF, ...");
             var tkey = e.which || e.keycode;
             var prevent = false;
             var isTabKeydown = false;
@@ -2112,8 +2118,6 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
         $editor.hide();
     })
     .on('change', function (e) {
-        console.log(e);
-
         HideError();
 
         var selected = $editor.find(":selected");
@@ -2191,8 +2195,6 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
             }
         }
 
-        //console.log("prevent [" + prevent + "] tkey [" + tkey + "]");
-
         if (prevent) {
             e.preventDefault();
             e.stopPropagation();
@@ -2242,8 +2244,6 @@ $.fn.DCrmEditableGrid.OptionSet = function (table, editorsArrayi, requiredErrorC
             var callbackData = { Option: undefined };
 
             for (var i = 0; i < optionset[0].OptionSet.Options.length; i++) {
-                //console.log("LocalizedLabels[0] [" + optionset[0].OptionSet.Options[i].Label.LocalizedLabels[0].Label + "]");
-
                 $editor.optionsData.push(
                 {
                     text: _thisHelpers.GetUserLocalizedLabel(optionset[0].OptionSet.Options[i].Label),
@@ -3035,7 +3035,6 @@ $.fn.DCrmEditableGrid.FilterLookup = function (parentdiv) {
                                     var d = _thisbtn.attr('data-fieldinfo');
                                     var o = JSON.parse(d.replace(/'/g, '"'));
                                     o.TargetEntities = $(this).attr('data-lookuptarget-entities');
-                                    console.log("object", o);
 
                                     var cont = GetFilterContainer(o.AttrType);
                                     // clone div
@@ -3523,7 +3522,6 @@ var CrmEditableGrid = (function () {
             if (result && result.length > 0) {
                 self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue = result[0].attributes[self.activeOptions.ParentChildLookupInfo.PrimaryNameAttribute].value;
             }
-            //console.log("self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue [" + self.activeOptions.ParentChildLookupInfo.PrimaryNameAttributeValue + "]");
 
             // Find the filter, if exists, update it
             var filter = self.GridConfiguration.GetInlineFilterBySchemaName(self.activeOptions.ParentChildLookupInfo.LookupSchemaName);
@@ -3987,11 +3985,6 @@ list of translated languages
 
                 if ((tkey >= DCrmEditableGrid.Keys.ARROWLEFT) && (tkey <= DCrmEditableGrid.Keys.ARROWDOWN)) {
 
-                    //if (tkey == DCrmEditableGrid.Keys.ARROWDOWN) {
-                    //    console.log("Arrow Down ");
-                    //}
-
-
                     var checkboxWasvisible = false;
                     for (var i = 0; i < self.GridEditors.length; i++) {
                         if ((self.GridEditors[i] != null) && (self.GridEditors[i].EditorType == DCrmEditableGrid.Editors.Checkbox)) {
@@ -4005,10 +3998,6 @@ list of translated languages
 
                     var possibleMove = _thisHelpers.Movement($(e.target), tkey);
                     if ((possibleMove) && (possibleMove.length) && (possibleMove.length > 0)) {
-
-                        //if (tkey == DCrmEditableGrid.Keys.ARROWDOWN) {
-                        //    console.log("Cell index " + possibleMove[0].cellIndex + "  Footer " + possibleMove.attr(_thisGlobals.DataAttr.Cell.FooterCell));
-                        //}
 
                         self.mainTable.focus();
                         possibleMove.focus();
@@ -4035,8 +4024,6 @@ list of translated languages
                         }
                         prevent = true;
                     } else {
-                        // Remove distinct and replace it with create new record using down arrow
-                        //console.log("Prevent " + prevent);
                         prevent = true;
                     }
                 } else if (tkey == DCrmEditableGrid.Keys.ENTER) {
@@ -4579,8 +4566,6 @@ list of translated languages
                     var dtPicker = $('#fieldfilter_inputcontainer').find('.xdsoft_datetimepicker');
 
                     // realOperator [on-or-after]  [2007-12-21]
-                    //console.log("realOperator [" + realOperator + "]  [" + savedValue + "]");
-
                     if ((realOperator == 'on') || (realOperator == 'on-or-after') || (realOperator == 'on-or-before')) {
 
                         $(filterUi.input).val(savedValue);
@@ -5824,12 +5809,10 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
                         var cells = rows[i].split("\t");
 
                         /* Uncomment for debug messages
-                        console.log("\r\nRow [" + i + "] = " + rows[i] + "\r\nCells:\r\n");
                         for (var ii = 0; ii < cells.length; ii++) {
                             if ((cells[ii]) && (cells[ii].length == 0)) {
                                 cells[ii] = null;
                             }
-                            console.log("cell [" + ii + "] = " + cells[ii]);
                         }
                         */
 
@@ -9221,6 +9204,13 @@ var FormattingOptions = (function () {
     return FormattingOptions;
 })();
 
+function GetActualSchema(identity) {
+    if (identity.contains(_thisGlobals._sSeperator)) {
+        return identity.split(_thisGlobals._sSeperator)[0];
+    }
+    return identity;
+}
+
 var DCrmEGConfigurationManager = (function () {
 
     function DCrmEGConfigurationManager(data) {
@@ -9228,7 +9218,7 @@ var DCrmEGConfigurationManager = (function () {
         self.ConfigID = data.ConfigID;
 
         self.Entity = {
-            SchemaName: data.schemaName,
+            SchemaName: GetActualSchema(data.schemaName),
             Label: data.label,
 
             RelatedToDisplayOnEntity: (data.related) ? true : false,
@@ -9244,10 +9234,10 @@ var DCrmEGConfigurationManager = (function () {
         // 1083, 1091, 1085. 1089
         // ['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail']
 
-        //if ((['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail'].MatchExists(data.schemaName) != -1) &&
+        //if ((['opportunityproduct', 'invoicedetail', 'quotedetail', 'salesorderdetail'].MatchExists(self.Entity.SchemaName) != -1) &&
         //    (['opportunity', 'quote', 'salesorder', 'invoice'].MatchExists(_thisGlobals.ParentFormEntityName) != -1)) {
         //    self.MSProductGrid = true;
-        //    self.MSProductGridHelperc = new MSProductGridHelper(data.schemaName, self);
+        //    self.MSProductGridHelperc = new MSProductGridHelper(self.Entity.SchemaName, self);
         //}
 
         self.GridTitle = ((data.GridTitle) && (data.GridTitle.length) && (data.GridTitle.length > 0)) ? data.GridTitle : data.label;
@@ -9275,6 +9265,9 @@ var DCrmEGConfigurationManager = (function () {
         self.BooleanEditorBehavoir = ((data.BooleanEditorBehavoir) && (data.BooleanEditorBehavoir != 'undefined')) ? data.BooleanEditorBehavoir : "20";
         self.HideAutosaveButton = ((data.HideAutosaveButton) && (data.HideAutosaveButton == 'true')) ? true : false;
         self.DateTimeMinuteStep = ((data.DateTimeMinuteStep) && (data.DateTimeMinuteStep != 'undefined')) ? parseInt(data.DateTimeMinuteStep) : 5;
+        self.SystemCurrencyPrecision = (data.SystemCurrencyPrecision) ? parseInt(data.SystemCurrencyPrecision) : 2;
+
+        _thisGlobals.SystemCurrencyPrecision = self.SystemCurrencyPrecision;
 
         self.SelectedFields = undefined;
         self.Conditions = undefined;
@@ -9777,13 +9770,12 @@ Related [false] RelatedEntityLookup [undefined]
             data.PasteFromExcel = ((tmp.length > 28) ? tmp[28] : false);
             data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
             data.DistinctValues = ((tmp.length > 30) ? tmp[30] : false);
-
+            data.SystemCurrencyPrecision = ((tmp.length > 31) ? tmp[31] : undefined);
         }
 
         config = new DCrmEGConfigurationManager(data);
         if (fields.length > 0) {
             config.SelectedFields = GetSelectedFields(FindEntiyGridFields(data.schemaName, fields));
-            //console.log("Fields", config.SelectedFields);
         }
         if (consitions.length > 0) {
             config.Conditions = FindEntiyGridFields(data.schemaName, consitions);
@@ -9825,7 +9817,6 @@ Related [false] RelatedEntityLookup [undefined]
                     }
 
                     config.Formattings = formatOption;
-                    //console.log(config.Formattings);
                 }
             }
         }
@@ -10254,7 +10245,9 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
                 PrecisionSource: 0,
                 UserPrecision: _thisGlobals.userCurrencySettings.CurrencyDecimalPrecision,
                 CurrencyPrecision: undefined,
-                PricinPrecision: 2,
+                // TODO
+                // Changing to global
+                PricinPrecision: _thisGlobals.SystemCurrencyPrecision,
                 FieldPrecision: item.Precision,
                 EntitySchemaName: data.Entity.SchemaName,
                 FieldSchemaName: item.SchemaName,

@@ -4721,8 +4721,7 @@ function DisplaySelectedEntityInfo(li, schema, liid) {
 
     ResetAllUI();
 
-    _thisGlobals._CurConfiguration = FindDCrmEGConfigurationByLiId(liid); // FindDCrmEGConfigurationBySchema(schema);
-    console.log(_thisGlobals._CurConfiguration);
+    _thisGlobals._CurConfiguration = FindDCrmEGConfigurationByLiId(liid);
 
     var tmpRel = RetreiveEntityRelationShips(schema);
     if (tmpRel.length > 0) {

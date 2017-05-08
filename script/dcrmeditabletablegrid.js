@@ -184,7 +184,23 @@ Array.prototype.DeleteItem = function (index) {
                 "UnsavedChangesMsg": "There are unsaved changes.\n\nClick Cancel to save changes\n\nClick Ok to continue without saving?",
                 "DefaultBackgroundColor": '#FFF',
                 "DefaultTextColor": '#000',
-                "CustomOptionsetSelect2Ids": 100
+                "CustomOptionsetSelect2Ids": 100,
+                "IsBrowser": {
+                    // Opera 8.0+
+                    "Opera": ((!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0),
+                    // Firefox 1.0+
+                    "Firefox" : (typeof InstallTrigger !== 'undefined'),
+                    // Safari 3.0+ "[object HTMLElementConstructor]" 
+                    "Safari" : (/constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || safari.pushNotification)),
+                    // Internet Explorer 6-11
+                    "IE" : (/*@cc_on!@*/false || !!document.documentMode),
+                    //// Edge 20+
+                    "isEdge": (!(/*@cc_on!@*/false || !!document.documentMode) && !!window.StyleMedia),
+                    // Chrome 1+
+                    "Chrome" : (!!window.chrome && !!window.chrome.webstore),
+                    // Blink engine detection
+                    "isBlink" : (((!!window.chrome && !!window.chrome.webstore) || ((!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0)) && !!window.CSS)
+                }
             }
         }
     });
@@ -309,12 +325,9 @@ Array.prototype.DeleteItem = function (index) {
                         isNegative = true;
                     }
 
-                    // TODO
-                    // if field precision is set to use system
                     if ((Precision == undefined) || (Precision == 'undefined')) {
                         Precision = _thisGlobals.userCurrencySettings.CurrencyDecimalPrecision;
                     }
-                    //Precision = _thisGlobals.SystemCurrencyPrecision;
 
                     fval = num.toFixed(Precision) + "";
                     fval = fval.replace('.', _thisGlobals.userCurrencySettings.DecimalSymbol);
@@ -620,13 +633,20 @@ Array.prototype.DeleteItem = function (index) {
     });
 })(jQuery);
 
-
 var _thisGlobals = DCrmEditableGrid.Globals;
 var _thisHelpers = DCrmEditableGrid.Helper;
 
 _thisGlobals.xrmPage = window.parent.Xrm.Page;
 _thisGlobals.LoggedInUserID = _thisGlobals.xrmPage.context.getUserId();
 _thisGlobals.SystemCurrencyPrecision = 2;
+
+//var output = 'Detecting browsers by ducktyping:\r\n';
+//output += 'isFirefox: ' + _thisGlobals.IsBrowser.Firefox + '\r\n';
+//output += 'isChrome: ' + _thisGlobals.IsBrowser.Chrome + '\r\n';
+//output += 'isSafari: ' + _thisGlobals.IsBrowser.Safari + '\r\n';
+//output += 'isOpera: ' + _thisGlobals.IsBrowser.Opera + '\r\n';
+//output += 'isIE: ' + _thisGlobals.IsBrowser.IE + '\r\n';
+//console.log(output);
 
 function DisplayCrmAlertDialog(msg) {
     window.parent.Xrm.Utility.alertDialog(msg);
@@ -3661,8 +3681,7 @@ var CrmEditableGrid = (function () {
                         .height(self.activeCell.height() - 2)
                         .SetInternals(curText, self.activeCell.attr(_thisGlobals.DataAttr.Cell.Lookup.Guid), self.activeCell.attr(_thisGlobals.DataAttr.Cell.Lookup.LogicalName));
                 } else if (curEditor.EditorType == DCrmEditableGrid.Editors.Status) {
-                    curEditor
-                        .SetInternals(curText, self.activeCell.parent().attr(_thisGlobals.DataAttr.Cell.RecordGuid));
+                    curEditor.SetInternals(curText, self.activeCell.attr(_thisGlobals.DataAttr.Cell.RecordGuid));
                 }
             }
             else {
@@ -5253,8 +5272,6 @@ list of translated languages
         });
     }
 
-    // Instance
-
     function openEntityRecord(enityLogicalName, guid) {
         var randomnumber = 100000000 + Math.floor(Math.random() * 900000000);
 
@@ -5493,19 +5510,19 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
                 if (id == 'ExportGridToExcel') {
                     try {
-                        SaveGridAsExcel(self);
+                        var tt = new SaveAsGridCallbackHelper(self);
                     } catch (e) {
                         msg = e.message;
                     }
                 } else if (id == 'ExportGridToCSV') {
                     try {
-                        SaveGridAsCsv(self);
+                        var tt = new SaveAsGridCallbackHelper(self, 1);
                     } catch (e) {
                         msg = e.message;
                     }
                 } else if (id == 'ExportGridToPdf') {
                     try {
-                        SaveGridAsPdf(self);
+                        var tt = new SaveAsGridCallbackHelper(self, 2);
                     } catch (e) {
                         msg = e.message;
                     }
@@ -5781,7 +5798,7 @@ http://localhost/Demo/main.aspx?etc=112&extraqs=?_CreateFromId=%7b5B6DFA60-6456-
 
         $('#' + self.activeOptions.GridContainerIds.SearchGridBox).on('change', function (e) {
             e.stopPropagation();
-            return;
+
             try {
                 var rows = $(this).val().split("\n");
                 $(this).val('');
@@ -6197,7 +6214,9 @@ var colResizable = (function () {
         //short-cuts
         //self.I = parseInt;
         //self.M = Math;
-        self.IE = /Trident\/[4-9]/.test(navigator.userAgent); // navigator.userAgent.indexOf('Trident/4.0')>0
+        //self.IE = /Trident\/[4-9]/.test(navigator.userAgent); // navigator.userAgent.indexOf('Trident/4.0')>0
+        self.IE = _thisGlobals.IsBrowser.IE;
+
         self.SessionStrage;
         try { self.SessionStrage = sessionStorage; } catch (e) { }	//Firefox crashes when executed as local file system
 
@@ -7509,33 +7528,6 @@ function GetAllUserSettings() {
     XrmServiceToolkit.Soap.Fetch(fetchXml, false, GetAllUserSettingsCallback);
 }
 
-// obsolete - currency symbol is retreived from the first record of a given entity
-// two entities can have different currencies assigned to them
-// Account -> CAN = $, Contact -> US = USD
-function GetOrgCurrencySymbol(transcationCurrencyId) {
-    var fetch = '<fetch version="1.0" output-format="xml-platform" mapping="logical" distinct="false">' +
-    '<entity name="transactioncurrency">' +
-    '<attribute name="transactioncurrencyid" />' +
-    '<attribute name="currencysymbol" />' +
-    '<attribute name="exchangerate" />' +
-    '<attribute name="currencyprecision" />' +
-    '<order attribute="currencyname" descending="false" />' +
-    '<filter type="and">' +
-    '<condition attribute="transactioncurrencyid" operator="eq" uitype="transactioncurrency" value="' + transcationCurrencyId + '" />' +
-    '</filter>' +
-  '</entity>' +
-  '</fetch>';
-    var result = XrmServiceToolkit.Soap.Fetch(fetch, false);
-    if ((result) && (result.length) && (result.length > 0) && (result[0].attributes['currencysymbol'])) {
-        _thisGlobals.userCurrencySettings.CurrencySymbol = result[0].attributes['currencysymbol'].value;
-
-        if (_thisGlobals.userCurrencySettings.CurrencySymbol != '$') {
-            _thisGlobals.userCurrencySettings.CurrencySymbolRegEx = _thisGlobals.userCurrencySettings.CurrencySymbol;
-            _thisGlobals.userCurrencySettings.RemoveCurrenyFormatRegEx = '/[' + _thisGlobals.userCurrencySettings.CurrencySymbolRegEx + _thisGlobals.userCurrencySettings.NumberSeparator + '()-]/g';
-        }
-    }
-}
-
 function GetAllUserSettingsCallback(allsettings) {
     var result = allsettings[0];
     // /
@@ -8579,376 +8571,575 @@ var _saveAs = (function (view) {
     return saveAs;
 }(window));
 
-var _title = function (config) {
-    var title = config.title;
+//var _title = function (config) {
+//    var title = config.title;
+//    return title.indexOf('*') !== -1 ?
+//		title.replace('*', $('title').text()) :
+//		title;
+//};
+//var _filename = function (config, incExtension) {
+//    // Backwards compatibility
+//    var filename = config.filename === '*' && config.title !== '*' && config.title !== undefined ?
+//		config.title :
+//		config.filename;
+//    if (filename.indexOf('*') !== -1) {
+//        filename = filename.replace('*', $('title').text());
+//    }
+//    // Strip characters which the OS will object to
+//    filename = filename.replace(/[^a-zA-Z0-9_\u00A1-\uFFFF\.,\-_ !\(\)]/g, "");
+//    return incExtension === undefined || incExtension === true ?
+//		filename + config.extension :
+//		filename;
+//};
+//var _newLine = function (config) {
+//    return config.newline ?
+//		config.newline :
+//		navigator.userAgent.match(/Windows/) ?
+//			'\r\n' :
+//			'\n';
+//};
+//var _exportData = function (dt, config) {
+//    var newLine = _newLine(config);
+//    var data = dt;
+//    var boundary = config.fieldBoundary;
+//    var separator = config.fieldSeparator;
+//    var reBoundary = new RegExp(boundary, 'g');
+//    var escapeChar = config.escapeChar !== undefined ?
+//		config.escapeChar :
+//		'\\';
+//    var join = function (a) {
+//        var s = '';
+//        // If there is a field boundary, then we might need to escape it in
+//        // the source data
+//        for (var i = 0, ien = a.length ; i < ien ; i++) {
+//            if (i > 0) {
+//                s += separator;
+//            }
+//            s += boundary ?
+//				boundary + ('' + a[i]).replace(reBoundary, escapeChar + boundary) + boundary :
+//				a[i];
+//        }
+//        return s;
+//    };
+//    var header = config.header ? join(data.header) + newLine : '';
+//    var footer = config.footer ? newLine + join(data.footer) : '';
+//    var body = [];
+//    for (var i = 0, ien = data.body.length ; i < ien ; i++) {
+//        body.push(join(data.body[i]));
+//    }
+//    return {
+//        str: header + body.join(newLine) + footer,
+//        rows: body.length
+//    };
+//};
+//var addRow = function (row, isHeader) {
+//    var cells = [];
+//    var tmpVal = '';
+//    for (var i = 1, ien = row.length ; i < ien ; i++) {
+//        if (row[i] === null || row[i] === undefined) {
+//            tmpVal = '';
+//        } else {
+//            tmpVal = (isHeader) ? _thisHelpers.GetHeaderCellText($(row[i])) : _thisHelpers.GetActiveCellText($(row[i]));
+//        }
+//        if (tmpVal.length > 0) {
+//            // trim and strip new line
+//            tmpVal = tmpVal.replace( /^\s+|\s+$/g, '' ).replace(/\n/g, ' ');
+//        }
+//        // Don't match numbers with leading zeros or a negative anywhere
+//        // but the start
+//        cells.push(typeof tmpVal === 'number' || (tmpVal.match && tmpVal.match(/^-?[0-9\.]+$/) && tmpVal.charAt(0) !== '0') ?
+//            '<c t="n"><v>' + tmpVal + '</v></c>' :
+//            '<c t="inlineStr"><is><t>' + (
+//                !tmpVal.replace ?
+//                tmpVal :
+//                tmpVal
+//                    .replace(/&(?!amp;)/g, '&amp;')
+//                    .replace(/[\x00-\x1F\x7F-\x9F]/g, '')) + // remove control characters
+//            '</t></is></c>'                                    // they are not valid in XML
+//        );
+//    }
+//    return '<row>' + cells.join('') + '</row>';
+//};
 
-    return title.indexOf('*') !== -1 ?
-		title.replace('*', $('title').text()) :
-		title;
-};
+var SaveAsGridCallbackHelper = (function () {
 
-var _filename = function (config, incExtension) {
-    // Backwards compatibility
-    var filename = config.filename === '*' && config.title !== '*' && config.title !== undefined ?
-		config.title :
-		config.filename;
+    function SaveAsGridCallbackHelper(who, saveas) {
+        var self = this;
+        // 0 Excel, 1 CSV, 2 PDF
+        self.SaveAs = saveas || 0;
+        self.grid = who;
+        self.XmlResult = null;
+        self.pageNumber = 1;
+        self.SelectedFields = self.grid.GridConfiguration.SelectedFields;
+        self.headers = self.grid.mainTable.find('thead').find('tr:first').find('th');
+        self.Rows = [];
 
-    if (filename.indexOf('*') !== -1) {
-        filename = filename.replace('*', $('title').text());
-    }
+        self.AddSavedRow = function (row) {
+            var cells = [];
+            var tmpVal = '';
+            for (var i = 0, ien = row.length ; i < ien ; i++) {
 
-    // Strip characters which the OS will object to
-    filename = filename.replace(/[^a-zA-Z0-9_\u00A1-\uFFFF\.,\-_ !\(\)]/g, "");
+                if (row[i] === null || row[i] === undefined) {
+                    tmpVal = '';
+                } else {
+                    tmpVal = row[i];
+                }
 
-    return incExtension === undefined || incExtension === true ?
-		filename + config.extension :
-		filename;
-};
+                if (tmpVal.length > 0) {
+                    // trim and strip new line
+                    tmpVal = tmpVal.replace(/^\s+|\s+$/g, '').replace(/\n/g, ' ');
+                }
 
-var _newLine = function (config) {
-    return config.newline ?
-		config.newline :
-		navigator.userAgent.match(/Windows/) ?
-			'\r\n' :
-			'\n';
-};
-
-var _isSafari = function () {
-    return navigator.userAgent.indexOf('Safari') !== -1 &&
-		navigator.userAgent.indexOf('Chrome') === -1 &&
-		navigator.userAgent.indexOf('Opera') === -1;
-};
-
-var _exportData = function (dt, config) {
-    var newLine = _newLine(config);
-    var data = dt;
-    var boundary = config.fieldBoundary;
-    var separator = config.fieldSeparator;
-    var reBoundary = new RegExp(boundary, 'g');
-    var escapeChar = config.escapeChar !== undefined ?
-		config.escapeChar :
-		'\\';
-    var join = function (a) {
-        var s = '';
-
-        // If there is a field boundary, then we might need to escape it in
-        // the source data
-        for (var i = 0, ien = a.length ; i < ien ; i++) {
-            if (i > 0) {
-                s += separator;
+                cells.push(typeof tmpVal === 'number' || (tmpVal.match && tmpVal.match(/^-?[0-9\.]+$/) && tmpVal.charAt(0) !== '0') ?
+                    '<c t="n"><v>' + tmpVal + '</v></c>' :
+                    '<c t="inlineStr"><is><t>' + (
+                        !tmpVal.replace ? tmpVal :
+                        tmpVal
+                            .replace(/&(?!amp;)/g, '&amp;')
+                            .replace(/[\x00-\x1F\x7F-\x9F]/g, '')) + // remove control characters
+                    '</t></is></c>'                                    // they are not valid in XML
+                );
             }
 
-            s += boundary ?
-				boundary + ('' + a[i]).replace(reBoundary, escapeChar + boundary) + boundary :
-				a[i];
+            self.XmlResult += '<row>' + cells.join('') + '</row>';
         }
 
-        return s;
-    };
+        self.SaveAsExcel = function () {
+            var isAvailable = window.FileReader !== undefined && window.JSZip !== undefined && !_thisGlobals.IsBrowser.Safari;
 
-    var header = config.header ? join(data.header) + newLine : '';
-    var footer = config.footer ? newLine + join(data.footer) : '';
-    var body = [];
+            self.XmlResult = addRow(self.headers, true) + self.XmlResult;
 
-    for (var i = 0, ien = data.body.length ; i < ien ; i++) {
-        body.push(join(data.body[i]));
-    }
+            var zip = new window.JSZip();
+            var _rels = zip.folder("_rels");
+            var xl = zip.folder("xl");
+            var xl_rels = zip.folder("xl/_rels");
+            var xl_worksheets = zip.folder("xl/worksheets");
 
-    return {
-        str: header + body.join(newLine) + footer,
-        rows: body.length
-    };
-};
+            zip.file('[Content_Types].xml', _thisGlobals.excelStrings['[Content_Types].xml']);
+            _rels.file('.rels', _thisGlobals.excelStrings['_rels/.rels']);
+            xl.file('workbook.xml', _thisGlobals.excelStrings['xl/workbook.xml']);
+            xl_rels.file('workbook.xml.rels', _thisGlobals.excelStrings['xl/_rels/workbook.xml.rels']);
+            xl_worksheets.file('sheet1.xml', _thisGlobals.excelStrings['xl/worksheets/sheet1.xml'].replace('__DATA__', self.XmlResult));
 
-var addRow = function (row, isHeader) {
-    var cells = [];
-    var tmpVal = '';
-
-    for (var i = 1, ien = row.length ; i < ien ; i++) {
-        if (row[i] === null || row[i] === undefined) {
-            tmpVal = '';
-        } else {
-            tmpVal = (isHeader) ? _thisHelpers.GetHeaderCellText($(row[i])) : _thisHelpers.GetActiveCellText($(row[i]));
+            _saveAs(
+                zip.generate({ type: "blob" }),
+                'Exported ' + self.grid.GridConfiguration.Entity.Label + ' Records.xlsx'
+            );
         }
 
-        if (tmpVal.length > 0) {
-            // trim and strip new line
-            tmpVal = tmpVal.replace( /^\s+|\s+$/g, '' ).replace(/\n/g, ' ');
-        }
+        self.SaveAsCsv = function () {
+            var isAvailable = window.FileReader !== undefined && window.Blob;
 
-        // Don't match numbers with leading zeros or a negative anywhere
-        // but the start
-        cells.push(typeof tmpVal === 'number' || (tmpVal.match && tmpVal.match(/^-?[0-9\.]+$/) && tmpVal.charAt(0) !== '0') ?
-            '<c t="n"><v>' + tmpVal + '</v></c>' :
-            '<c t="inlineStr"><is><t>' + (
-                !tmpVal.replace ?
-                tmpVal :
-                tmpVal
-                    .replace(/&(?!amp;)/g, '&amp;')
-                    .replace(/[\x00-\x1F\x7F-\x9F]/g, '')) + // remove control characters
-            '</t></is></c>'                                    // they are not valid in XML
-        );
-    }
+            var data = {};
+            data.header = [];
+            data.body = [];
 
-    return '<row>' + cells.join('') + '</row>';
-};
-
-function SaveGridAsExcel(who) {
-    var isAvailable = window.FileReader !== undefined && window.JSZip !== undefined && !_isSafari();
-    LogIt("isAvailable " + isAvailable);
-    var headers = who.mainTable.find('thead').find('tr:first').find('th');
-    var rows = who.GetBodyRows();
-
-    if (rows.length == 0) {
-        return;
-    }
-
-    var xml = addRow(headers, true);
-    for (var i = 0, ien = rows.length ; i < ien ; i++) {
-        xml += addRow($(rows[i]).find('td'));
-    }
-
-    var zip = new window.JSZip();
-    var _rels = zip.folder("_rels");
-    var xl = zip.folder("xl");
-    var xl_rels = zip.folder("xl/_rels");
-    var xl_worksheets = zip.folder("xl/worksheets");
-
-    zip.file('[Content_Types].xml', _thisGlobals.excelStrings['[Content_Types].xml']);
-    _rels.file('.rels', _thisGlobals.excelStrings['_rels/.rels']);
-    xl.file('workbook.xml', _thisGlobals.excelStrings['xl/workbook.xml']);
-    xl_rels.file('workbook.xml.rels', _thisGlobals.excelStrings['xl/_rels/workbook.xml.rels']);
-    xl_worksheets.file('sheet1.xml', _thisGlobals.excelStrings['xl/worksheets/sheet1.xml'].replace('__DATA__', xml));
-
-    _saveAs(
-        zip.generate({ type: "blob" }),
-        'Exported Grid.xlsx'
-    );
-}
-
-function SaveGridAsCsv(who) {
-    var isAvailable = window.FileReader !== undefined && window.Blob;
-    LogIt("isAvailable " + isAvailable);
-
-    var data = {};
-    data.header = [];
-    data.body = [];
-
-    var headers = who.mainTable.find('thead').find('tr:first').find('th');
-    var rows = who.GetBodyRows();
-    if (rows.length == 0) {
-        return;
-    }
-
-    var columns = headers.length;
-    for (var i = 1, ien = headers.length ; i < ien ; i++) {
-        data.header.push(_thisHelpers.GetHeaderCellText($(headers[i])));
-    }
-
-    var tmp = [];
-    var tmpVal = '';
-
-    for (var i = 0, ien = rows.length ; i < ien ; i++) {
-        var row = $(rows[i]).find('td');
-        
-        for (var j = 1; j < row.length; j++) {
-            tmpVal = _thisHelpers.GetActiveCellText($(row[j]));
-            if (tmpVal.length > 0) {
-                tmpVal = tmpVal.replace(/^\s+|\s+$/g, '').replace(/\n/g, ' ');
+            for (var i = 1, ien = self.headers.length ; i < ien ; i++) {
+                data.header.push(_thisHelpers.GetHeaderCellText($(self.headers[i])));
             }
-            tmp.push(tmpVal);
-        }
-        data.body[i] = tmp
-        tmp = [];
-    }
 
-    var config = {
-        filename: '*',
-        extension: '.csv',
-        fieldSeparator: ',',
-        fieldBoundary: '"',
-        escapeChar: '"',
-        charset: null,
-        header: true,
-        footer: false
-    };
+            var tmp = [];
+            var tmpVal = '';
 
-    var newLine = _newLine(config);
-    var output = _exportData(data, config).str;
-    var charset = document.characterSet || document.charset;
+            for (var i = 0, ien = self.Rows.length ; i < ien ; i++) {
+                var row = self.Rows[i];
 
-    if (charset !== false) {
-        if (!charset) {
-            charset = document.characterSet || document.charset;
-        }
-
-        if (charset) {
-            charset = ';charset=' + charset;
-        }
-    }
-    else {
-        charset = '';
-    }
-
-    _saveAs(
-        new Blob([output], { type: 'text/csv' + charset }),
-        'Exported Grid.csv'
-    );
-}
-
-function SaveGridAsPdf(who) {
-    var isAvailable = window.FileReader !== undefined && window.pdfMake;
-    LogIt("isAvailable " + isAvailable);
-
-    var data = {};
-    data.header = [];
-    data.body = [];
-
-    var headers = who.mainTable.find('thead').find('tr:first').find('th');
-    var rows = who.GetBodyRows();
-    if (rows.length == 0) {
-        return;
-    }
-
-    var columns = headers.length;
-    for (var i = 1, ien = headers.length ; i < ien ; i++) {
-        data.header.push(_thisHelpers.GetHeaderCellText($(headers[i])));
-    }
-
-    var tmp = [];
-    var tmpVal = '';
-
-    for (var i = 0, ien = rows.length ; i < ien ; i++) {
-        var row = $(rows[i]).find('td');
-
-        for (var j = 1; j < row.length; j++) {
-            tmpVal = _thisHelpers.GetActiveCellText($(row[j]));
-            if (tmpVal.length > 0) {
-                tmpVal = tmpVal.replace(/^\s+|\s+$/g, '').replace(/\n/g, ' ');
+                for (var j = 0; j < row.length; j++) {
+                    if (row[j] === null || row[j] === undefined) {
+                        tmpVal = '';
+                    } else {
+                        tmpVal = row[j];
+                    }
+                    if (tmpVal.length > 0) {
+                        tmpVal = tmpVal.replace(/^\s+|\s+$/g, '').replace(/\n/g, ' ');
+                    }
+                    tmp.push(tmpVal);
+                }
+                data.body[i] = tmp
+                tmp = [];
             }
-            tmp.push(tmpVal);
+
+            var config = {
+                filename: '*',
+                extension: '.csv',
+                fieldSeparator: ',',
+                fieldBoundary: '"',
+                escapeChar: '"',
+                charset: null,
+                header: true,
+                footer: false
+            };
+
+            var newLine = _newLine(config);
+            var output = _exportData(data, config).str;
+            var charset = document.characterSet || document.charset;
+
+            if (charset !== false) {
+                if (!charset) {
+                    charset = document.characterSet || document.charset;
+                }
+
+                if (charset) {
+                    charset = ';charset=' + charset;
+                }
+            }
+            else {
+                charset = '';
+            }
+
+            _saveAs(
+                new Blob([output], { type: 'text/csv' + charset }),
+                'Exported ' + self.grid.GridConfiguration.Entity.Label + ' Records.csv'
+            );
         }
-        data.body[i] = tmp
-        tmp = [];
-    }
 
-    var config = {
-        title: '*',
-        filename: '*',
-        extension: '.pdf',
-        orientation: 'portrait',
-        pageSize: 'A4',
-        header: true,
-        footer: false,
-        message: null,
-        customize: null,
-        download: 'download'
-    }
+        self.SaveAsPdf = function () {
+            // http://pdfmake.org
+            var isAvailable = window.FileReader !== undefined && window.pdfMake;
 
-    var newLine = _newLine(config);
-    var rows = [];
+            var data = {};
+            data.header = [];
+            data.body = [];
 
-    if (config.header) {
-        rows.push($.map(data.header, function (d) {
-            return {
-                text: typeof d === 'string' ? d : d + '',
-                style: 'tableHeader'
-            };
-        }));
-    }
+            for (var i = 1, ien = self.headers.length ; i < ien ; i++) {
+                data.header.push(_thisHelpers.GetHeaderCellText($(self.headers[i])));
+            }
 
-    for (var i = 0, ien = data.body.length ; i < ien ; i++) {
-        rows.push($.map(data.body[i], function (d) {
-            return {
-                text: typeof d === 'string' ? d : d + '',
-                style: i % 2 ? 'tableBodyEven' : 'tableBodyOdd'
-            };
-        }));
-    }
+            var tmp = [];
+            var tmpVal = '';
 
-    if (config.footer) {
-        rows.push($.map(data.footer, function (d) {
-            return {
-                text: typeof d === 'string' ? d : d + '',
-                style: 'tableFooter'
-            };
-        }));
-    }
+            for (var i = 0, ien = self.Rows.length ; i < ien ; i++) {
+                var row = self.Rows[i];
 
-    var doc = {
-        pageSize: config.pageSize,
-        pageOrientation: config.orientation,
-        content: [
-            {
-                table: {
-                    headerRows: 1,
-                    body: rows
+                for (var j = 0; j < row.length; j++) {
+                    if (row[j] === null || row[j] === undefined) {
+                        tmpVal = '';
+                    } else {
+                        tmpVal = row[j];
+                    }
+                    if (tmpVal.length > 0) {
+                        tmpVal = tmpVal.replace(/^\s+|\s+$/g, '').replace(/\n/g, ' ');
+                    }
+                    tmp.push(tmpVal);
+                }
+                data.body[i] = tmp
+                tmp = [];
+            }
+
+            var config = {
+                title: '*',
+                filename: '*',
+                extension: '.pdf',
+                orientation: 'portrait',
+                pageSize: 'A4',
+                header: true,
+                footer: false,
+                message: null,
+                customize: null,
+                download: 'download'
+            }
+
+            var newLine = _newLine(config);
+            var rows = [];
+
+            if (config.header) {
+                rows.push($.map(data.header, function (d) {
+                    return {
+                        text: typeof d === 'string' ? d : d + '',
+                        style: 'tableHeader'
+                    };
+                }));
+            }
+
+            for (var i = 0, ien = data.body.length ; i < ien ; i++) {
+                rows.push($.map(data.body[i], function (d) {
+                    return {
+                        text: typeof d === 'string' ? d : d + '',
+                        style: i % 2 ? 'tableBodyEven' : 'tableBodyOdd'
+                    };
+                }));
+            }
+
+            if (config.footer) {
+                rows.push($.map(data.footer, function (d) {
+                    return {
+                        text: typeof d === 'string' ? d : d + '',
+                        style: 'tableFooter'
+                    };
+                }));
+            }
+
+            var doc = {
+                pageSize: config.pageSize,
+                pageOrientation: config.orientation,
+                content: [
+                    {
+                        table: {
+                            headerRows: 1,
+                            body: rows
+                            // Set coloumn width and gap here
+                            // widths: [ '*', 'auto', 100, '*' ],
+                        },
+                        layout: 'noBorders'
+                    }
+                ],
+                styles: {
+                    tableHeader: {
+                        bold: true,
+                        fontSize: 11,
+                        color: 'white',
+                        fillColor: '#2d4154',
+                        alignment: 'center'
+                    },
+                    tableBodyEven: {},
+                    tableBodyOdd: {
+                        fillColor: '#f3f3f3'
+                    },
+                    tableFooter: {
+                        bold: true,
+                        fontSize: 11,
+                        color: 'white',
+                        fillColor: '#2d4154'
+                    },
+                    title: {
+                        alignment: 'center',
+                        fontSize: 15
+                    },
+                    message: {}
                 },
-                layout: 'noBorders'
+                defaultStyle: {
+                    fontSize: 10
+                }
+            };
+
+            if (config.message) {
+                doc.content.unshift({
+                    text: config.message,
+                    style: 'message',
+                    margin: [0, 0, 0, 12]
+                });
             }
-        ],
-        styles: {
-            tableHeader: {
-                bold: true,
-                fontSize: 11,
-                color: 'white',
-                fillColor: '#2d4154',
-                alignment: 'center'
-            },
-            tableBodyEven: {},
-            tableBodyOdd: {
-                fillColor: '#f3f3f3'
-            },
-            tableFooter: {
-                bold: true,
-                fontSize: 11,
-                color: 'white',
-                fillColor: '#2d4154'
-            },
-            title: {
-                alignment: 'center',
-                fontSize: 15
-            },
-            message: {}
-        },
-        defaultStyle: {
-            fontSize: 10
+
+            if (config.title) {
+                doc.content.unshift({
+                    text: _title(config, false),
+                    style: 'title',
+                    margin: [0, 0, 0, 12]
+                });
+            }
+
+            if (config.customize) {
+                config.customize(doc);
+            }
+
+            var pdf = window.pdfMake.createPdf(doc);
+
+            if (config.download === 'open' && !_thisGlobals.IsBrowser.Safari) {
+                pdf.open();
+            }
+            else {
+                pdf.download('Exported ' + self.grid.GridConfiguration.Entity.Label + ' Records');
+            }
         }
-    };
 
-    if (config.message) {
-        doc.content.unshift({
-            text: config.message,
-            style: 'message',
-            margin: [0, 0, 0, 12]
-        });
+        self.SaveAsGridCallback = function (fieldsresult, hasMoreRecords, pagingCookie) {
+
+            if ((fieldsresult) && (fieldsresult.length) && (fieldsresult.length > 0)) {
+
+                var fval = '';
+                var tmpLcase = '';
+
+                for (var i = 0; i < fieldsresult.length; i++) {
+                    var item = fieldsresult[i];
+                    var trow = [];
+                    for (var iinner = 0; iinner < self.SelectedFields.length; iinner++) {
+                        var inneritem = self.SelectedFields[iinner];
+                        var inneritemSchemaName = inneritem.SchemaName.toLowerCase();
+                        tmpLcase = inneritem.AttrType.toLowerCase();
+
+                        if ((tmpLcase == _thisGlobals.CrmFieldTypes.OptionSetType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.State) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.Status) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.BooleanType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.MoneyType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.DecimalType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.DoubleType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.IntegerType)) {
+
+                            if (item.attributes[inneritemSchemaName]) {
+                                trow.push(item.attributes[inneritemSchemaName].formattedValue);
+                            } else {
+                                trow.push('');
+                            }
+                        } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.LookupType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.CustomerType) ||
+                            (tmpLcase == _thisGlobals.CrmFieldTypes.OwnerType)) {
+
+                            if (item.attributes[inneritemSchemaName]) {
+                                trow.push(item.attributes[inneritemSchemaName].name || '');
+                            } else {
+                                trow.push('');
+                            }
+
+                        } else if ((tmpLcase == _thisGlobals.CrmFieldTypes.TextType) || (tmpLcase == _thisGlobals.CrmFieldTypes.MemoType)) {
+                            if (item.attributes[inneritemSchemaName]) {
+                                trow.push(item.attributes[inneritemSchemaName].value);
+                            } else {
+                                trow.push('');
+                            }
+                        } else if (tmpLcase == _thisGlobals.CrmFieldTypes.DateTimeType) {
+                            if (item.attributes[inneritemSchemaName]) {
+                                trow.push(item.attributes[inneritemSchemaName].formattedValue);
+                            } else {
+                                trow.push('');
+                            }
+                        }
+
+                    }
+
+                    if (trow.length > 0) {
+                        if (self.SaveAs == 0) {
+                            self.AddSavedRow(trow);
+                        } else {
+                            self.Rows.push(trow);
+                        }
+                    }
+                }
+            }
+
+            if (hasMoreRecords) {
+                self.pageNumber += 1;
+                XrmServiceToolkit.Soap.Fetch(self.grid.GridConfiguration.GetFetchXml(self.pageNumber, pagingCookie, 5000), false, self.SaveAsGridCallback);
+            } else {
+                var stype = 'Excel';
+                // Excel
+                if (self.SaveAs == 0) {
+                    self.SaveAsExcel();
+                    // CSV
+                } else if (self.SaveAs == 1) {
+                    stype = 'CSV';
+                    self.SaveAsCsv();
+                    // PDF
+                } else {
+                    stype = 'PDF';
+                    self.SaveAsPdf();
+                }
+            }
+        }
+
+        XrmServiceToolkit.Soap.Fetch(self.grid.GridConfiguration.GetFetchXml(self.pageNumber, null, 5000), false, self.SaveAsGridCallback);
     }
 
-    if (config.title) {
-        doc.content.unshift({
-            text: _title(config, false),
-            style: 'title',
-            margin: [0, 0, 0, 12]
-        });
+    function addRow (row, isHeader) {
+        var cells = [];
+        var tmpVal = '';
+
+        for (var i = 1, ien = row.length ; i < ien ; i++) {
+            if (row[i] === null || row[i] === undefined) {
+                tmpVal = '';
+            } else {
+                tmpVal = (isHeader) ? _thisHelpers.GetHeaderCellText($(row[i])) : _thisHelpers.GetActiveCellText($(row[i]));
+            }
+
+            if (tmpVal.length > 0) {
+                // trim and strip new line
+                tmpVal = tmpVal.replace( /^\s+|\s+$/g, '' ).replace(/\n/g, ' ');
+            }
+
+            // Don't match numbers with leading zeros or a negative anywhere
+            // but the start
+            cells.push(typeof tmpVal === 'number' || (tmpVal.match && tmpVal.match(/^-?[0-9\.]+$/) && tmpVal.charAt(0) !== '0') ?
+                '<c t="n"><v>' + tmpVal + '</v></c>' :
+                '<c t="inlineStr"><is><t>' + (
+                    !tmpVal.replace ?
+                tmpVal :
+                    tmpVal
+                        .replace(/&(?!amp;)/g, '&amp;')
+                        .replace(/[\x00-\x1F\x7F-\x9F]/g, '')) + // remove control characters
+                '</t></is></c>'                                    // they are not valid in XML
+            );
+        }
+
+        return '<row>' + cells.join('') + '</row>';
     }
 
-    if (config.customize) {
-        config.customize(doc);
+    function _title(config) {
+        var title = config.title;
+
+        return title.indexOf('*') !== -1 ?
+            title.replace('*', $('title').text()) :
+            title;
     }
 
-    var pdf = window.pdfMake.createPdf(doc);
+    function _filename (config, incExtension) {
+        // Backwards compatibility
+        var filename = config.filename === '*' && config.title !== '*' && config.title !== undefined ?
+            config.title :
+            config.filename;
 
-    if (config.download === 'open' && !_isSafari()) {
-        pdf.open();
-    }
-    else {
-        pdf.getBuffer(function (buffer) {
-            var blob = new Blob([buffer], { type: 'application/pdf' });
+        if (filename.indexOf('*') !== -1) {
+            filename = filename.replace('*', $('title').text());
+        }
 
-            _saveAs(blob, 'Exported Grid.pdf');
-        });
+        // Strip characters which the OS will object to
+        filename = filename.replace(/[^a-zA-Z0-9_\u00A1-\uFFFF\.,\-_ !\(\)]/g, "");
+
+        return incExtension === undefined || incExtension === true ?
+            filename + config.extension :
+            filename;
     }
-}
+
+    function _newLine (config) {
+        return config.newline ?
+            config.newline :
+            navigator.userAgent.match(/Windows/) ?
+                '\r\n' :
+                '\n';
+    }
+
+    function _exportData (dt, config) {
+        var newLine = _newLine(config);
+        var data = dt;
+        var boundary = config.fieldBoundary;
+        var separator = config.fieldSeparator;
+        var reBoundary = new RegExp(boundary, 'g');
+        var escapeChar = config.escapeChar !== undefined ?
+            config.escapeChar :
+            '\\';
+        var join = function (a) {
+            var s = '';
+
+            // If there is a field boundary, then we might need to escape it in
+            // the source data
+            for (var i = 0, ien = a.length ; i < ien ; i++) {
+                if (i > 0) {
+                    s += separator;
+                }
+
+                s += boundary ?
+                    boundary + ('' + a[i]).replace(reBoundary, escapeChar + boundary) + boundary :
+                    a[i];
+            }
+
+            return s;
+        };
+
+        var header = config.header ? join(data.header) + newLine : '';
+        var footer = config.footer ? newLine + join(data.footer) : '';
+        var body = [];
+
+        for (var i = 0, ien = data.body.length ; i < ien ; i++) {
+            body.push(join(data.body[i]));
+        }
+
+        return {
+            str: header + body.join(newLine) + footer,
+            rows: body.length
+        };
+    }
+
+    return SaveAsGridCallbackHelper;
+})();
 
 /* Grid Configuration class, loading, ... */
 
@@ -9266,6 +9457,7 @@ var DCrmEGConfigurationManager = (function () {
         self.HideAutosaveButton = ((data.HideAutosaveButton) && (data.HideAutosaveButton == 'true')) ? true : false;
         self.DateTimeMinuteStep = ((data.DateTimeMinuteStep) && (data.DateTimeMinuteStep != 'undefined')) ? parseInt(data.DateTimeMinuteStep) : 5;
         self.SystemCurrencyPrecision = (data.SystemCurrencyPrecision) ? parseInt(data.SystemCurrencyPrecision) : 2;
+        self.GridTitleWordWrap = ((data.GridTitleWordWrap) && (data.GridTitleWordWrap == 'true')) ? true : false;
 
         _thisGlobals.SystemCurrencyPrecision = self.SystemCurrencyPrecision;
 
@@ -9335,7 +9527,7 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
 </fetch>
 
         */
-        self.GetFetchXml = function (page, pagingCookie) {
+        self.GetFetchXml = function (page, pagingCookie, totalcount) {
             var fetch = '';
             var additional = null;
             page = page || "1";
@@ -9346,15 +9538,23 @@ Hasmore records [true] cookie [&lt;cookie page=&quot;1&quot;&gt;&lt;name last=&q
                     additional = window.parent.DCrmEgGridOnBeforeFetchRecords({ ParentEntityLabel: self.Entity.Label, ParentEntitySchemaName: self.Entity.SchemaName });
                 }
 
-                if (pagingCookie) {
-                    fetch += self.GridFetchXml.HeadForPaging.replace("%P%", page + "").replace("%PC%", pagingCookie)
-                        + self.GridFetchXml.Entity
-                        + self.GridFetchXml.Fields.join('');
+                if (totalcount) {
+                    var lookfor = 'count="' + self.RecordsPerPage + '"';
+                    var replacewith = 'count="' + totalcount + '"';
+                    if (pagingCookie) {
+                        fetch += self.GridFetchXml.HeadForPaging.replace(lookfor, replacewith).replace("%P%", page + "").replace("%PC%", pagingCookie);
+                    } else {
+                        fetch += self.GridFetchXml.Head.replace(lookfor, replacewith).replace("%P%", page + "");
+                    }
+
+                } else if (pagingCookie) {
+                    fetch += self.GridFetchXml.HeadForPaging.replace("%P%", page + "").replace("%PC%", pagingCookie);
                 } else {
-                    fetch += self.GridFetchXml.Head.replace("%P%", page + "")
-                        + self.GridFetchXml.Entity
-                        + self.GridFetchXml.Fields.join('');
+                    fetch += self.GridFetchXml.Head.replace("%P%", page + "");
                 }
+
+                fetch += self.GridFetchXml.Entity
+                    + self.GridFetchXml.Fields.join('');
 
                 if (self.GridFetchXml.Sort.length > 0) {
                     fetch += self.GridFetchXml.Sort.join('');
@@ -9771,6 +9971,7 @@ Related [false] RelatedEntityLookup [undefined]
             data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
             data.DistinctValues = ((tmp.length > 30) ? tmp[30] : false);
             data.SystemCurrencyPrecision = ((tmp.length > 31) ? tmp[31] : undefined);
+            data.GridTitleWordWrap = ((tmp.length > 32) ? tmp[32] : false);
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -10018,7 +10219,7 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
         var item = data.SelectedFields[headerIndex];
 
         $theader = $('<th></th>')
-            .addClass('TextAutoEclipse')
+            //.addClass('TextAutoEclipse')
             .attr(_thisGlobals.ToolTipAttrName, item.Name)
             .appendTo($tr);
 
@@ -10181,7 +10382,12 @@ function CreateAndPopulateGrid(data, parentcontainer, relationshipparentEntityGu
             $theader.attr(_thisGlobals.DataAttr.Header.Required, _thisGlobals.DataAttr.NO);
         }
 
-        var $firstSpan = $('<span class="headertitle"></span>')
+        var spanclass = 'headertitle';
+        if (data.GridTitleWordWrap == false) {
+            spanclass += ' wrapheadertitle';
+        }
+
+        var $firstSpan = $('<span class="' + spanclass + '"></span>')
             .text(item.Name)
             .attr(_thisGlobals.ToolTipAttrName, item.Name)
             .appendTo($theader);
@@ -11030,8 +11236,8 @@ var GridLoaderHelper = (function () {
                     InputFormatErrorContainer: 'inputformaterror',
                     ParentFormIsReadOnly: _thisGlobals.FormIsReadOnly,
 
-                    UserCanDelete: self.data.AllowDelete,
-                    UserCanUpdate: !_thisGlobals.FormIsReadOnly,
+                    UserCanDelete: (self.data.AllowDelete && !_thisGlobals.FormIsReadOnly),
+                    UserCanUpdate: (!_thisGlobals.FormIsReadOnly),
 
                     DisplayCloneRecordButton: self.data.DisplayCloneRecordButton,
                     DisplayCloneRecord: self.data.DisplayCloneRecord,

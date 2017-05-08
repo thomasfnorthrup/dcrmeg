@@ -3155,6 +3155,13 @@ function InitializeSetupRoutines() {
 
         SetParentFormDirty();
     });
+
+    $('#gridtitlewordwrap').on('click', function (e) {
+        _thisGlobals._CurConfiguration.GridTitleWordWrap = $(this).prop('checked');
+
+        SetParentFormDirty();
+    });
+
     $('#displayclonerecordbutton').on('click', function (e) {
         _thisGlobals._CurConfiguration.DisplayCloneRecordButton = $(this).prop('checked');
 
@@ -3729,6 +3736,7 @@ function InitializeSetupRoutines() {
         $('#displayexportbutton').attr('disabled', 'disabled');
         $('#displaysetrecordstate').attr('disabled', 'disabled');
         $('#displayclonerecord').attr('disabled', 'disabled');
+        $('#gridtitlewordwrap').attr('disabled', 'disabled');
         $('#displayclonerecordbutton').attr('disabled', 'disabled');
         $('#openrecordbehavoir').prop('disabled', 'disabled');
         $('#systemcurrencyprecision').prop('disabled', 'disabled');
@@ -4495,6 +4503,7 @@ var DCrmEGConfigurationManager = (function () {
         self.DisplayExportButton = ((data.DisplayExportButton) && (data.DisplayExportButton == 'false')) ? false : true;
         self.DisplaySetRecordState = ((data.DisplaySetRecordState) && (data.DisplaySetRecordState == 'false')) ? false : true;
         self.DisplayCloneRecord = ((data.DisplayCloneRecord) && (data.DisplayCloneRecord == 'false')) ? false : true;
+        self.GridTitleWordWrap = ((data.GridTitleWordWrap) && (data.GridTitleWordWrap == 'true')) ? true : false;
         self.DisplayCloneRecordButton = ((data.DisplayCloneRecordButton) && (data.DisplayCloneRecordButton == 'false')) ? false : true;
         self.OpenRecordBehavoir = ((data.OpenRecordBehavoir) && (data.OpenRecordBehavoir != 'undefined')) ? data.OpenRecordBehavoir : "10";
         
@@ -4744,6 +4753,7 @@ function DisplaySelectedEntityInfo(li, schema, liid) {
     $('#displayexportbutton').prop('checked', _thisGlobals._CurConfiguration.DisplayExportButton);
     $('#displaysetrecordstate').prop('checked', _thisGlobals._CurConfiguration.DisplaySetRecordState);
     $('#displayclonerecord').prop('checked', _thisGlobals._CurConfiguration.DisplayCloneRecord);
+    $('#gridtitlewordwrap').prop('checked', _thisGlobals._CurConfiguration.GridTitleWordWrap);
     $('#displayclonerecordbutton').prop('checked', _thisGlobals._CurConfiguration.DisplayCloneRecordButton);
     
     $('#displaySum').prop('checked', _thisGlobals._CurConfiguration.DisplaySum);
@@ -4872,7 +4882,7 @@ function LoadDCrmEGConfiguration() {
             data.DateTimeMinuteStep = ((tmp.length > 29) ? tmp[29] : undefined);
             data.DistinctValues = ((tmp.length > 30) ? tmp[30] : false);
             data.SystemCurrencyPrecision = ((tmp.length > 31) ? tmp[31] : undefined);
-            
+            data.GridTitleWordWrap = ((tmp.length > 32) ? tmp[32] : false);
         }
 
         config = new DCrmEGConfigurationManager(data);
@@ -5077,7 +5087,8 @@ function SaveDCrmEGConfiguration() {
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].PasteFromExcel
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DateTimeMinuteStep
         + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].DistinctValues
-        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].SystemCurrencyPrecision;
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].SystemCurrencyPrecision
+        + _thisGlobals._SEPERATOR + _thisGlobals.DCrmEGConfiguration[i].GridTitleWordWrap;
         
         if (_thisGlobals.DCrmEGConfiguration[i].Fields) {
             if (i > 0) {
@@ -5157,8 +5168,9 @@ function SaveDCrmEGConfigurationInternal(config) {
     + _thisGlobals._SEPERATOR + config.PasteFromExcel
     + _thisGlobals._SEPERATOR + config.DateTimeMinuteStep
     + _thisGlobals._SEPERATOR + config.DistinctValues
-    + _thisGlobals._SEPERATOR + config.SystemCurrencyPrecision;
-    
+    + _thisGlobals._SEPERATOR + config.SystemCurrencyPrecision
+    + _thisGlobals._SEPERATOR + config.GridTitleWordWrap;
+
     if (config.Fields) {
         _thisGlobals._Fieldsinfo += _thisGlobals._pSeperator + config.Fields + _thisGlobals._OuterSeperator + config.Entity.Identity;
     }

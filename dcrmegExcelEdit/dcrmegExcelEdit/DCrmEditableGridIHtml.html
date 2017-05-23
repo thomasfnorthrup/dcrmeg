@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <link href="dcrmeg_site" rel="stylesheet" />
+
+    <!-- Jquery 2.1.4 -->
+    <script src="dcrmeg_jquery2"></script>
+    <!-- Jquery Mousewheel -->
+    <script src="dcrmeg_jqmw"></script>
+    <!-- Jquery Datetime Picker -->
+    <script src="dcrmeg_jqdtpj"></script>
+    <!-- aes Crypto.js -->
+    <script src="dcrmeg_aes"></script>
+    <!-- XrmServiceToolkit 2.2.1 modified -->
+    <script src="dcrmeg_xrmservicetoolkit"></script>
+    <!-- Xdate -->
+    <script src="dcrmeg_xdate"></script>
+    <!-- Select2 -->
+    <script src="dcrmeg_select2js"></script>
+    <!-- JSZip - A Javascript class for generating and reading zip files -->
+    <script src="dcrmeg_jszip"></script>
+    <!-- pdfmake -->
+    <script src="dcrmeg_pdfmake"></script>
+    <!-- pdfmakefonts -->
+    <script src="dcrmeg_pdfmakefonts"></script>
+    <!--<script src="dcrmeg_webapisdk"></script>-->
+    <!-- dcrmeditabletablegrid -->
+    <script src="dcrmeg_dcrmeg"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+</head>
+<body>
+    <div id="parentcontainer" style="width:98%;">
+        <div id="validationerror" class="verror" style="display:none;">Requiered Field</div>
+        <div id="inputformaterror" class="verror" style="display:none;">Invalid format</div>
+    </div>
+
+    <div id="dcrmegProcessingDialog" class="dcrmegdialogprocessing">
+        <div class="dcrmegprocessingtitle">
+            <div class="dcrmegprocessingimg"><img src="/_imgs/processing_loader.gif" /></div>
+            <div>Loading...</div>
+        </div>
+    </div>
+
+    <div id="fieldfilter_content" class="flyoutOverlayContent">
+        <div id="fieldfilter_contentvalue" class="flyoutOverlayContentValue">
+
+            <div id="fieldfilter_datetimecontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_datetimeconditionslabel" for="fieldfilter_datetimeconditions">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_datetimeconditions">
+                    <option value="on" data-fetchop="on" selected="selected">On</option>
+                    <option value="on-or-after" data-fetchop="on-or-after">On or After</option>
+                    <option value="on-or-before" data-fetchop="on-or-before">On or Before</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="today">Today</option>
+                    <option value="tomorrow">Tomorrow</option>
+                    <option value="next-seven-days">Next 7 Days</option>
+                    <option value="last-seven-days">Last 7 Days</option>
+                    <option value="next-week">Next Week</option>
+                    <option value="last-week">Last Week</option>
+                    <option value="this-week">This Week</option>
+                    <option value="next-month">Next Month</option>
+                    <option value="last-month">Last Month</option>
+                    <option value="this-month">This Month</option>
+                    <option value="next-year">Next Year</option>
+                    <option value="last-year">Last Year</option>
+                    <option value="this-year">This Year</option>
+                    <option value="last-x-hours">Last X Hours</option>
+                    <option value="next-x-hours">Next X Hours</option>
+                    <option value="last-x-days">Last X Days</option>
+                    <option value="next-x-days">Next X Days</option>
+                    <option value="last-x-weeks">Last X Weeks</option>
+                    <option value="next-x-weeks">Next X Weeks</option>
+                    <option value="last-x-months">Last X Months</option>
+                    <option value="next-x-months">Next X Months</option>
+                    <option value="last-x-years">Last X Years</option>
+                    <option value="next-x-years">Next X Years</option>
+                    <option value="anytime">Any Time</option>
+                    <option value="olderthan-x-months">Older Than X Months</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                    <option value="in-fiscal-year">In Fiscal Year</option>
+                    <option value="in-fiscal-period">In Fiscal Period</option>
+                    <option value="in-fiscal-period-and-year">In Fiscal Period and Year</option>
+                    <option value="in-or-after-fiscal-period-and-year">In or After Fiscal Period</option>
+                    <option value="in-or-before-fiscal-period-and-year">In or Before Fiscal Period</option>
+                    <option value="last-fiscal-year">Last Fiscal Year</option>
+                    <option value="this-fiscal-year">This Fiscal Year</option>
+                    <option value="next-fiscal-year">Next Fiscal Year</option>
+                    <option value="last-x-fiscal-years">Last X Fiscal Years</option>
+                    <option value="next-x-fiscal-years">Next X Fiscal Years</option>
+                    <option value="last-fiscal-period">Last Fiscal Period</option>
+                    <option value="this-fiscal-period">This Fiscal Period</option>
+                    <option value="next-fiscal-period">Next Fiscal Period</option>
+                    <option value="last-x-fiscal-periods">Last X Fiscal Periods</option>
+                    <option value="next-x-fiscal-periods">Next X Fiscal Periods</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_numericcontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_numericconditionslabel" for="fieldfilter_numericconditions">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_numericconditions">
+                    <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                    <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                    <option value="gt" data-fetchop="gt">Is Greater Than</option>
+                    <option value="ge" data-fetchop="ge">Is Greater Than or Equal To</option>
+                    <option value="lt" data-fetchop="lt">Is Less Than</option>
+                    <option value="le" data-fetchop="le">Is Less Than or Equal To</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_stringcontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_stringconditionslabel" for="fieldfilter_stringconditions">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_stringconditions">
+                    <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                    <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_optionsetcontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_optionsetconditionslabel" for="fieldfilter_optionsetconditions">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_optionsetconditions">
+                    <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                    <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_lookupcontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_lookupconditionslabel" for="fieldfilter_lookupconditions">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_lookupconditions">
+                    <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                    <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_systemusercontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_systemuserctllabel" for="fieldfilter_systemuserlookup">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_systemuserlookup">
+                    <option value="eq-userid" selected="selected">Equals Current User</option>
+                    <option value="ne-userid">Does Not Equal Current User</option>
+                    <option value="eq-userteams">Equals Current User's Teams</option>
+                    <option value="eq-useroruserteams">Equals Current User Or User's Teams</option>
+                    <option value="eq" data-fetchop="eq">Equals</option>
+                    <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_customlookupcontainer" class="conditionscontainer hidefilters">
+                <label id="fieldfilter_customerlookuplabel" for="fieldfilter_customerlookup">Field value</label>
+                <select class="fieldconditionselect" id="fieldfilter_customerlookup">
+                    <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                    <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                    <option value="not-null">Contains Data</option>
+                    <option value="null">Does Not Contain Data</option>
+                    <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                    <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                    <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                    <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                    <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                    <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                </select>
+            </div>
+
+            <div id="fieldfilter_inputcontainer">
+                <input type="text" id="fieldfilter_stringinput" class="filterbtnwidth hidefilters" />
+                <div id="fieldfilter_lookupinput" class="hidefilters"></div>
+                <div style="margin-bottom:5px;"><input type="text" id="fieldfilter_extrainput" class="filterbtnwidth hidefilters" /></div>
+                <input type="text" id="fieldfilter_calendarinput" />
+                <div id="fieldfilter_optionscontainer" class="hidefilters"><select id="fieldfilter_optionsetselect" class="selectfilter multiselectoptions" multiple="multiple"></select></div>
+           </div>
+
+        </div>
+
+        <div id="fieldfilter_btncontainer" class="flyoutOverlaybtncontainer">
+            <button id="fieldfilter_btnok" class="flyoutOverlaybtn">Ok</button>
+            <button id="fieldfilter_btncancel" class="flyoutOverlaybtn">Cancel</button>
+            <div style="margin-top:5px;"><button id="fieldfilter_btnremovefilter" title="Remove filter" class="flyoutOverlaybtn hidefilters">Remove filter</button></div>
+        </div>
+    </div>
+
+    <div id="products_flyoutOverlay" class="flyoutOverlay">
+        <div id="productsoverlay_content" class="flyoutproductscontent">
+            <div>
+                <table id="products_table" class="products_fixed_headers">
+                    <thead>
+                        <tr>
+                            <th><input id="products_selectall" type="checkbox" /></th>
+                            <th>Product</th>
+                            <th>Unit</th>
+                            <th>PriceList</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div id="products_btncontainer" class="flyoutOverlaybtncontainer">
+                <button id="products_btnok" class="flyoutOverlaybtn">Ok</button>
+                <button id="products_btncancel" class="flyoutOverlaybtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+
+        $(function () {
+            InitializeSetupRoutines();
+        });
+
+    </script>
+
+</body>
+</html>

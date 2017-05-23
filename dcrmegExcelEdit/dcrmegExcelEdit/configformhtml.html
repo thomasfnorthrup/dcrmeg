@@ -1,0 +1,712 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+
+    <link href="dcrmeg_configformcss" rel="stylesheet" />
+    <link href="dcrmeg_spectrum" rel="stylesheet" />
+    
+    <script src="dcrmeg_jquery2" type="text/javascript"></script>
+    <!-- Jquery Mousewheel -->
+    <script src="dcrmeg_jqmw"></script>
+    <script src="dcrmeg_jqdtpj"></script>
+    <script src="dcrmeg_aes"></script>
+    <script src="dcrmeg_xrmservicetoolkit"></script>
+    <script src="dcrmeg_xdate"></script>
+    <script src="dcrmeg_jquerysortable"></script>
+    <script src="dcrmeg_select2js"></script>
+    <script src="dcrmeg_spectrumjs"></script>
+    <script src="dcrmeg_configformiframejs"></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+</head>
+<body>
+    <div id="mainContainer" class="maincontent">
+        <div class="section group" id="maincontentsect1">
+
+            <div class="col span_2_of_7">
+
+                <div class="group">
+                    <div class="col span_1_of_2">
+                        <label for="displayonentity" style="width:100%;"><span style="font-weight:bold;" class="ElipseText2" id="dcrmeg_displaygridonentity">Display grid on entity</span><span style="width:5%;display:inline-block;" class="Required">*</span></label>
+                    </div>
+                    <div class="col span_1_of_2">
+                        <select id="displayonentity" class="displayonentityclass"></select>
+                    </div>
+                </div>
+
+                <div class="group">
+                    <div class="col span_1_of_2">
+                        <label for="displayfromentity" style="width:100%;"><span style="font-weight:bold;" class="ElipseText" id="dcrmeg_displaydatafromentity">Display data from</span></label>
+                    </div>
+                    <div class="col span_1_of_3">
+                        <select id="displayfromentity" class="displayonentityclass"></select>
+                    </div>
+                    <div class="col span_1_of_7">
+                        <button id="addentitytodisplaybutton" class="addentitylistbutton">+</button>
+                    </div>
+                </div>
+
+                <div class="group">
+                    &nbsp;
+                </div>
+
+                <div class="group" style="height:28px;">
+                    <span style="display:inline-block;margin-right:5px;font-weight:bold;"> Guid</span>
+                    <input style="width:80%;" id="configguid" type="text" readonly="readonly" />
+                </div>
+
+                <div class="group displaynone" id="maincontentsect41" style="margin-top:15px;">
+                    <div style="height:24px;">
+                        <label for="displayentityfieldsoptions" id="listoffieldstoselectlabel"></label> <span class="Required">*</span>&nbsp;&nbsp;
+                        <select id="displayentityfieldsoptions">
+                            <option value="100000000">Fields on the form</option>
+                            <option value="100000001">Custom fields</option>
+                            <option value="100000002">System fields</option>
+                            <option selected="selected" value="100000003">All fields</option>
+                        </select>&nbsp;&nbsp;
+                        <input style="border:solid 1px lightgrey;" id="listoffieldstoselectfilter" type="text" />
+                    </div>
+                    <div class="checklistcontainer" id="listoffieldstoselect"></div>
+                </div>
+
+            </div>
+
+            <div class="col span_3_of_7">
+
+                <div class="ollistofentitiescontainer">
+                    <div><span id="dcrmeg_displaydatafromentity_copy">Selected entities to display data from</span> <span class="Required">*</span></div>
+                    <ol id="makesortable" class="ollistofentities"></ol>
+                </div>
+
+                <div id="maincontentsect51" class="displaynone" style="border-left: solid 3px lightgray;padding-left:10px;">
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label id="displayclearfilterbuttonlabel" class="ElipseText" for="displayclearfilterbutton">Display clear filters button</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="checkbox" checked="checked" id="displayclearfilterbutton" />
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label id="displayheaderfilterlabel" class="ElipseText" for="displayheaderfilter">Display grid header filter</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="checkbox" checked="checked" id="displayheaderfilter" />
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label id="displayexportbuttonlabel" class="ElipseText" for="displayexportbutton">Display export button</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="checkbox" checked="checked" id="displayexportbutton" />
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label id="displaysetrecordstatelabel" class="ElipseText" for="displaysetrecordstate">Display set record status context menu</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="checkbox" checked="checked" id="displaysetrecordstate" />
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label id="displayclonerecordbuttonlabel" class="ElipseText" for="displayclonerecordbutton">Display clone record button</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="checkbox" checked="checked" id="displayclonerecordbutton" />
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label id="displayclonerecordlabel" class="ElipseText" for="displayclonerecord">Display clone record context menu</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="checkbox" checked="checked" id="displayclonerecord" />
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label for="openrecordbehavoir" class="ElipseText" id="openrecordbehavoirlabel">Open record button behavior</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <select id="openrecordbehavoir" class="displayonentityclass">
+                                <option value="10" selected="selected">Same window</option>
+                                <option value="20">New window</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="group">
+                        <div class="col span_2_of_3">
+                            <label for="datetimeeditorminutestep" class="ElipseText" id="datetimeeditorminutesteplabel">Date time editor minute step</label>
+                        </div>
+                        <div class="col span_1_of_4">
+                            <input type="text" title="12:05, 12:10, 12:15, ..." id="datetimeeditorminutestep" maxlength="2" style="width: 35px;" />
+                        </div>
+                    </div>
+                    <div class="group displaynone" id="maincontentsect2">
+                        <table style="margin-top:15px;padding:5px;border:solid 1px lightgray;">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <label id="dcrmeg_displayonlyrelatedrecords" for="entitiesAreRelated">Display only related records</label>
+                                        <input type="checkbox" id="entitiesAreRelated" style="margin-top:5px;" />
+                                    </td>
+                                    <td>
+                                        <label for="relatedEntityLookupSelect" id="dcrmeg_relatedentitylookup">Related entitiy lookup(s)</label>
+                                        <select id="relatedEntityLookupSelect" style="width:60%;margin-top:5px;"></select>
+                                    </td>
+                                    <td>
+                                        <label for="relatedEntityLookup" id="relatedEntityLookupLabel">Selected Relationship</label>
+                                        <input readonly="readonly" id="relatedEntityLookup" type="text" style="width:60%;margin-top:5px;" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col span_2_of_7 conditionfetchcontainer displaynone" id="maincontentsect5">
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="autosavechanges_label" class="ElipseText" for="autosavechanges_check">Auto save changes</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="autosavechanges_check" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="hideautosave_label" class="ElipseText" for="hideautosave_check">Hide auto save button</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" id="hideautosave_check" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="allowcreate_label" class="ElipseText" for="allowcreate_check">Allow create new</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="allowcreate_check" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="allowdelete_label" class="ElipseText" for="allowdelete_check">Allow delete</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="allowdelete_check" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="refreshaftercreate_label" class="ElipseText" for="refreshaftercreate_check">Refresh after create new</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="refreshaftercreate_check" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="refreshaftersave_label" class="ElipseText" for="refreshaftersave_check">Refresh after save</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" id="refreshaftersave_check" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="dcrmeg_displaysumfornumericvalues" class="ElipseText" for="displaySum">Allow aggregates</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" checked="checked" id="displaySum" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label for="createnewbtnclick" class="ElipseText" id="createnewbtnclick_label">New button (+) behavior</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <select id="createnewbtnclick" class="displayonentityclass">
+                            <option value="10">Create inline</option>
+                            <option selected="selected" value="30">Display menu</option>
+                            <option value="20">New window</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label for="booleaneditorbehaviour" class="ElipseText" id="booleaneditorbehaviour_label">Boolean editor behavior</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <select id="booleaneditorbehaviour" class="displayonentityclass">
+                            <option value="10">One click change</option>
+                            <option selected="selected" value="20">Display editor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label for="maxrecordperpage" class="ElipseText" id="dcrmeg_maxrecordsperpage">Max records per page</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <select id="maxrecordperpage" class="displayonentityclass">
+                            <option selected="selected" value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="30">30</option>
+                            <option value="40">40</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="150">150</option>
+                            <option value="200">200</option>
+                            <option value="250">250</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="gridtitlelabel" class="ElipseText" for="gridtitle">Grid Title</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input style="width:93%;" type="text" id="gridtitle" />
+                    </div>
+                </div>
+                <div class="group">
+                    <div class="col span_2_of_3">
+                        <label id="pastefromexcellabel" class="ElipseText" for="pastefromexcel_check">Display paste from Excel textbox</label>
+                    </div>
+                    <div class="col span_1_of_4">
+                        <input type="checkbox" id="pastefromexcel_check" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="section group displaynone section4class" id="maincontentsect4">
+            <div class="col span_2_of_2">
+
+                <div class="configuresortingdiv group" id="multisortabletilescontainertitle">
+                    <span style="font-weight:bold;display:inline-block;margin-right:20px;" id="dcrmeg_selectedgridheaders">Selected Entity Fields</span>
+                    <button style="width:100px;" id="configuresorting">Configure Sorting</button>
+                </div>
+                <div class="group">
+                    <table id="selectedfieldstable" class="selectedfieldstableclass">
+                        <thead>
+                            <tr>
+                                <th>&nbsp;</th>
+                                <th><div title="Label">Label</div></th>
+                                <th><div title="Schema Name">Schema Name</div></th>
+                                <th><div title="Field Type">Field Type</div></th>
+                                <th><div title="Required Level">Required Level</div></th>
+                                <th><div title="Read-only">Read-only</div></th>
+                                <th><div title="Width">Width</div></th>
+                                <th><div title="Create New, Default Value">Create New, Default Value</div></th>
+                                <th>Color and Format</th>
+                                <th>Color and Format</th>
+                                <th>&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col span_2_of_2 formattingmaincontainer">
+
+                <div id="headerformattingcontainer" class="displaynone group" style="left:0;top:0;">
+                    <table class="formattingcontainertable">
+                        <tbody>
+                            <tr>
+                                <td class="headerformattinglabel" style="font-weight:bold;">&nbsp;</td>
+                                <td title="Background Color">Background</td>
+                                <td><input id="headerbkcolor" /></td>
+                                <td title="Text Color">Text</td>
+                                <td><input id="headerfkcolor" /></td>
+                                <td title="Font CSS">Font</td>
+                                <td><input id="headerfontcss" type="text" title="font-size:16px;font-weight:bold" /></td>
+                                <td><label for="applyheaderformattoallcells">Apply Colors to Column</label><input id="applyheaderformattoallcells" type="checkbox" /></td>
+                                <td><button id="headerformattingokbtn">OK</button></td>
+                                <td><button id="headerformattingcancelbtn">Cancel</button></td>
+                                <td><button id="headerformattingresetbtn">Reset</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="cellformattingcontainer" class="displaynone group" style="left:0;top:0;">
+                    <table class="formattingcontainertable">
+                        <tbody>
+                            <tr>
+                                <td class="cellformattinglabel" style="font-weight:bold;">&nbsp;</td>
+                                <td title="Background Color">Background</td>
+                                <td><input id="conditionbackgroundcolor" type="text" /></td>
+                                <td title="Text Color">Text</td>
+                                <td><input id="conditionforegroundcolor" type="text" /></td>
+                                <td title="CSS sample: font-size:14px;font-weight:bold">CSS</td>
+                                <td><input id="cellfontcss" title="CSS Sample: font-size:14px;font-weight:bold" class="conditioncss" type="text" /></td>
+                                <td><button id="cellformattingokbtn">OK</button></td>
+                                <td><button id="cellformattingcancelbtn">Cancel</button></td>
+                                <td><button id="cellformattingresetbtn">Reset</button></td>
+                            </tr>
+                            <tr>
+                                <td colspan="7">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight:bold;">Condition</td>
+                                <td colspan="9">
+                                    <select id="cellformatgeneralcondition">
+                                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                                        <option value="not-null">Contains Data</option>
+                                        <option value="null">Does Not Contain Data</option>
+                                        <!-- Numeric -->
+                                        <option value="gt" data-fetchop="gt">Is Greater Than</option>
+                                        <option value="ge" data-fetchop="ge">Is Greater Than or Equal To</option>
+                                        <option value="lt" data-fetchop="lt">Is Less Than</option>
+                                        <option value="le" data-fetchop="le">Is Less Than or Equal To</option>
+                                    </select>
+                                    <select id="cellformatlookupcondition" class="displaynone">
+                                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                                        <option value="not-null">Contains Data</option>
+                                        <option value="null">Does Not Contain Data</option>
+                                        <option value="eq-userid">Equals Current User</option>
+                                        <option value="ne-userid">Does Not Equal Current User</option>
+                                    </select>
+                                    <select class="displaynone" id="cellformatdatetimeconditions">
+                                        <option value="on" data-fetchop="on" selected="selected">On</option>
+                                        <option value="on-or-after" data-fetchop="on-or-after">On or After</option>
+                                        <option value="on-or-before" data-fetchop="on-or-before">On or Before</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="today">Today</option>
+                                        <option value="tomorrow">Tomorrow</option>
+                                        <option value="next-seven-days">Next 7 Days</option>
+                                        <option value="last-seven-days">Last 7 Days</option>
+                                        <!--<option value="next-week">Next Week</option>
+                                        <option value="last-week">Last Week</option>
+                                        <option value="this-week">This Week</option>
+                                        <option value="next-month">Next Month</option>
+                                        <option value="last-month">Last Month</option>
+                                        <option value="this-month">This Month</option>
+                                        <option value="next-year">Next Year</option>
+                                        <option value="last-year">Last Year</option>
+                                        <option value="this-year">This Year</option>-->
+                                        <option value="not-null">Contains Data</option>
+                                        <option value="null">Does Not Contain Data</option>
+                                    </select>
+                                    <select class="displaynone" id="cellformatoptionsetcondition"></select>
+                                    <input class="displaynone" readonly="readonly" id="cellformatdateconditioninput" type="text" />
+                                    &nbsp;&nbsp;<input id="cellformatconditioninput" type="text" />
+                                    <button id="cellformatconditionlookupbtn" class="displaynone" style="margin-left:5px;">...</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="group" style="margin-top:15px;">
+                    <div style="font-weight:bold;">Color and Format preview</div>
+                </div>
+
+                <div class="group" style="margin-top:5px;">
+                    <table id="formattingcolors" class="formattingcolorscss">
+                        <thead>
+                            <tr><th>&nbsp;</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><div style="display:inline-block;margin-right:5px;" id="oddrowcolorinputcontainer"><input id="oddrowcolorinput" /></div><div style="font-weight:bold;display:inline-block;">Even Row BackgroundColor</div></td>
+                            </tr>
+                            <tr>
+                                <td><div style="display:inline-block;margin-right:5px;" id="evenrowcolorinputcontainer"><input id="evenrowcolorinput" /></div><div style="font-weight:bold;display:inline-block;">Odd Row BackgroundColor</div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="section group displaynone" id="maincontentsect7">
+        <div>
+            <div><span style="font-weight:bold;" id="fieldconditionslabel">Field Conditions</span></div>
+            <div id="conditionsfetchdisplay">&nbsp;</div>
+            <div class="deleteallfieldconditionscontainer"><button id="deleteallfieldconditionsbtn">Delete all field conditions</button></div>
+        </div>
+    </div>
+
+    <div id="fieldconditionflyout" class="flyoutOverlay">
+        <div class="flyoutOverlayContent">
+            <div class="flyoutOverlayContentValue">
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="datetimeconditionslabel" for="datetimeconditions">Field value</label>
+                    <select class="fieldconditionselect" id="datetimeconditions">
+                        <option value="on" data-fetchop="on" selected="selected">On</option>
+                        <option value="on-or-after" data-fetchop="on-or-after">On or After</option>
+                        <option value="on-or-before" data-fetchop="on-or-before">On or Before</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="today">Today</option>
+                        <option value="tomorrow">Tomorrow</option>
+                        <option value="next-seven-days">Next 7 Days</option>
+                        <option value="last-seven-days">Last 7 Days</option>
+                        <option value="next-week">Next Week</option>
+                        <option value="last-week">Last Week</option>
+                        <option value="this-week">This Week</option>
+                        <option value="next-month">Next Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="this-month">This Month</option>
+                        <option value="next-year">Next Year</option>
+                        <option value="last-year">Last Year</option>
+                        <option value="this-year">This Year</option>
+                        <option value="last-x-hours">Last X Hours</option>
+                        <option value="next-x-hours">Next X Hours</option>
+                        <option value="last-x-days">Last X Days</option>
+                        <option value="next-x-days">Next X Days</option>
+                        <option value="last-x-weeks">Last X Weeks</option>
+                        <option value="next-x-weeks">Next X Weeks</option>
+                        <option value="last-x-months">Last X Months</option>
+                        <option value="next-x-months">Next X Months</option>
+                        <option value="last-x-years">Last X Years</option>
+                        <option value="next-x-years">Next X Years</option>
+                        <option value="anytime">Any Time</option>
+                        <option value="olderthan-x-months" data-fetchop="olderthan-x-months">Older Than X Months</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="in-fiscal-year">In Fiscal Year</option>
+                        <option value="in-fiscal-period">In Fiscal Period</option>
+                        <option value="in-fiscal-period-and-year">In Fiscal Period and Year</option>
+                        <option value="in-or-after-fiscal-period-and-year">In or After Fiscal Period</option>
+                        <option value="in-or-before-fiscal-period-and-year">In or Before Fiscal Period</option>
+                        <option value="last-fiscal-year">Last Fiscal Year</option>
+                        <option value="this-fiscal-year">This Fiscal Year</option>
+                        <option value="next-fiscal-year">Next Fiscal Year</option>
+                        <option value="last-x-fiscal-years">Last X Fiscal Years</option>
+                        <option value="next-x-fiscal-years">Next X Fiscal Years</option>
+                        <option value="last-fiscal-period">Last Fiscal Period</option>
+                        <option value="this-fiscal-period">This Fiscal Period</option>
+                        <option value="next-fiscal-period">Next Fiscal Period</option>
+                        <option value="last-x-fiscal-periods">Last X Fiscal Periods</option>
+                        <option value="next-x-fiscal-periods">Next X Fiscal Periods</option>
+                    </select>
+                </div>
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="numericconditionslabel" for="numericconditions">Field value</label>
+                    <select class="fieldconditionselect" id="numericconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="gt" data-fetchop="gt">Is Greater Than</option>
+                        <option value="ge" data-fetchop="ge">Is Greater Than or Equal To</option>
+                        <option value="lt" data-fetchop="lt">Is Less Than</option>
+                        <option value="le" data-fetchop="le">Is Less Than or Equal To</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                    </select>
+                </div>
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="stringconditionslabel" for="stringconditions">Field value</label>
+                    <select class="fieldconditionselect" id="stringconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                    </select>
+                </div>
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="optionsetconditionslabel" for="optionsetconditions">Field value</label>
+                    <select class="fieldconditionselect" id="optionsetconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="lookupconditionslabel" for="lookupconditions">Field value</label>
+                    <select class="fieldconditionselect" id="lookupconditions">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="systemuserctllabel" for="systemuserlookup">Field value</label>
+                    <select class="fieldconditionselect" id="systemuserlookup">
+                        <option value="eq-userid" selected="selected">Equals Current User</option>
+                        <option value="ne-userid">Does Not Equal Current User</option>
+                        <option value="eq-userteams">Equals Current User's Teams</option>
+                        <option value="eq-useroruserteams">Equals Current User Or User's Teams</option>
+                        <option value="eq" data-fetchop="eq">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
+
+                <div class="conditionscontainer hideconditionscontainer">
+                    <label class="FitText" id="customerlookuplabel" for="customerlookup">Field value</label>
+                    <select class="fieldconditionselect" id="customerlookup">
+                        <option value="eq" data-fetchop="eq" selected="selected">Equals</option>
+                        <option value="ne" data-fetchop="ne">Does Not Equal</option>
+                        <option value="not-null">Contains Data</option>
+                        <option value="null">Does Not Contain Data</option>
+                        <option value="contains" data-fetchval="%{0}%" data-fetchop="like">Contains</option>
+                        <option value="doesnotcontain" data-fetchval="%{0}%" data-fetchop="not-like">Does Not Contain</option>
+                        <option value="beginswith" data-fetchval="{0}%" data-fetchop="like">Begins With</option>
+                        <option value="doesnotbeginwith" data-fetchval="{0}%" data-fetchop="not-like">Does Not Begin With</option>
+                        <option value="endswith" data-fetchval="%{0}" data-fetchop="like">Ends With</option>
+                        <option value="doesnotendwith" data-fetchval="%{0}" data-fetchop="not-like">Does Not End With</option>
+                    </select>
+                </div>
+
+                <input class="conditioninputs" id="fieldconditioninput" type="text" />
+                <input class="conditioninputs" readonly="readonly" id="dateconditioninput" type="text" />
+                <button class="LookupSearchBtn" id="lookupsearchbtn"></button>
+                <button id="picklistselect" class="picklistselectbtn">...</button>
+
+            </div>
+            <div class="flyoutOverlayContentBtns">
+                <button id="setfieldcondition">Set condition</button>
+                <button id="cancelfieldcondition">Cancel</button>
+                <button id="removefieldcondition">Remove condition</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="listoflookupentityfieldsflyout" class="flyoutOverlay">
+        <div class="flyoutOverlayContentLookupFields">
+            <div style="margin-bottom:5px;"><h3 id="listoflookupentityfieldstitle"></h3></div>
+            <div class="checklistcontainer" id="listoflookupentityfieldstoselect"></div>
+            <div class="flyoutOverlayContentBtns">
+                <button id="listoflookupfieldstoselectokbtn">OK</button>
+                <button id="listoflookupfieldstoselectcancelbtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="picklistconditionflyout" class="picklistflyoutOverlay">
+        <div class="picklistflyoutOverlayContent">
+            <div id="picklistchecklist" class="picklistflyoutOverlayContentValue"></div>
+            <div class="picklistflyoutOverlayContentBtns">
+                <button id="setpicklistcondition">Ok</button>
+                <button id="cancelsetpicklistcondition">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dcrmegProcessingDialog" class="dcrmegdialogprocessing">
+        <div class="dcrmegprocessingtitle">
+            <div class="dcrmegprocessingimg"><img src="/_imgs/processing_loader.gif" /></div>
+            <div>Loading...</div>
+        </div>
+    </div>
+
+    <div id="colsorttypedilog" class="flyoutOverlay">
+        <div class="flyoutSortorder">
+            <table class="sorttypetable">
+                <tr><td colspan="2"><span style="font-size:14px;">Configure Sort Order</span></td></tr>
+                <tr><td colspan="2">Select the columns to sort on by default</td></tr>
+                <tr><td colspan="2">&nbsp;</td></tr>
+
+                <tr>
+                    <td style="width:40%;"><label for="sorttypeprimary">Sort by</label></td>
+                    <td>
+                        <select id="sorttypeprimary"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>
+                        <input type="radio" id="sorttypeprimaryradio1" name="sorttypeprimaryradio" value="0" checked="checked" /><label for="sorttypeprimaryradio1">Ascending Order</label>
+                        <br /><input type="radio" id="sorttypeprimaryradio2" name="sorttypeprimaryradio" value="1" /><label for="sorttypeprimaryradio2">Descending Order</label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td><label for="sorttypesecondary">Then by</label></td>
+                    <td>
+                        <select id="sorttypesecondary"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>
+                        <input type="radio" id="sorttypesecondaryradio1" name="sorttypesecondaryradio" value="0" checked="checked" /><label for="sorttypesecondaryradio1">Ascending Order</label>
+                        <br /><input type="radio" id="sorttypesecondaryradio2" name="sorttypesecondaryradio" value="1" /><label for="sorttypesecondaryradio2">Descending Order</label>
+                    </td>
+                </tr>
+
+                <tr><td colspan="2">&nbsp;</td></tr>
+                <tr>
+                    <td colspan="2" style="text-align:right;">
+                        <div class="configuresortingdiv">
+                            <button id="sorttypeok">Ok</button>&nbsp;<button id="sorttypecancel">Cancel</button>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $(function () {
+            InitializeSetupRoutines();
+        });
+    </script>
+
+</body>
+</html>
+

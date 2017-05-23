@@ -1,0 +1,130 @@
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <entity name="account" displayname="Account" etc="1" primaryidfield="accountid" primarynamefield="name" disableplugins="true">
+    <fields>
+      <field updateCompare="true" displayname="Account" name="accountid" type="guid" primaryKey="true" />
+      <field updateCompare="true" displayname="Account Name" name="name" type="string" />
+      <field displayname="Process" name="processid" type="guid" />
+      <field displayname="Process Stage" name="stageid" type="guid" />
+      <field displayname="Email" name="emailaddress1" type="string" />
+    </fields>
+  </entity>
+  <entity name="opportunity" displayname="Opportunity" etc="3" primaryidfield="opportunityid" primarynamefield="name" disableplugins="true">
+    <fields>
+      <field displayname="" name="contactid" type="entityreference" lookupType="contact" />
+      <field displayname="" name="accountid" type="entityreference" lookupType="account" />
+      <field displayname="Account" name="parentaccountid" type="entityreference" lookupType="account" />
+      <field displayname="Account Manager" name="msdyn_accountmanagerid" type="entityreference" lookupType="systemuser" customfield="true" />
+      <field displayname="Actual Close Date" name="actualclosedate" type="datetime" />
+      <field displayname="Actual Revenue" name="actualvalue" type="money" />
+      <field displayname="Actual Revenue (Base)" name="actualvalue_base" type="money" />
+      <field displayname="Add to Forecast" name="int_addtoforecast" type="bool" customfield="true" />
+      <field displayname="Add to Forecast (old)" name="new_addtoforecast" type="bool" customfield="true" />
+      <field displayname="Budget" name="budgetstatus" type="optionsetvalue" />
+      <field displayname="Budget Amount" name="budgetamount" type="money" />
+      <field displayname="Budget Amount (Base)" name="budgetamount_base" type="money" />
+      <field displayname="Complete Internal Review" name="completeinternalreview" type="bool" />
+      <field displayname="Confirm Interest" name="confirminterest" type="bool" />
+      <field displayname="Contact" name="parentcontactid" type="entityreference" lookupType="contact" />
+      <field displayname="Contracting Unit" name="msdyn_contractorganizationalunitid" type="entityreference" lookupType="msdyn_organizationalunit" customfield="true" />
+      <field displayname="Created By" name="createdby" type="entityreference" lookupType="systemuser" />
+      <field displayname="Created By (Delegate)" name="createdonbehalfby" type="entityreference" lookupType="systemuser" />
+      <field displayname="Created On" name="createdon" type="datetime" />
+      <field displayname="Currency" name="transactioncurrencyid" type="entityreference" lookupType="transactioncurrency" />
+      <field displayname="Current Situation" name="currentsituation" type="string" />
+      <field displayname="Customer Need" name="customerneed" type="string" />
+      <field displayname="Customer Pain Points" name="customerpainpoints" type="string" />
+      <field displayname="Decide Go/No-Go" name="pursuitdecision" type="bool" />
+      <field displayname="Decision Maker?" name="decisionmaker" type="bool" />
+      <field displayname="Description" name="description" type="string" />
+      <field displayname="Develop Proposal" name="developproposal" type="bool" />
+      <field displayname="Discount Approved?" name="int_discountapproved" type="bool" customfield="true" />
+      <field displayname="Est. Close Date" name="estimatedclosedate" type="datetime" />
+      <field displayname="Est. Revenue" name="estimatedvalue" type="money" />
+      <field displayname="Est. Revenue (Base)" name="estimatedvalue_base" type="money" />
+      <field displayname="Evaluate Fit" name="evaluatefit" type="bool" />
+      <field displayname="Exchange Rate" name="exchangerate" type="decimal" />
+      <field displayname="Feedback Resolved" name="resolvefeedback" type="bool" />
+      <field displayname="File Debrief" name="filedebrief" type="bool" />
+      <field displayname="Final Decision Date" name="finaldecisiondate" type="datetime" />
+      <field displayname="Final Proposal Ready" name="completefinalproposal" type="bool" />
+      <field displayname="Forecast" name="int_forecast" type="money" customfield="true" />
+      <field displayname="Forecast (Base)" name="int_forecast_base" type="money" customfield="true" />
+      <field displayname="Forecast (old)" name="new_forecast" type="money" customfield="true" />
+      <field displayname="Forecast (old) (Base)" name="new_forecast_base" type="money" customfield="true" />
+      <field displayname="Freight Amount" name="freightamount" type="money" />
+      <field displayname="Freight Amount (Base)" name="freightamount_base" type="money" />
+      <field displayname="Identify Competitors" name="identifycompetitors" type="bool" />
+      <field displayname="Identify Customer Contacts" name="identifycustomercontacts" type="bool" />
+      <field displayname="Identify Sales Team" name="identifypursuitteam" type="bool" />
+      <field displayname="Import Sequence Number" name="importsequencenumber" type="number" />
+      <field displayname="Initial Communication" name="initialcommunication" type="optionsetvalue" />
+      <field displayname="Last On Hold Time" name="lastonholdtime" type="datetime" />
+      <field displayname="Last SLA applied" name="slainvokedid" type="entityreference" lookupType="sla" />
+      <field displayname="Modified By" name="modifiedby" type="entityreference" lookupType="systemuser" />
+      <field displayname="Modified By (Delegate)" name="modifiedonbehalfby" type="entityreference" lookupType="systemuser" />
+      <field displayname="Modified On" name="modifiedon" type="datetime" />
+      <field displayname="Need" name="need" type="optionsetvalue" />
+      <field displayname="On Hold Time (Minutes)" name="onholdtime" type="number" />
+      <field updateCompare="true" displayname="Opportunity" name="opportunityid" type="guid" primaryKey="true" />
+      <field displayname="Opportunity Discount (%)" name="discountpercentage" type="decimal" />
+      <field displayname="Opportunity Discount Amount" name="discountamount" type="money" />
+      <field displayname="Opportunity Discount Amount (Base)" name="discountamount_base" type="money" />
+      <field displayname="Originating Lead" name="originatingleadid" type="entityreference" lookupType="lead" />
+      <field displayname="Owner" name="ownerid" type="owner" />
+      <field displayname="Owning Business Unit" name="owningbusinessunit" type="entityreference" lookupType="businessunit" />
+      <field displayname="Owning Team" name="owningteam" type="entityreference" lookupType="team" />
+      <field displayname="Owning User" name="owninguser" type="entityreference" lookupType="systemuser" />
+      <field displayname="Participates in Workflow" name="participatesinworkflow" type="bool" />
+      <field displayname="Pipeline Phase" name="stepname" type="string" />
+      <field displayname="Potential Customer" name="customerid" type="entityreference" lookupType="account|contact" />
+      <field displayname="Present Final Proposal" name="presentfinalproposal" type="bool" />
+      <field displayname="Presented Proposal" name="presentproposal" type="bool" />
+      <field displayname="Price List" name="pricelevelid" type="entityreference" lookupType="pricelevel" />
+      <field displayname="Pricing Error " name="pricingerrorcode" type="optionsetvalue" />
+      <field displayname="Priority" name="prioritycode" type="optionsetvalue" />
+      <field displayname="Probability" name="closeprobability" type="number" />
+      <field displayname="Process" name="processid" type="guid" />
+      <field displayname="Process Code" name="salesstagecode" type="optionsetvalue" />
+      <field displayname="Process Stage" name="stageid" type="guid" />
+      <field displayname="Proposal Feedback Captured" name="captureproposalfeedback" type="bool" />
+      <field displayname="Proposed Solution" name="proposedsolution" type="string" />
+      <field displayname="Purchase Process" name="purchaseprocess" type="optionsetvalue" />
+      <field displayname="Purchase Timeframe" name="purchasetimeframe" type="optionsetvalue" />
+      <field displayname="Qualification Comments" name="qualificationcomments" type="string" />
+      <field displayname="Quote Comments" name="quotecomments" type="string" />
+      <field displayname="Rating" name="opportunityratingcode" type="optionsetvalue" />
+      <field displayname="Record Created On" name="overriddencreatedon" type="datetime" />
+      <field displayname="Revenue" name="isrevenuesystemcalculated" type="bool" />
+      <field displayname="Sales Stage" name="salesstage" type="optionsetvalue" />
+      <field displayname="Schedule Proposal Meeting" name="scheduleproposalmeeting" type="datetime" />
+      <field displayname="Scheduled Follow up (Prospect)" name="schedulefollowup_prospect" type="datetime" />
+      <field displayname="Scheduled Follow up (Qualify)" name="schedulefollowup_qualify" type="datetime" />
+      <field displayname="Send Thank You Note" name="sendthankyounote" type="bool" />
+      <field displayname="SLA" name="slaid" type="entityreference" lookupType="sla" />
+      <field displayname="Source Campaign" name="campaignid" type="entityreference" lookupType="campaign" />
+      <field displayname="Status" name="statecode" type="state" />
+      <field displayname="Status Reason" name="statuscode" type="status" />
+      <field displayname="Step" name="stepid" type="guid" />
+      <field displayname="Time Spent by me" name="timespentbymeonemailandmeetings" type="string" />
+      <field displayname="Time Zone Rule Version Number" name="timezoneruleversionnumber" type="number" />
+      <field displayname="Timeline" name="timeline" type="optionsetvalue" />
+      <field displayname="Topic" name="name" type="string" />
+      <field displayname="Total Amount" name="totalamount" type="money" />
+      <field displayname="Total Amount (Base)" name="totalamount_base" type="money" />
+      <field displayname="Total Detail Amount" name="totallineitemamount" type="money" />
+      <field displayname="Total Detail Amount (Base)" name="totallineitemamount_base" type="money" />
+      <field displayname="Total Discount Amount" name="totaldiscountamount" type="money" />
+      <field displayname="Total Discount Amount (Base)" name="totaldiscountamount_base" type="money" />
+      <field displayname="Total Line Item Discount Amount" name="totallineitemdiscountamount" type="money" />
+      <field displayname="Total Line Item Discount Amount (Base)" name="totallineitemdiscountamount_base" type="money" />
+      <field displayname="Total Pre-Freight Amount" name="totalamountlessfreight" type="money" />
+      <field displayname="Total Pre-Freight Amount (Base)" name="totalamountlessfreight_base" type="money" />
+      <field displayname="Total Tax" name="totaltax" type="money" />
+      <field displayname="Total Tax (Base)" name="totaltax_base" type="money" />
+      <field displayname="Traversed Path" name="traversedpath" type="string" />
+      <field displayname="Type" name="msdyn_ordertype" type="optionsetvalue" customfield="true" />
+      <field displayname="UTC Conversion Time Zone Code" name="utcconversiontimezonecode" type="number" />
+    </fields>
+    <relationships />
+  </entity>
+</entities>

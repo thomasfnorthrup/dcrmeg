@@ -671,56 +671,30 @@ Date.parseDate = function (input, format) {
         return new Date();
     }
 
-    var arr = input.trim().split(" ");
-    var d = arr[0].trim().split(_thisGlobals.userDatetimeSettings.DateSeparator);
-    var t = undefined;
-
-    if (format.contains(_thisGlobals.userDatetimeSettings.TimeFormat)) {
-        t = arr[1].trim().split(_thisGlobals.userDatetimeSettings.TimeSeparator);
-    }
-    // dd/MM/yyyy
-    // M/dd/yyyy
-    // yyyy/dd/M
-    var dformat = format.toLowerCase().split(_thisGlobals.userDatetimeSettings.DateSeparator);
-    d[0] = d[0].trim();
-    d[1] = d[1].trim();
-    d[2] = d[2].trim();
-
-    var year = '';
-    var month = '';
-    var day = '';
-
-    if (dformat[0].startsWith('y')) {
-        year = d[0];
-    } else if (dformat[1].startsWith('y')) {
-        year = d[1];
-    } else if (dformat[2].startsWith('y')) {
-        year = d[2];
-    }
-
-    if (dformat[0].startsWith('m')) {
-        month = d[0];
-    } else if (dformat[1].startsWith('m')) {
-        month = d[1];
-    } else if (dformat[2].startsWith('m')) {
-        month = d[2];
-    }
-
-    if (dformat[0].startsWith('d')) {
-        day = d[0];
-    } else if (dformat[1].startsWith('d')) {
-        day = d[1];
-    } else if (dformat[2].startsWith('d')) {
-        day = d[2];
-    }
-
     var val;
-    // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
-    // Month is zero based
+
+    // Convert CRM date format into jQuery date format
+    var jQueryDateFormat;
+    var CRMDateFormat;
+    var CRMDateWithoutDelimiter;
+    var findSeparatorChar = new RegExp(_thisGlobals.userDatetimeSettings.DateSeparator, 'g');
+    CRMDateFormat = format.replace(findSeparatorChar, " ");
+    CRMDateWithoutDelimiter = input.replace(findSeparatorChar, " ");
+
+    switch (CRMDateFormat) {
+        case "dd MMM yy": jQueryDateFormat = "dd M y"; break;
+        case "M d yy": jQueryDateFormat = "m d y"; break;
+        case "M d yyyy": jQueryDateFormat = "m d yy"; break;
+        case "MM dd yy": jQueryDateFormat = "mm dd y"; break;
+        case "MM dd yyyy": jQueryDateFormat = "mm dd yy"; break;
+        case "yy MM dd": jQueryDateFormat = "y mm dd"; break;
+        case "yyyy MM dd": jQueryDateFormat = "yy mm dd"; break;
+    }
+
     if (t) {
-        val = new Date(year, month - 1, day, t[0].trim(), t[1].trim());
+        val = new Date(CRMDateWithoutDelimiter, t[0].trim(), t[1].trim());
     } else {
-        val = new Date(year, month - 1, day);
+        val = new Date(CRMDateWithoutDelimiter);
     }
 
     return val;
@@ -6565,12 +6539,12 @@ function DisplayNewButtonMenu(self, $this) {
  parameters["parentcustomeridname"] = "Contoso";
  parameters["parentcustomeridtype"] = "account";
 
-For simple lookups you must set the value and the text to display in the lookup. Use the suffix “name” with the name of the attribute to set the value for the text.
-Don’t use any other arguments.
+For simple lookups you must set the value and the text to display in the lookup. Use the suffix Â“nameÂ” with the name of the attribute to set the value for the text.
+DonÂ’t use any other arguments.
 For customer and owner lookups you must set the value and the name in the same way you set them for simple lookups.
-In addition you must use the suffix “type” to specify the type of entity.
+In addition you must use the suffix Â“typeÂ” to specify the type of entity.
 Allowable values are account, contact, systemuser, and team.
-You can’t set the values for partylist or regarding lookups.
+You canÂ’t set the values for partylist or regarding lookups.
                     */
                     var parameters = {};
 

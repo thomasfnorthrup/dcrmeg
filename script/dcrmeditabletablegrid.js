@@ -1,46 +1,5 @@
-
-String.prototype.capitalizeFirstLetter = function () {
-        return (this.length > 0) ? this.charAt(0).toUpperCase() + this.slice(1) : '';
-    };
-
-String.prototype.contains = function (str, exactMatch) {
-        exactMatch = exactMatch || false;
-        return (!exactMatch) ? (this.indexOf(str) != -1) : (this.toLowerCase().indexOf(str.toLowerCase()) != -1);
-    };
-
-String.prototype.startsWith = function (str) {
-        return this.slice(0, str.length) == str;
-    };
-
-String.prototype.endsWith = function (str) {
-        return this.slice(-str.length) == str;
-    };
-
-Array.prototype.ExactMatchExists = function (str) {
-        for (var i = 0; i < this.length; i++) {
-            if (str == this[i]) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-Array.prototype.MatchExists = function (str) {
-    for (var i = 0; i < this.length; i++) {
-        if (str == this[i]) {
-            return i;
-        }
-    }
-    return -1;
-};
-
-Array.prototype.insert = function (index, item) {
-    this.splice(index, 0, item);
-};
-
-Array.prototype.DeleteItem = function (index) {
-    this.splice(index, 1);
-};
+///<referencepath="TypeDecorators.js"/>
+///<referencepath="XrmServiceToolkit.js"/>
 
 (function ($) {
     $.extend(true, window, {
@@ -6516,12 +6475,12 @@ function DisplayNewButtonMenu(self, $this) {
  parameters["parentcustomeridname"] = "Contoso";
  parameters["parentcustomeridtype"] = "account";
 
-For simple lookups you must set the value and the text to display in the lookup. Use the suffix “name” with the name of the attribute to set the value for the text.
-Don’t use any other arguments.
+For simple lookups you must set the value and the text to display in the lookup. Use the suffix ï¿½nameï¿½ with the name of the attribute to set the value for the text.
+Donï¿½t use any other arguments.
 For customer and owner lookups you must set the value and the name in the same way you set them for simple lookups.
-In addition you must use the suffix “type” to specify the type of entity.
+In addition you must use the suffix ï¿½typeï¿½ to specify the type of entity.
 Allowable values are account, contact, systemuser, and team.
-You can’t set the values for partylist or regarding lookups.
+You canï¿½t set the values for partylist or regarding lookups.
                     */
                     var parameters = {};
 
